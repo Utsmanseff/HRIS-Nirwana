@@ -31,3 +31,13 @@ Route::middleware('auth')->group(function () {
         return redirect('/login');
     })->name('logout');
 });
+
+// --- App: auth + claimed gated routes ---
+Route::middleware(['auth', 'claimed'])->group(function () {
+    Route::view('/dashboard', 'dashboard')->name('dashboard');
+
+    Route::middleware('permission:kelola-sdm')->group(function () {
+        // Placeholder; UI asli dibangun di Fase 1b.
+        Route::view('/sdm/karyawan', 'dashboard')->name('sdm.karyawan');
+    });
+});
