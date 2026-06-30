@@ -26,6 +26,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# Local Claude Code tooling (launch config, local settings) — not for the repo
+/.claude
+
 # Local project docs (specs, plans, mockups) — kept out of the repo
 /docs
 
