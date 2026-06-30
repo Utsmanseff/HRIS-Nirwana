@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Livewire\Auth\Klaim;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,4 +15,17 @@ Route::view('/styleguide', 'styleguide')->name('styleguide');
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleController::class, 'redirect'])->name('auth.google');
     Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
+});
+
+// --- Auth: authenticated routes ---
+Route::middleware('auth')->group(function () {
+    Route::get('/klaim', Klaim::class)->name('klaim');
+    // Logout didefinisikan di sini karena view klaim memakai route('logout').
+    Route::post('/logout', function () {
+        auth()->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect('/login');
+    })->name('logout');
 });
