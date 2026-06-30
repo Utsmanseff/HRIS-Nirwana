@@ -1,0 +1,29 @@
+/* ============================================================
+   App Shell (ADMIN / HR desktop) — ported from docs/mockups/assets/shell.js
+   Sidebar + topbar. Sidebar surface stays dark in both themes (fixed hex).
+   ============================================================ */
+.app-shell{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
+.sidebar{ background:#0d1413; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
+.sb-brand{ display:flex; align-items:center; gap:.7rem; padding:1.1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.08); }
+.sb-logo{ display:grid; place-items:center; width:38px; height:38px; border-radius:11px; box-shadow:var(--shadow-sm);
+  background:#fff; flex:none; }
+.nv-group{ font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.32); padding:.5rem .6rem .35rem; }
+.sidebar .nv-item{ display:flex; align-items:center; gap:.7rem; padding:.5rem .6rem; border-radius:var(--r-md); font-size:.85rem; font-weight:500;
+  color:rgba(255,255,255,.62); transition:background .14s,color .14s; }
+.sidebar .nv-item:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.nv-ic{ width:18px; height:18px; flex:none; opacity:.9; }
+.nv-ic svg{ width:18px; height:18px; }
+.sidebar .nv-active{ background:linear-gradient(90deg,color-mix(in srgb,var(--brand-500) 30%,transparent),transparent); color:#fff; box-shadow:inset 2px 0 0 var(--brand-400); }
+.nv-active .nv-ic{ opacity:1; color:var(--brand-200); }
+.nv-soon{ opacity:.45; pointer-events:none; }
+.nv-badge{ font-size:.65rem; font-weight:700; background:var(--brand-500); color:#fff; min-width:18px; height:18px; padding:0 .35rem; border-radius:999px; display:grid; place-items:center; }
+.topbar{ position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:.75rem; padding:.75rem 1.5rem;
+  background:color-mix(in srgb,var(--bg-surface) 88%,transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); min-height:64px; }
+.content{ padding:1.5rem; max-width:1280px; }
+@media (max-width:640px){ .content{ padding:1rem; } .topbar{ padding:.65rem 1rem; } }
+@media (max-width:1024px){
+  .app-shell{ grid-template-columns:1fr; }
+  .sidebar{ position:fixed; z-index:50; width:264px; transform:translateX(-100%); transition:transform .25s; }
+  body.sb-open .sidebar{ transform:translateX(0); }
+  body.sb-open::after{ content:''; position:fixed; inset:0; background:rgba(20,26,28,.45); z-index:40; }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Nirwana HRIS",
+  "short_name": "Nirwana HRIS",
+  "description": "Sistem Informasi SDM & Kepegawaian RSU Nirwana.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c1312",
+  "theme_color": "#0e1514",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

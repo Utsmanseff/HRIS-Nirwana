@@ -1,0 +1,74 @@
+@props(['active' => ''])
+@php
+    // Nav model. href '#' = route not wired yet (filled in per-phase implementation).
+    $nav = [
+        ['group' => null, 'items' => [
+            ['id' => 'dashboard', 'label' => 'Dashboard', 'href' => '#', 'icon' => 'grid'],
+        ]],
+        ['group' => 'SDM', 'items' => [
+            ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => '#', 'icon' => 'users'],
+            ['id' => 'struktur', 'label' => 'Struktur Organisasi', 'href' => '#', 'icon' => 'tree'],
+            ['id' => 'jabatan', 'label' => 'Jabatan & Level', 'href' => '#', 'icon' => 'badge'],
+            ['id' => 'kontrak', 'label' => 'Kontrak & Pengingat', 'href' => '#', 'icon' => 'doc'],
+            ['id' => 'dokumen', 'label' => 'Dokumen', 'href' => '#', 'icon' => 'folder'],
+        ]],
+        ['group' => 'Operasional', 'items' => [
+            ['id' => 'cuti', 'label' => 'Cuti', 'href' => '#', 'icon' => 'calendar'],
+            ['id' => 'disiplin', 'label' => 'Disiplin', 'href' => '#', 'icon' => 'gavel'],
+            ['id' => 'tiket', 'label' => 'Ticketing', 'href' => '#', 'icon' => 'ticket'],
+            ['id' => 'inventaris', 'label' => 'Inventaris', 'href' => '#', 'icon' => 'box'],
+            ['id' => 'absensi', 'label' => 'Absensi', 'href' => '#', 'icon' => 'clock'],
+            ['id' => 'jadwal', 'label' => 'Jadwal Shift', 'href' => '#', 'icon' => 'calendar'],
+        ]],
+        ['group' => 'Sistem', 'items' => [
+            ['id' => 'pengguna', 'label' => 'Pengguna & Role', 'href' => '#', 'icon' => 'shield'],
+            ['id' => 'pengaturan', 'label' => 'Pengaturan', 'href' => '#', 'icon' => 'cog'],
+        ]],
+    ];
+@endphp
+<aside class="sidebar">
+    <div class="sb-brand">
+        <span class="sb-logo"><x-logo :size="24" /></span>
+        <div class="leading-tight">
+            <div class="font-extrabold text-[15px] tracking-tight text-white">Nirwana<span class="text-brand-200">HRIS</span></div>
+            <div class="text-[10px] text-brand-200/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
+        </div>
+    </div>
+
+    <nav class="py-4 flex-1 overflow-y-auto">
+        @foreach ($nav as $group)
+            <div class="px-3">
+                @if ($group['group'])
+                    <div class="nv-group">{{ $group['group'] }}</div>
+                @endif
+                <div class="space-y-0.5">
+                    @foreach ($group['items'] as $it)
+                        <a href="{{ $it['href'] }}" class="nv-item {{ $it['id'] === $active ? 'nv-active' : '' }}">
+                            <span class="nv-ic"><x-icon :name="$it['icon']" /></span>
+                            <span class="flex-1">{{ $it['label'] }}</span>
+                            @isset($it['badge'])
+                                <span class="nv-badge">{{ $it['badge'] }}</span>
+                            @endisset
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+            @if (!$loop->last)
+                <div class="my-3"></div>
+            @endif
+        @endforeach
+    </nav>
+
+    <div class="p-3 border-t border-white/10">
+        <div class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+            <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
+                {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
+            </span>
+            <div class="leading-tight flex-1 min-w-0">
+                <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
+                <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
+            </div>
+            <svg width="16" class="text-brand-200/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+        </div>
+    </div>
+</aside>

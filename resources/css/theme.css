@@ -1,0 +1,258 @@
+/* ============================================================
+   HRIS RSU Nirwana — Design Tokens
+   Modern-minimal, clinical-calm. Themeable via CSS variables.
+   Ported 1:1 from docs/mockups/assets/theme.css.
+   LOGO SWAP: replace the --brand-* hex values below with colors
+   sampled from the official RSU Nirwana logo. Nothing else changes.
+   ============================================================ */
+
+:root {
+  /* --- Brand: RSU Nirwana GREEN (sampel dari logo, di-tone agar tidak menyilaukan) --- */
+  --brand-50:  #edfbf1;
+  --brand-100: #d2f4dd;
+  --brand-200: #a7e8bd;
+  --brand-300: #6fd593;
+  --brand-400: #3cbd6c;
+  --brand-500: #15a149;  /* primary — hijau utama logo */
+  --brand-600: #0f8a3d;
+  --brand-700: #0f6e33;
+  --brand-800: #11572b;
+  --brand-900: #0e4724;
+
+  /* Aksen lime (hijau muda logo) — pemakaian terbatas: highlight/progress */
+  --lime-300: #c4e98a;
+  --lime-400: #a8d95f;
+  --lime-500: #8cc63f;  /* lime logo */
+  --lime-600: #6fa82f;
+
+  /* --- Neutral (cool slate) --- */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f8fafa;
+  --neutral-100: #f1f4f5;
+  --neutral-200: #e4e9eb;
+  --neutral-300: #cdd5d9;
+  --neutral-400: #9aa7ad;
+  --neutral-500: #6b787e;
+  --neutral-600: #4d585d;
+  --neutral-700: #3a4448;
+  --neutral-800: #232b2e;
+  --neutral-900: #141a1c;
+
+  /* --- Semantic --- */
+  --success-50:#ecfdf3; --success-100:#d1fadf; --success-500:#16a34a; --success-600:#15803d; --success-700:#166534;
+  --warning-50:#fffaeb; --warning-100:#fef0c7; --warning-500:#d97706; --warning-600:#b45309; --warning-700:#92400e;
+  --danger-50: #fef3f2; --danger-100: #fee4e2; --danger-500: #dc2626; --danger-600: #b91c1c; --danger-700: #991b1b;
+  --info-50:   #eff6ff; --info-100:   #dbeafe; --info-500:   #2563eb; --info-600:   #1d4ed8; --info-700:   #1e40af;
+
+  /* --- Surfaces & lines --- */
+  --bg-app:      var(--neutral-50);
+  --bg-surface:  var(--neutral-0);
+  --bg-sunken:   var(--neutral-100);
+  --border:      var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --text:        var(--neutral-800);
+  --text-muted:  var(--neutral-500);
+  --text-subtle: var(--neutral-400);
+
+  /* --- Radius --- */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+
+  /* --- Shadows (soft, low spread — modern minimal) --- */
+  --shadow-xs: 0 1px 2px rgba(20,26,28,.05);
+  --shadow-sm: 0 1px 3px rgba(20,26,28,.06), 0 1px 2px rgba(20,26,28,.04);
+  --shadow-md: 0 4px 12px rgba(20,26,28,.08), 0 2px 4px rgba(20,26,28,.04);
+  --shadow-lg: 0 12px 32px rgba(20,26,28,.10), 0 4px 8px rgba(20,26,28,.05);
+  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--brand-500) 22%, transparent);
+
+  /* --- Type --- */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* --- Panel gelap tetap (dipakai di kedua mode: hero/login). Charcoal + glow hijau halus --- */
+  --panel-grad: linear-gradient(150deg, #18221f 0%, #0e1514 60%, #0b1110 100%);
+  --panel-glow: radial-gradient(420px circle at 12% 8%, color-mix(in srgb, var(--brand-500) 26%, transparent), transparent 60%);
+  --on-panel: #eef3f1;
+  --on-panel-muted: rgba(238,243,241,.62);
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   DARK MODE — override token. Neutral ramp dibalik + tint disesuaikan.
+   Brand hijau tetap (pop di gelap). Aktif via [data-theme="dark"].
+   ============================================================ */
+:root[data-theme="dark"]{
+  color-scheme: dark;
+
+  /* Neutral ramp dibalik: rendah=gelap (surface), tinggi=terang (teks) */
+  --neutral-0:   #161f1d;  /* surface / kartu */
+  --neutral-50:  #111917;  /* bg halus / header tabel / hover */
+  --neutral-100: #1b2522;  /* sunken / chip */
+  --neutral-200: #273230;  /* border */
+  --neutral-300: #36433f;  /* border kuat */
+  --neutral-400: #6e7c78;  /* teks subtle */
+  --neutral-500: #93a09c;  /* teks muted */
+  --neutral-600: #aeb9b5;
+  --neutral-700: #c9d2cf;
+  --neutral-800: #e6ece9;  /* teks utama */
+  --neutral-900: #f3f7f5;
+
+  --bg-app:      #0c1312;
+  --bg-surface:  var(--neutral-0);
+  --bg-sunken:   var(--neutral-100);
+  --border:      var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --text:        var(--neutral-800);
+  --text-muted:  var(--neutral-500);
+  --text-subtle: var(--neutral-400);
+
+  /* Tint badge/alert: -50 jadi gelap, -700 jadi terang biar legible */
+  --brand-50:#13261d;  --brand-100:#1c3a2c;  --brand-700:#7fe0a6;
+  --success-50:#11251a; --success-100:#1c3a28; --success-600:#5fd98a; --success-700:#86efac;
+  --warning-50:#271d0e; --warning-100:#3a2c12; --warning-600:#fbbf24; --warning-700:#fcd34d;
+  --danger-50:#281414;  --danger-100:#3c1d1d;  --danger-600:#f87171; --danger-700:#fca5a5;
+  --info-50:#101d2d;   --info-100:#1a2c44;   --info-600:#60a5fa; --info-700:#93c5fd;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 14px rgba(0,0,0,.5);
+  --shadow-lg: 0 14px 40px rgba(0,0,0,.6);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01","cv01";
+  color: var(--text);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.font-mono { font-family: var(--font-mono); }
+/* App anchors: no UA underline/blue by default. Pakai hover:underline & text-* eksplisit bila perlu. */
+a, a:link, a:visited { color:inherit; text-decoration:none; }
+.tile { color:var(--text); }
+[data-theme-icon]{ display:grid; place-items:center; }
+[data-theme-icon] svg{ width:20px; height:20px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Scrollbar — quiet */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--neutral-300); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--neutral-400); background-clip: content-box; }
+
+/* ============================================================
+   Component classes (portable utility compositions)
+   ============================================================ */
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; text-decoration:none;
+  font-weight:600; font-size:.875rem; line-height:1; border-radius:var(--r-md);
+  padding:.625rem 1rem; cursor:pointer; border:1px solid transparent;
+  transition:background .15s, border-color .15s, color .15s, box-shadow .15s, transform .05s; white-space:nowrap; }
+.btn:active { transform:translateY(.5px); }
+.btn:focus-visible { outline:none; box-shadow:var(--shadow-focus); }
+.btn svg { width:1.05em; height:1.05em; }
+.btn-primary { background:var(--brand-500); color:#fff; }
+.btn-primary:hover { background:var(--brand-600); }
+.btn-secondary { background:var(--bg-surface); color:var(--text); border-color:var(--border-strong); }
+.btn-secondary:hover { background:var(--neutral-50); border-color:var(--neutral-400); }
+.btn-ghost { background:transparent; color:var(--text-muted); }
+.btn-ghost:hover { background:var(--neutral-100); color:var(--text); }
+.btn-danger { background:var(--danger-500); color:#fff; }
+.btn-danger:hover { background:var(--danger-600); }
+.btn-sm { padding:.45rem .75rem; font-size:.8125rem; border-radius:var(--r-sm); }
+.btn-lg { padding:.75rem 1.25rem; font-size:.9375rem; }
+.btn-icon { padding:.5rem; }
+
+/* Inputs */
+.field-label { display:block; font-size:.8125rem; font-weight:600; color:var(--text); margin-bottom:.375rem; }
+.field-hint { font-size:.75rem; color:var(--text-muted); margin-top:.375rem; }
+.input, .select, .textarea {
+  width:100%; font-family:inherit; font-size:.875rem; color:var(--text);
+  background:var(--bg-surface); border:1px solid var(--border-strong);
+  border-radius:var(--r-md); padding:.625rem .75rem; transition:border-color .15s, box-shadow .15s; }
+.input::placeholder, .textarea::placeholder { color:var(--text-subtle); }
+.input:focus, .select:focus, .textarea:focus { outline:none; border-color:var(--brand-500); box-shadow:var(--shadow-focus); }
+.input:disabled, .select:disabled { background:var(--neutral-100); color:var(--text-muted); cursor:not-allowed; }
+.input-error { border-color:var(--danger-500); }
+.input-error:focus { box-shadow:0 0 0 3px var(--danger-100); }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:.375rem; font-size:.75rem; font-weight:600;
+  padding:.1875rem .5rem; border-radius:var(--r-full); border:1px solid transparent; line-height:1.3; white-space:nowrap; }
+.badge .dot { width:.4375rem; height:.4375rem; border-radius:50%; background:currentColor; }
+.badge-neutral { background:var(--neutral-100); color:var(--neutral-600); border-color:var(--neutral-200); }
+.badge-success { background:var(--success-50); color:var(--success-700); border-color:var(--success-100); }
+.badge-warning { background:var(--warning-50); color:var(--warning-700); border-color:var(--warning-100); }
+.badge-danger  { background:var(--danger-50);  color:var(--danger-700);  border-color:var(--danger-100); }
+.badge-info    { background:var(--info-50);    color:var(--info-700);    border-color:var(--info-100); }
+.badge-brand   { background:var(--brand-50);   color:var(--brand-700);   border-color:var(--brand-100); }
+
+/* Card */
+.card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); }
+.card-pad { padding:1.25rem 1.5rem; }
+.card-header { padding:1.125rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.card-title { font-size:.9375rem; font-weight:700; letter-spacing:-.01em; }
+
+/* Table */
+.table { width:100%; border-collapse:separate; border-spacing:0; font-size:.875rem; }
+.table thead th { text-align:left; font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--text-muted); padding:.625rem 1rem; background:var(--neutral-50); border-bottom:1px solid var(--border); white-space:nowrap; }
+.table tbody td { padding:.875rem 1rem; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle; }
+.table tbody tr:last-child td { border-bottom:none; }
+.table tbody tr { transition:background .12s; }
+.table tbody tr:hover { background:var(--neutral-50); }
+.table-row-link { cursor:pointer; }
+
+/* Responsive table → cards on mobile.
+   Mark cells: data-label="…" (key), data-primary (header cell, no label),
+   data-hide-m (hidden on mobile). */
+@media (max-width:640px){
+  .rtable thead{ display:none; }
+  .rtable, .rtable tbody, .rtable tr, .rtable td{ display:block; width:100%; }
+  .rtable tr{ border:1px solid var(--border); border-radius:var(--r-lg); margin-bottom:.6rem;
+    padding:.35rem .9rem .55rem; background:var(--bg-surface); box-shadow:var(--shadow-xs); }
+  .rtable tbody tr:hover{ background:var(--bg-surface); }
+  .rtable td{ border:0!important; padding:.42rem 0; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .rtable td::before{ content:attr(data-label); font-size:.68rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.04em; color:var(--text-muted); flex:none; }
+  .rtable td > *{ text-align:right; margin-left:auto; }
+  .rtable td[data-primary]{ justify-content:flex-start; padding:.65rem 0 .55rem; margin-bottom:.25rem;
+    border-bottom:1px solid var(--border)!important; }
+  .rtable td[data-primary]::before{ display:none; }
+  .rtable td[data-primary] > *{ text-align:left; margin-left:0; }
+  .rtable td[data-hide-m]{ display:none!important; }
+}
+
+/* Sticky bottom action bar (mobile forms) */
+.action-bar-d{ display:flex; align-items:center; justify-content:flex-end; gap:.75rem; padding-bottom:1rem; }
+.action-bar-m{ display:none; }
+@media (max-width:640px){
+  .action-bar-d{ display:none; }
+  .action-bar-m{ display:flex; position:sticky; bottom:0; gap:.6rem; padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
+    background:color-mix(in srgb,var(--bg-surface) 92%,transparent); backdrop-filter:blur(8px);
+    border-top:1px solid var(--border); margin:0 -1rem -1rem; z-index:20; }
+}
+
+/* Avatar */
+.avatar { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-full);
+  background:var(--brand-100); color:var(--brand-700); font-weight:700; overflow:hidden; flex:none; }
+
+/* Misc */
+.divider { height:1px; background:var(--border); border:0; }
+.kbd { font-family:var(--font-mono); font-size:.6875rem; background:var(--neutral-100); border:1px solid var(--border);
+  border-bottom-width:2px; border-radius:var(--r-sm); padding:.125rem .375rem; color:var(--text-muted); }
+
+/* Fade/stagger entrance */
+@keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.rise { animation:rise .5s cubic-bezier(.16,1,.3,1) both; }
