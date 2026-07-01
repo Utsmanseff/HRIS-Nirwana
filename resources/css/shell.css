@@ -28,9 +28,20 @@
   body.sb-open::after{ content:''; position:fixed; inset:0; background:rgba(20,26,28,.45); z-index:40; }
 }
 
-/* Sidebar collapsed (rail) — hanya efektif di desktop; mobile pakai drawer di atas */
-.sb-collapsed{ grid-template-columns:72px 1fr; }
-.sb-collapsed .sidebar .sb-label{ display:none; }
-.sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
-.sb-collapsed .sidebar .sb-brand{ justify-content:center; }
-.sb-collapsed .sidebar .nv-badge{ display:none; }
+/* Tombol toggle rail (data-sb-toggle) hanya tampil desktop. Ditulis sebagai CSS polos
+   (bukan util Tailwind hidden/lg:*) karena util Tailwind di-emit dalam @layer dan kalah
+   cascade terhadap .btn (CSS polos tanpa layer) pada proyek ini — util display:none/flex
+   dari Tailwind tak akan menang melawan .btn{display:inline-flex}. */
+[data-sb-toggle]{ display:none; }
+
+/* Sidebar collapsed (rail) — hanya efektif di desktop; mobile pakai drawer di atas.
+   Guarded by min-width:1025px agar tak pernah menimpa .app-shell{grid-template-columns:1fr}
+   dari media query mobile di atas (specificity sama, source order akan menang tanpa guard ini). */
+@media (min-width:1025px){
+  [data-sb-toggle]{ display:inline-flex; }
+  .sb-collapsed{ grid-template-columns:72px 1fr; }
+  .sb-collapsed .sidebar .sb-label{ display:none; }
+  .sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
+  .sb-collapsed .sidebar .sb-brand{ justify-content:center; }
+  .sb-collapsed .sidebar .nv-badge{ display:none; }
+}
