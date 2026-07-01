@@ -1,28 +1,57 @@
-<div class="card card-pad" style="background:var(--panel-glow),var(--panel-grad);border:0;color:var(--on-panel)">
-    <div class="flex items-center gap-3 mb-6">
-        <span class="grid place-items-center w-11 h-11 rounded-xl bg-white"><x-logo :size="26" /></span>
-        <div>
-            <div class="font-extrabold text-lg tracking-tight">Nirwana<span class="text-brand-300">HRIS</span></div>
-            <div class="text-xs" style="color:var(--on-panel-muted)">RSU Nirwana</div>
+<div class="auth">
+    <div class="auth-brand">
+        <div class="auth-grain"></div>
+        <div class="flex items-center gap-3">
+            <span class="grid place-items-center w-11 h-11 rounded-xl shadow-sm bg-white"><x-logo :size="26" /></span>
+            <div>
+                <div class="font-extrabold text-lg tracking-tight">Nirwana<span class="text-brand-200">HRIS</span></div>
+                <div class="text-[11px] text-brand-200/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
+            </div>
+        </div>
+        <div class="max-w-sm">
+            <h2 class="text-[2rem] font-extrabold leading-tight tracking-tight mb-3">Satu sistem untuk seluruh kepegawaian.</h2>
+            <p class="text-white/60 text-[15px] leading-relaxed">Data karyawan, kontrak, cuti, absensi, hingga aset — terpusat, rapi, tanpa input ganda.</p>
+        </div>
+        <div class="text-xs text-white/40">© {{ date('Y') }} RSU Nirwana · Internal use only</div>
+    </div>
+
+    <div class="auth-form">
+        <div class="w-full max-w-sm rise">
+            <div class="mb-6">
+                <h1 class="text-2xl font-extrabold tracking-tight mb-1">Masuk ke akun Anda</h1>
+                <p class="text-neutral-500 text-sm">Gunakan akun Google kantor, atau NIP &amp; kata sandi.</p>
+            </div>
+
+            {{-- Aksi utama: Google --}}
+            <a href="{{ route('auth.google') }}" class="btn btn-primary btn-lg w-full gap-2">
+                <x-icon name="user" :size="18" /> Masuk dengan Google
+            </a>
+
+            <div class="flex items-center gap-3 my-5 text-neutral-400">
+                <div class="flex-1 h-px bg-neutral-200"></div><span class="text-xs">atau pakai NIP</span><div class="flex-1 h-px bg-neutral-200"></div>
+            </div>
+
+            {{-- Alternatif: NIP + kata sandi --}}
+            <form wire:submit="login" class="space-y-4">
+                <div>
+                    <label class="field-label">NIP</label>
+                    <input wire:model="nip" class="input font-mono @error('nip') input-error @enderror" placeholder="1990.04.21.001" autocomplete="username">
+                    @error('nip') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="field-label">Kata sandi</label>
+                    <input wire:model="password" type="password" class="input" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <label class="flex items-center gap-2 text-sm text-neutral-600">
+                    <input wire:model="remember" type="checkbox" class="w-4 h-4 accent-brand-500"> <span>Ingat saya</span>
+                </label>
+                <button type="submit" class="btn btn-secondary w-full">Masuk dengan NIP</button>
+            </form>
+
+            <p class="mt-6 text-xs text-neutral-400 leading-relaxed">
+                Belum terhubung? Masuk dengan Google lalu hubungkan data karyawanmu.
+                Aplikasi bisa dipasang ke layar utama (PWA).
+            </p>
         </div>
     </div>
-    <form wire:submit="login" class="space-y-4">
-        <div>
-            <label class="field-label" style="color:var(--on-panel)">NIP</label>
-            <input wire:model="nip" class="input font-mono @error('nip') input-error @enderror" placeholder="1990.04.21.001" autofocus>
-            @error('nip') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
-        </div>
-        <div>
-            <label class="field-label" style="color:var(--on-panel)">Kata sandi</label>
-            <input wire:model="password" type="password" class="input" placeholder="••••••••">
-        </div>
-        <label class="flex items-center gap-2 text-sm" style="color:var(--on-panel-muted)">
-            <input wire:model="remember" type="checkbox"> <span>Ingat saya</span>
-        </label>
-        <button type="submit" class="btn btn-primary w-full">Masuk</button>
-    </form>
-    <div class="flex items-center gap-3 my-5" style="color:var(--on-panel-muted)">
-        <div class="flex-1 h-px" style="background:rgba(255,255,255,.15)"></div><span class="text-xs">atau</span><div class="flex-1 h-px" style="background:rgba(255,255,255,.15)"></div>
-    </div>
-    <a href="{{ route('auth.google') }}" class="btn btn-secondary w-full">Masuk dengan Google</a>
 </div>

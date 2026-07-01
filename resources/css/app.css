@@ -2,6 +2,7 @@
 @import './theme.css';
 @import './shell.css';
 @import './mobile.css';
+@import './auth.css';
 
 /* Scan Blade + Livewire + compiled views for utility classes */
 @source '../**/*.blade.php';
