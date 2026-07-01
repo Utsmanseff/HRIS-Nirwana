@@ -7,5 +7,5 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nirwana HRIS">
-<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
-<link rel="apple-touch-icon" href="/icons/icon.svg">
+<link rel="icon" type="image/png" href="/img/android-chrome-192x192.png">
+<link rel="apple-touch-icon" href="/img/android-chrome-192x192.png">
