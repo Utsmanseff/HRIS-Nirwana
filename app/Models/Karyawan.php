@@ -28,6 +28,7 @@ class Karyawan extends Model
     {
         return [
             'tanggal_lahir' => 'date', 'tanggal_masuk' => 'date', 'tanggal_nonaktif' => 'date',
+            'sip_berlaku_mulai' => 'date', 'sip_berlaku_akhir' => 'date',
             'jenis_kelamin' => JenisKelamin::class, 'status_nikah' => StatusNikah::class,
             'status' => StatusKaryawan::class, 'alasan_nonaktif' => AlasanNonaktif::class,
         ];

@@ -29,4 +29,14 @@ class KaryawanFactory extends Factory
             'status' => 'aktif',
         ];
     }
+
+    /** Karyawan nakes dengan SIP terisi (berlaku, belum habis). */
+    public function withSip(): static
+    {
+        return $this->state(fn () => [
+            'sip_nomor' => 'SIP/'.$this->faker->numberBetween(100, 999).'/'.now()->year,
+            'sip_berlaku_mulai' => now()->subYears(2),
+            'sip_berlaku_akhir' => now()->addYears(3),
+        ]);
+    }
 }
