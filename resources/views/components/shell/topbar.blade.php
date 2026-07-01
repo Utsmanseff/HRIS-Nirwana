@@ -30,10 +30,7 @@
 
     <x-theme-toggle class="btn btn-ghost btn-icon" />
 
-    <button type="button" class="btn btn-ghost btn-icon relative" aria-label="notifikasi">
-        <x-icon name="bell" :size="20" />
-        <span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-danger-500 text-white text-[9px] font-bold grid place-items-center">3</span>
-    </button>
+    <livewire:notification-bell />
 
     <span class="avatar w-9 h-9 text-xs md:hidden">{{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}</span>
 </header>
