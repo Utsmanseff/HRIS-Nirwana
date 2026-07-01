@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
 
         return redirect('/login');
     })->name('logout');
+
+    // Simpan langganan Web Push milik device user (multi-device).
+    Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])->name('push.subscribe');
 });
 
 // --- App: auth + claimed gated routes ---
