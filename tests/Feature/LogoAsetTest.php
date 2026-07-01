@@ -7,10 +7,13 @@ use Tests\TestCase;
 
 class LogoAsetTest extends TestCase
 {
-    public function test_komponen_logo_render_gambar_wordmark_asli(): void
+    public function test_komponen_logo_render_mark_persegi_bukan_wordmark(): void
     {
         $html = Blade::render('<x-logo />');
-        $this->assertStringContainsString('RSU22Nirwana.png', $html);
+        // <x-logo> = mark persegi (android-chrome), dipakai di wadah persegi sidebar/login/appbar.
+        $this->assertStringContainsString('android-chrome-192x192.png', $html);
+        // Wordmark horizontal HANYA untuk kop ekspor — tidak boleh muncul di komponen ini.
+        $this->assertStringNotContainsString('RSU22Nirwana.png', $html);
         $this->assertStringNotContainsString('<svg', $html);
     }
 

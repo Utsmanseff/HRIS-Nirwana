@@ -2,14 +2,21 @@
    App Shell (ADMIN / HR desktop) — ported from docs/mockups/assets/shell.js
    Sidebar + topbar. Sidebar surface stays dark in both themes (fixed hex).
    ============================================================ */
-.app-shell{ display:grid; grid-template-columns:264px 1fr; min-height:100vh; }
-.sidebar{ background:#0d1413; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
+/* Lebar kolom sidebar sebagai custom property BER-TIPE agar bisa dianimasi mulus.
+   (Menganimasi grid-template-columns langsung tak jalan andal di Chromium — track fr
+   membuat transisi macet; --sb-track sebagai <length> beres.) inherits:true agar nilai
+   yang sedang beranimasi diwarisi .sidebar (width:var) → kolom & sidebar bergerak seiring. */
+@property --sb-track{ syntax:'<length>'; inherits:true; initial-value:264px; }
+.app-shell{ --sb-track:264px; display:grid; grid-template-columns:var(--sb-track) 1fr; min-height:100vh;
+  transition:--sb-track .24s cubic-bezier(.4,0,.2,1); }
+.sidebar{ background:#0d1413; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; width:var(--sb-track); z-index:40;
+  transition:width .24s cubic-bezier(.4,0,.2,1), box-shadow .24s ease; }
 .sb-brand{ display:flex; align-items:center; gap:.7rem; padding:1.1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.08); }
 .sb-logo{ display:grid; place-items:center; width:38px; height:38px; border-radius:11px; box-shadow:var(--shadow-sm);
   background:#fff; flex:none; }
 .nv-group{ font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.32); padding:.5rem .6rem .35rem; }
 .sidebar .nv-item{ display:flex; align-items:center; gap:.7rem; padding:.5rem .6rem; border-radius:var(--r-md); font-size:.85rem; font-weight:500;
-  color:rgba(255,255,255,.62); transition:background .14s,color .14s; }
+  white-space:nowrap; color:rgba(255,255,255,.62); transition:background .14s,color .14s; }
 .sidebar .nv-item:hover{ background:rgba(255,255,255,.06); color:#fff; }
 .nv-ic{ width:18px; height:18px; flex:none; opacity:.9; }
 .nv-ic svg{ width:18px; height:18px; }
@@ -28,33 +35,57 @@
   body.sb-open::after{ content:''; position:fixed; inset:0; background:rgba(20,26,28,.45); z-index:40; }
 }
 
-/* Tombol toggle rail (data-sb-toggle) hanya tampil desktop. Ditulis sebagai CSS polos
-   (bukan util Tailwind hidden/lg:*) karena util Tailwind di-emit dalam @layer dan kalah
-   cascade terhadap .btn (CSS polos tanpa layer) pada proyek ini — util display:none/flex
-   dari Tailwind tak akan menang melawan .btn{display:inline-flex}. */
+/* Tombol toggle (data-sb-toggle) — CSS polos (bukan util Tailwind hidden/lg:*) karena util
+   Tailwind di-emit dalam @layer & kalah cascade vs .btn (CSS polos tanpa layer) di proyek ini.
+   Default sembunyi; ditampilkan per-state di bawah (desktop). */
 [data-sb-toggle]{ display:none; }
 
-/* Sidebar collapsed (rail) — hanya efektif di desktop; mobile pakai drawer di atas.
-   Guarded by min-width:1025px agar tak pernah menimpa .app-shell{grid-template-columns:1fr}
-   dari media query mobile di atas (specificity sama, source order akan menang tanpa guard ini).
+/* ── Sidebar collapse: rail + hover-peek — DESKTOP saja (min-width:1025px) ─────────────
+   Guard min-width:1025px agar tak menimpa .app-shell{grid-template-columns:1fr} dari media
+   query mobile di atas (mobile pakai drawer off-canvas, bukan rail).
 
-   Dua selector dipakai bareng dengan aturan identik:
-   - html[data-sidebar="collapsed"] .app-shell — di-set oleh partials/sidebar-init.blade.php,
-     inline <script> sinkron di <head> (jalan sebelum paint pertama & sebelum Alpine termuat).
-     Ini sumber kebenaran untuk render awal — zero flash walau Alpine belum boot.
-   - .app-shell.sb-collapsed — di-set oleh Alpine (x-data collapsed) saat tombol toggle
-     diklik, untuk transisi instan tanpa reload. Klik handler juga menulis
-     document.documentElement.dataset.sidebar agar kedua sumber tetap sinkron. */
+   Sumber state ganda (aturan identik, di-OR):
+   - html[data-sidebar="collapsed"] — di-set partials/sidebar-init.blade.php (inline <script>
+     sinkron di <head>): sumber render awal → zero flash walau Alpine belum boot.
+   - .app-shell.sb-collapsed — di-set Alpine saat toggle diklik (transisi instan tanpa reload).
+     Klik handler juga menulis dataset.sidebar agar dua sumber tetap sinkron.
+
+   Konsep interaksi (sesuai permintaan):
+   1. Expanded (pinned): sidebar 264px penuh, toggle tampil → klik = collapse.
+   2. Collapsed: rail 72px (ikon saja); label + toggle sembunyi.
+   3. Collapsed + HOVER: sidebar melebar 264px sebagai FLYOUT OVERLAY (grid tetap 72px →
+      sidebar menutupi konten, tidak mendorongnya) + label & toggle muncul → klik toggle =
+      pin balik ke expanded. Lepas hover = balik rail. Transisi width halus (.sidebar). */
 @media (min-width:1025px){
+  /* Expanded (pinned): toggle tampil */
   [data-sb-toggle]{ display:inline-flex; }
+
+  /* Collapsed → rail 72px (kolom & lebar sidebar ikut var --sb-track, dianimasi) */
   html[data-sidebar="collapsed"] .app-shell,
-  .app-shell.sb-collapsed{ grid-template-columns:72px 1fr; }
-  html[data-sidebar="collapsed"] .app-shell .sidebar .sb-label,
+  .app-shell.sb-collapsed{ --sb-track:72px; }
+  html[data-sidebar="collapsed"] .sidebar .sb-label,
   .app-shell.sb-collapsed .sidebar .sb-label{ display:none; }
-  html[data-sidebar="collapsed"] .app-shell .sidebar .nv-item,
+  html[data-sidebar="collapsed"] .sidebar .nv-item,
   .app-shell.sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
-  html[data-sidebar="collapsed"] .app-shell .sidebar .sb-brand,
+  html[data-sidebar="collapsed"] .sidebar .sb-brand,
   .app-shell.sb-collapsed .sidebar .sb-brand{ justify-content:center; }
-  html[data-sidebar="collapsed"] .app-shell .sidebar .nv-badge,
+  html[data-sidebar="collapsed"] .sidebar .nv-badge,
   .app-shell.sb-collapsed .sidebar .nv-badge{ display:none; }
+  /* Rail (tidak di-hover): toggle sembunyi */
+  html[data-sidebar="collapsed"] .sidebar [data-sb-toggle],
+  .app-shell.sb-collapsed .sidebar [data-sb-toggle]{ display:none; }
+
+  /* Collapsed + HOVER → flyout overlay: pulihkan tampilan expanded */
+  html[data-sidebar="collapsed"] .sidebar:hover,
+  .app-shell.sb-collapsed .sidebar:hover{ width:264px; box-shadow:0 12px 48px rgba(0,0,0,.5); }
+  html[data-sidebar="collapsed"] .sidebar:hover .sb-label,
+  .app-shell.sb-collapsed .sidebar:hover .sb-label{ display:block; }
+  html[data-sidebar="collapsed"] .sidebar:hover .nv-item,
+  .app-shell.sb-collapsed .sidebar:hover .nv-item{ justify-content:flex-start; padding-left:.6rem; padding-right:.6rem; }
+  html[data-sidebar="collapsed"] .sidebar:hover .sb-brand,
+  .app-shell.sb-collapsed .sidebar:hover .sb-brand{ justify-content:flex-start; }
+  html[data-sidebar="collapsed"] .sidebar:hover .nv-badge,
+  .app-shell.sb-collapsed .sidebar:hover .nv-badge{ display:grid; }
+  html[data-sidebar="collapsed"] .sidebar:hover [data-sb-toggle],
+  .app-shell.sb-collapsed .sidebar:hover [data-sb-toggle]{ display:inline-flex; }
 }
