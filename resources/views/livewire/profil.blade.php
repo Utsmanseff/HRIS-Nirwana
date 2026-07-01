@@ -87,4 +87,11 @@
             <div class="pt-1"><button type="submit" class="btn btn-primary btn-sm">Simpan Kata Sandi</button></div>
         </form>
     </div>
+
+    {{-- Notifikasi perangkat --}}
+    <div class="card card-pad">
+        <div class="card-title mb-1">Notifikasi</div>
+        <p class="text-sm text-neutral-500 mb-3">Aktifkan notifikasi push agar pengingat penting muncul di perangkat ini.</p>
+        <x-push-subscribe />
+    </div>
 </div>

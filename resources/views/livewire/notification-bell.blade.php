@@ -15,10 +15,6 @@
             @endif
         </div>
 
-        <div class="px-3 py-2 border-b border-neutral-200">
-            <x-push-subscribe />
-        </div>
-
         <div class="max-h-96 overflow-y-auto divide-y divide-neutral-100">
             @forelse ($daftar as $n)
                 <a href="{{ $n->data['url'] ?? '#' }}" wire:click="tandaiDibaca('{{ $n->id }}')"

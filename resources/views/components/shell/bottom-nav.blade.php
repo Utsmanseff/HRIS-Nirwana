@@ -5,7 +5,7 @@
         ['id' => 'beranda', 'label' => 'Beranda', 'href' => '#', 'icon' => 'home'],
         ['id' => 'riwayat', 'label' => 'Riwayat', 'href' => '#', 'icon' => 'history'],
         ['id' => 'notif', 'label' => 'Notifikasi', 'href' => '#', 'icon' => 'bell', 'badge' => 3],
-        ['id' => 'profil', 'label' => 'Profil', 'href' => '#', 'icon' => 'user'],
+        ['id' => 'profil', 'label' => 'Profil', 'href' => route('profil'), 'icon' => 'user'],
     ];
 @endphp
 <nav class="m-nav">

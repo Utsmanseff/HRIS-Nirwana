@@ -69,7 +69,7 @@
     </nav>
 
     <div class="p-3 border-t border-white/10">
-        <div class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
+        <a href="{{ route('profil') }}" title="Profil Saya" class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
             <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
                 {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
             </span>
@@ -78,6 +78,6 @@
                 <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
             </div>
             <svg width="16" class="text-brand-200/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-        </div>
+        </a>
     </div>
 </aside>
