@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
+use App\Livewire\Profil;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,12 +34,13 @@ Route::middleware('auth')->group(function () {
     })->name('logout');
 
     // Simpan langganan Web Push milik device user (multi-device).
-    Route::post('/push/subscribe', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])->name('push.subscribe');
+    Route::post('/push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
 });
 
 // --- App: auth + claimed gated routes ---
 Route::middleware(['auth', 'claimed'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/profil', Profil::class)->name('profil');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
         // Placeholder; UI asli dibangun di Fase 1b.
