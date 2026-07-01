@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.guest')]
+#[Layout('components.layouts.auth')]
 class Klaim extends Component
 {
     public string $q = '';
