@@ -36,7 +36,10 @@
         <button type="button" data-sb-toggle
                 class="btn btn-ghost btn-icon ml-auto text-white/70 hover:text-white"
                 aria-label="Ciutkan sidebar"
-                @click="collapsed = !collapsed; localStorage.setItem('nirwana-sidebar', collapsed ? 'collapsed' : 'expanded')">
+                :aria-label="collapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'"
+                @click="collapsed = !collapsed;
+                        document.documentElement.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
+                        localStorage.setItem('nirwana-sidebar', collapsed ? 'collapsed' : 'expanded')">
             <x-icon name="menu" :size="18" stroke-width="2" />
         </button>
     </div>

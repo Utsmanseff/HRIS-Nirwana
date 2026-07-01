@@ -36,12 +36,25 @@
 
 /* Sidebar collapsed (rail) — hanya efektif di desktop; mobile pakai drawer di atas.
    Guarded by min-width:1025px agar tak pernah menimpa .app-shell{grid-template-columns:1fr}
-   dari media query mobile di atas (specificity sama, source order akan menang tanpa guard ini). */
+   dari media query mobile di atas (specificity sama, source order akan menang tanpa guard ini).
+
+   Dua selector dipakai bareng dengan aturan identik:
+   - html[data-sidebar="collapsed"] .app-shell — di-set oleh partials/sidebar-init.blade.php,
+     inline <script> sinkron di <head> (jalan sebelum paint pertama & sebelum Alpine termuat).
+     Ini sumber kebenaran untuk render awal — zero flash walau Alpine belum boot.
+   - .app-shell.sb-collapsed — di-set oleh Alpine (x-data collapsed) saat tombol toggle
+     diklik, untuk transisi instan tanpa reload. Klik handler juga menulis
+     document.documentElement.dataset.sidebar agar kedua sumber tetap sinkron. */
 @media (min-width:1025px){
   [data-sb-toggle]{ display:inline-flex; }
-  .sb-collapsed{ grid-template-columns:72px 1fr; }
-  .sb-collapsed .sidebar .sb-label{ display:none; }
-  .sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
-  .sb-collapsed .sidebar .sb-brand{ justify-content:center; }
-  .sb-collapsed .sidebar .nv-badge{ display:none; }
+  html[data-sidebar="collapsed"] .app-shell,
+  .app-shell.sb-collapsed{ grid-template-columns:72px 1fr; }
+  html[data-sidebar="collapsed"] .app-shell .sidebar .sb-label,
+  .app-shell.sb-collapsed .sidebar .sb-label{ display:none; }
+  html[data-sidebar="collapsed"] .app-shell .sidebar .nv-item,
+  .app-shell.sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
+  html[data-sidebar="collapsed"] .app-shell .sidebar .sb-brand,
+  .app-shell.sb-collapsed .sidebar .sb-brand{ justify-content:center; }
+  html[data-sidebar="collapsed"] .app-shell .sidebar .nv-badge,
+  .app-shell.sb-collapsed .sidebar .nv-badge{ display:none; }
 }

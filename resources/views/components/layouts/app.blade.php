@@ -8,6 +8,7 @@
     <title>{{ $title ? $title . ' · ' : '' }}{{ config('app.name', 'Nirwana HRIS') }}</title>
 
     @include('partials.theme-init')
+    @include('partials.sidebar-init')
     @include('partials.pwa-head')
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,8 +16,7 @@
 </head>
 <body data-active="{{ $active }}">
     <div class="app-shell"
-         x-data="{ collapsed: false }"
-         x-init="collapsed = localStorage.getItem('nirwana-sidebar') === 'collapsed'"
+         x-data="{ collapsed: document.documentElement.dataset.sidebar === 'collapsed' }"
          :class="{ 'sb-collapsed': collapsed }">
         <x-shell.sidebar :active="$active" />
         <div class="min-w-0 flex flex-col">

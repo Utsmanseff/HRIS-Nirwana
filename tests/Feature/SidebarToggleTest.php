@@ -23,6 +23,7 @@ class SidebarToggleTest extends TestCase
         $res = $this->actingAs($user)->get('/dashboard');
         $res->assertOk();
         $res->assertSee('data-sb-toggle', false);          // tombol toggle sidebar
-        $res->assertSee("localStorage.getItem('nirwana-sidebar')", false); // init state no-flash
+        $res->assertSee("var KEY = 'nirwana-sidebar'", false); // init state no-flash (head script, pre-paint)
+        $res->assertSee('root.dataset.sidebar', false);    // data attribute dibaca CSS sebelum Alpine boot
     }
 }
