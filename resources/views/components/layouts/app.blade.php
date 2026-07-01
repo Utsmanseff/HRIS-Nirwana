@@ -14,7 +14,10 @@
     @livewireStyles
 </head>
 <body data-active="{{ $active }}">
-    <div class="app-shell">
+    <div class="app-shell"
+         x-data="{ collapsed: false }"
+         x-init="collapsed = localStorage.getItem('nirwana-sidebar') === 'collapsed'"
+         :class="{ 'sb-collapsed': collapsed }">
         <x-shell.sidebar :active="$active" />
         <div class="min-w-0 flex flex-col">
             <x-shell.topbar :title="$title" :breadcrumb="$breadcrumb" />

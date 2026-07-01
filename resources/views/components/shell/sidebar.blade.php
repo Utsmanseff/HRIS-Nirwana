@@ -29,23 +29,29 @@
 <aside class="sidebar">
     <div class="sb-brand">
         <span class="sb-logo"><x-logo :size="24" /></span>
-        <div class="leading-tight">
+        <div class="leading-tight sb-label">
             <div class="font-extrabold text-[15px] tracking-tight text-white">Nirwana<span class="text-brand-200">HRIS</span></div>
             <div class="text-[10px] text-brand-200/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
         </div>
+        <button type="button" data-sb-toggle
+                class="btn btn-ghost btn-icon ml-auto text-white/70 hover:text-white"
+                aria-label="Ciutkan sidebar"
+                @click="collapsed = !collapsed; localStorage.setItem('nirwana-sidebar', collapsed ? 'collapsed' : 'expanded')">
+            <x-icon name="menu" :size="18" stroke-width="2" />
+        </button>
     </div>
 
     <nav class="py-4 flex-1 overflow-y-auto">
         @foreach ($nav as $group)
             <div class="px-3">
                 @if ($group['group'])
-                    <div class="nv-group">{{ $group['group'] }}</div>
+                    <div class="nv-group sb-label">{{ $group['group'] }}</div>
                 @endif
                 <div class="space-y-0.5">
                     @foreach ($group['items'] as $it)
-                        <a href="{{ $it['href'] }}" class="nv-item {{ $it['id'] === $active ? 'nv-active' : '' }}">
+                        <a href="{{ $it['href'] }}" title="{{ $it['label'] }}" class="nv-item {{ $it['id'] === $active ? 'nv-active' : '' }}">
                             <span class="nv-ic"><x-icon :name="$it['icon']" /></span>
-                            <span class="flex-1">{{ $it['label'] }}</span>
+                            <span class="flex-1 sb-label">{{ $it['label'] }}</span>
                             @isset($it['badge'])
                                 <span class="nv-badge">{{ $it['badge'] }}</span>
                             @endisset
@@ -64,7 +70,7 @@
             <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
                 {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
             </span>
-            <div class="leading-tight flex-1 min-w-0">
+            <div class="leading-tight flex-1 min-w-0 sb-label">
                 <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
                 <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
             </div>

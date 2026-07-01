@@ -27,3 +27,10 @@
   body.sb-open .sidebar{ transform:translateX(0); }
   body.sb-open::after{ content:''; position:fixed; inset:0; background:rgba(20,26,28,.45); z-index:40; }
 }
+
+/* Sidebar collapsed (rail) — hanya efektif di desktop; mobile pakai drawer di atas */
+.sb-collapsed{ grid-template-columns:72px 1fr; }
+.sb-collapsed .sidebar .sb-label{ display:none; }
+.sb-collapsed .sidebar .nv-item{ justify-content:center; padding-left:0; padding-right:0; }
+.sb-collapsed .sidebar .sb-brand{ justify-content:center; }
+.sb-collapsed .sidebar .nv-badge{ display:none; }
