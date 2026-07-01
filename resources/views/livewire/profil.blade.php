@@ -32,5 +32,59 @@
         <p class="px-4 pb-3 text-[11px] text-neutral-400">Data pribadi &amp; kepegawaian dikelola SDM. Untuk koreksi, hubungi bagian SDM.</p>
     </div>
 
-    {{-- Kontak + kata sandi + notifikasi ditambahkan di Task 5-7 --}}
+    {{-- Kontak (editable) --}}
+    <div class="card">
+        <div class="card-header"><div class="card-title">Kontak</div></div>
+        <form wire:submit="simpanKontak" class="card-pad space-y-3">
+            @if (session('kontak_ok'))
+                <p class="text-sm text-brand-600">{{ session('kontak_ok') }}</p>
+            @endif
+            <div>
+                <label class="field-label">No. HP</label>
+                <input wire:model="no_hp" class="input font-mono @error('no_hp') input-error @enderror" placeholder="08xxxxxxxxxx">
+                @error('no_hp') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="field-label">Email Pribadi</label>
+                <input wire:model="email" type="email" class="input @error('email') input-error @enderror" placeholder="nama@email.com">
+                @error('email') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="field-label">Alamat</label>
+                <textarea wire:model="alamat" rows="2" class="input @error('alamat') input-error @enderror" placeholder="Alamat domisili"></textarea>
+                @error('alamat') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
+            <div class="pt-1"><button type="submit" class="btn btn-primary btn-sm">Simpan Kontak</button></div>
+        </form>
+        <p class="px-4 pb-3 text-[11px] text-neutral-400">Hanya kontak &amp; alamat yang bisa kamu ubah. Data lain → hubungi SDM.</p>
+    </div>
+
+    {{-- Kata sandi --}}
+    <div class="card">
+        <div class="card-header"><div class="card-title">{{ auth()->user()->password ? 'Ubah Kata Sandi' : 'Buat Kata Sandi' }}</div></div>
+        <form wire:submit="simpanPassword" class="card-pad space-y-3">
+            @if (session('password_ok'))
+                <p class="text-sm text-brand-600">{{ session('password_ok') }}</p>
+            @endif
+            @if (auth()->user()->password)
+                <div>
+                    <label class="field-label">Kata sandi lama</label>
+                    <input wire:model="password_lama" type="password" class="input @error('password_lama') input-error @enderror" autocomplete="current-password">
+                    @error('password_lama') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                </div>
+            @else
+                <p class="text-xs text-neutral-400">Akun Google-mu belum punya kata sandi. Buat satu agar bisa login pakai NIP.</p>
+            @endif
+            <div>
+                <label class="field-label">Kata sandi baru</label>
+                <input wire:model="password" type="password" class="input @error('password') input-error @enderror" autocomplete="new-password">
+                @error('password') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="field-label">Ulangi kata sandi baru</label>
+                <input wire:model="password_confirmation" type="password" class="input" autocomplete="new-password">
+            </div>
+            <div class="pt-1"><button type="submit" class="btn btn-primary btn-sm">Simpan Kata Sandi</button></div>
+        </form>
+    </div>
 </div>
