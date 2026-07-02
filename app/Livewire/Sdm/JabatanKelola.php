@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sdm;
 
+use App\Models\Jabatan;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -10,6 +11,10 @@ class JabatanKelola extends Component
 {
     public function render()
     {
-        return view('livewire.sdm.jabatan-kelola');
+        $jabatan = Jabatan::query()
+            ->withCount('karyawan')
+            ->orderBy('level')->orderBy('nama')->get();
+
+        return view('livewire.sdm.jabatan-kelola', ['jabatan' => $jabatan]);
     }
 }
