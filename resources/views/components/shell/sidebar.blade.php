@@ -9,8 +9,9 @@
             ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => route('sdm.karyawan'), 'icon' => 'users'],
             ['id' => 'struktur', 'label' => 'Struktur Organisasi', 'href' => route('sdm.struktur'), 'icon' => 'tree'],
             ['id' => 'jabatan', 'label' => 'Jabatan & Level', 'href' => route('sdm.jabatan'), 'icon' => 'badge'],
-            ['id' => 'kontrak', 'label' => 'Kontrak & Pengingat', 'href' => '#', 'icon' => 'doc'],
-            ['id' => 'dokumen', 'label' => 'Dokumen', 'href' => '#', 'icon' => 'folder'],
+            // 'Kontrak & Pengingat' & 'Dokumen' sengaja TIDAK ada: kontrak/dokumen
+            // dikelola per-karyawan (tab detail), pengingat tampil di Dashboard —
+            // satu informasi satu tempat (keputusan 2026-07-02).
         ]],
         ['group' => 'Operasional', 'items' => [
             ['id' => 'cuti', 'label' => 'Cuti', 'href' => '#', 'icon' => 'calendar'],
