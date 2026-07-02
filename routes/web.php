@@ -28,7 +28,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // --- Auth: authenticated routes ---
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'aktif'])->group(function () {
     Route::get('/klaim', Klaim::class)->name('klaim');
     // Logout didefinisikan di sini karena view klaim memakai route('logout').
     Route::post('/logout', function () {
@@ -44,7 +44,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // --- App: auth + claimed gated routes ---
-Route::middleware(['auth', 'claimed'])->group(function () {
+Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::get('/profil', Profil::class)->name('profil');
 

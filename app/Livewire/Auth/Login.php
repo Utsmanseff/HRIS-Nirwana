@@ -28,6 +28,10 @@ class Login extends Component
             throw ValidationException::withMessages(['nip' => 'NIP atau kata sandi salah.']);
         }
 
+        if (! $user->akunAktif()) {
+            throw ValidationException::withMessages(['nip' => 'Akun dinonaktifkan. Hubungi admin sistem.']);
+        }
+
         Auth::login($user, $this->remember);
         session()->regenerate();
 

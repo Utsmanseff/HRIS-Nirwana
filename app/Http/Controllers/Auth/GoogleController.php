@@ -35,6 +35,10 @@ class GoogleController extends Controller
             $user->update(['google_id' => $g->getId(), 'avatar_url' => $g->getAvatar()]);
         }
 
+        if (! $user->akunAktif()) {
+            return redirect('/login')->withErrors(['nip' => 'Akun dinonaktifkan. Hubungi admin sistem.']);
+        }
+
         Auth::login($user, true);
         session()->regenerate();
 
