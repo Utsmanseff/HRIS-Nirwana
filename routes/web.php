@@ -6,6 +6,7 @@ use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
 use App\Livewire\Profil;
 use App\Livewire\Sdm\JabatanKelola;
+use App\Livewire\Sdm\KaryawanIndex;
 use App\Livewire\Sdm\OrgStruktur;
 use Illuminate\Support\Facades\Route;
 
@@ -45,8 +46,7 @@ Route::middleware(['auth', 'claimed'])->group(function () {
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
-        // Placeholder; UI asli dibangun di Fase 1b.
-        Route::view('/sdm/karyawan', 'dashboard')->name('sdm.karyawan');
+        Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
     });

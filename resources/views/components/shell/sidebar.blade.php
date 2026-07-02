@@ -6,7 +6,7 @@
             ['id' => 'dashboard', 'label' => 'Dashboard', 'href' => '#', 'icon' => 'grid'],
         ]],
         ['group' => 'SDM', 'items' => [
-            ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => '#', 'icon' => 'users'],
+            ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => route('sdm.karyawan'), 'icon' => 'users'],
             ['id' => 'struktur', 'label' => 'Struktur Organisasi', 'href' => route('sdm.struktur'), 'icon' => 'tree'],
             ['id' => 'jabatan', 'label' => 'Jabatan & Level', 'href' => route('sdm.jabatan'), 'icon' => 'badge'],
             ['id' => 'kontrak', 'label' => 'Kontrak & Pengingat', 'href' => '#', 'icon' => 'doc'],

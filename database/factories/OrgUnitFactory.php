@@ -13,6 +13,7 @@ class OrgUnitFactory extends Factory
 
     public function definition(): array
     {
-        return ['parent_id' => null, 'nama' => $this->faker->unique()->randomElement(['Farmasi', 'Lab', 'IT', 'Kesling', 'Keperawatan', 'Keuangan']), 'tipe' => 'divisi', 'aktif' => true];
+        // Pool nama besar — unique()->randomElement 6 opsi habis saat test membuat banyak karyawan.
+        return ['parent_id' => null, 'nama' => $this->faker->unique()->numerify('Divisi ###'), 'tipe' => 'divisi', 'aktif' => true];
     }
 }
