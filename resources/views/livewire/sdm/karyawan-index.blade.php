@@ -18,19 +18,20 @@
                 {{-- padding-left inline: util pl-9 kalah dari padding .input (CSS unlayered menang atas @layer utilities) --}}
                 <input wire:model.live.debounce.300ms="cari" class="input" style="padding-left:2.35rem" placeholder="Cari nama atau NIP…">
             </div>
-            <select wire:model.live="unitId" class="select w-auto">
+            {{-- width inline: util w-auto kalah dari width:100% .select (CSS unlayered menang atas @layer utilities) --}}
+            <select wire:model.live="unitId" class="select" style="width:auto">
                 <option value="">Semua Unit</option>
                 @foreach ($unitOptions as $u)
                     <option value="{{ $u->id }}">{{ $u->nama }}</option>
                 @endforeach
             </select>
-            <select wire:model.live="level" class="select w-auto">
+            <select wire:model.live="level" class="select" style="width:auto">
                 <option value="">Semua Level</option>
                 @foreach ($levelOptions as $lv)
                     <option value="{{ $lv->value }}">L{{ $lv->value }} · {{ ucfirst($lv->name) }}</option>
                 @endforeach
             </select>
-            <select wire:model.live="kontrakJenis" class="select w-auto">
+            <select wire:model.live="kontrakJenis" class="select" style="width:auto">
                 <option value="">Semua Kontrak</option>
                 @foreach ($kontrakOptions as $jk)
                     <option value="{{ $jk->value }}">{{ $jk->label() }}</option>
@@ -51,7 +52,7 @@
                     <span class="w-5 h-5 rounded-full bg-brand-500 text-white grid place-items-center text-[11px] tnum">{{ count($pilihan) }}</span>dipilih
                 </span>
                 <div class="w-px h-5 bg-brand-200 mx-1"></div>
-                <select wire:model="unitTujuan" class="select w-auto">
+                <select wire:model="unitTujuan" class="select" style="width:auto">
                     <option value="">Pindah ke unit…</option>
                     @foreach ($unitOptions as $u)
                         <option value="{{ $u->id }}">{{ $u->nama }}</option>
