@@ -64,7 +64,7 @@
             <tbody>
                 @forelse ($karyawan as $k)
                     @php [$badgeTeks, $badgeKelas] = $this->badgeKontrak($k); @endphp
-                    <tr class="table-row-link">
+                    <tr class="table-row-link" onclick="window.location='{{ route('sdm.karyawan.detail', $k) }}'">
                         <td onclick="event.stopPropagation()"><input type="checkbox" wire:model.live="pilihan" value="{{ $k->id }}" class="w-4 h-4 accent-brand-500"></td>
                         <td>
                             <div class="font-semibold">{{ $k->nama_lengkap }}</div>
