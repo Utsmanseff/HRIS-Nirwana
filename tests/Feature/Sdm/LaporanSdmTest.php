@@ -98,4 +98,19 @@ class LaporanSdmTest extends TestCase
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_daftar_karyawan_punya_link_ekspor_dengan_filter_aktif(): void
+    {
+        $this->actingAs($this->userSdm())
+            ->get('/sdm/karyawan')
+            ->assertSee('/sdm/laporan/karyawan?format=xlsx', false)
+            ->assertSee('/sdm/laporan/karyawan?format=pdf', false);
+    }
+
+    public function test_dashboard_punya_link_ekspor_pengingat(): void
+    {
+        $this->actingAs($this->userSdm())
+            ->get('/dashboard')
+            ->assertSee('/sdm/laporan/pengingat-kontrak?format=xlsx', false);
+    }
 }

@@ -2,7 +2,13 @@
     <div class="flex items-center justify-between">
         <div><h1 class="text-lg font-extrabold tracking-tight">Karyawan</h1>
             <p class="text-sm text-neutral-500">Data induk karyawan RSU Nirwana.</p></div>
-        <a href="{{ route('sdm.karyawan.tambah') }}" class="btn btn-primary btn-sm">+ Tambah Karyawan</a>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('sdm.laporan.karyawan') }}?format=xlsx&cari={{ urlencode($cari) }}&unit_id={{ $unitId }}&level={{ $level }}&kontrak_jenis={{ $kontrakJenis }}&status={{ $status }}"
+               class="btn btn-secondary btn-sm">Ekspor Excel</a>
+            <a href="{{ route('sdm.laporan.karyawan') }}?format=pdf&cari={{ urlencode($cari) }}&unit_id={{ $unitId }}&level={{ $level }}&kontrak_jenis={{ $kontrakJenis }}&status={{ $status }}"
+               class="btn btn-secondary btn-sm">Ekspor PDF</a>
+            <a href="{{ route('sdm.karyawan.tambah') }}" class="btn btn-primary btn-sm">+ Tambah Karyawan</a>
+        </div>
     </div>
 
     <div class="card">

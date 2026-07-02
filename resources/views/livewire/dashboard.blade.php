@@ -47,7 +47,11 @@
                         <div class="card-title">Pengingat Kontrak</div>
                         <div class="text-xs text-neutral-400 mt-0.5">Diturunkan dari kontrak terakhir tiap karyawan.</div>
                     </div>
-                    <a href="{{ route('sdm.karyawan') }}" class="btn btn-ghost btn-sm">Lihat semua</a>
+                    <div class="flex gap-1.5">
+                        <a href="{{ route('sdm.laporan.pengingat') }}?format=xlsx" class="btn btn-ghost btn-sm">Excel</a>
+                        <a href="{{ route('sdm.laporan.pengingat') }}?format=pdf" class="btn btn-ghost btn-sm">PDF</a>
+                        <a href="{{ route('sdm.karyawan') }}" class="btn btn-ghost btn-sm">Lihat semua</a>
+                    </div>
                 </div>
                 @if ($pengingatKontrak->isEmpty())
                     <p class="card-pad text-sm text-neutral-400">Tidak ada kontrak yang butuh perhatian. 🎉</p>
@@ -90,7 +94,7 @@
                     <div class="card-pad grid grid-cols-2 gap-2.5">
                         <a href="{{ route('sdm.karyawan.tambah') }}" class="p-3 rounded-lg border border-neutral-200 text-[13px] font-semibold hover:border-brand-400">+ Karyawan baru</a>
                         <a href="{{ route('sdm.struktur') }}" class="p-3 rounded-lg border border-neutral-200 text-[13px] font-semibold hover:border-brand-400">Atur organisasi</a>
-                        <a href="{{ route('sdm.karyawan') }}" class="p-3 rounded-lg border border-neutral-200 text-[13px] font-semibold hover:border-brand-400">Ekspor laporan</a>
+                        <a href="{{ route('sdm.laporan.karyawan') }}?format=xlsx" class="p-3 rounded-lg border border-neutral-200 text-[13px] font-semibold hover:border-brand-400">Ekspor laporan</a>
                         @can('kelola-rbac')
                             <a href="{{ route('sistem.pengguna') }}" class="p-3 rounded-lg border border-neutral-200 text-[13px] font-semibold hover:border-brand-400">Kelola role</a>
                         @endcan
