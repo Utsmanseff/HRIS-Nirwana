@@ -48,8 +48,36 @@ class DashboardTest extends TestCase
         $this->actingAs($user)->get('/dashboard')
             ->assertOk()
             ->assertSee('Kontrak ≤ 30 Hari')
-            ->assertSee('Terlewat');
-        // assertSee nama karyawan di tabel pengingat — ditambah Task 4
+            ->assertSee('Terlewat')
+            ->assertSee($akan->nama_lengkap)
+            ->assertSee($lewat->nama_lengkap);
+    }
+
+    public function test_tabel_pengingat_urut_terlewat_dulu_dan_link_detail(): void
+    {
+        $user = $this->userSdm();
+        $akan = Karyawan::factory()->create(['nama_lengkap' => 'Akan Berakhir']);
+        Kontrak::factory()->create(['karyawan_id' => $akan->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(11), 'tanggal_akhir' => now()->addDays(10)]);
+        $lewat = Karyawan::factory()->create(['nama_lengkap' => 'Sudah Lewat']);
+        Kontrak::factory()->create(['karyawan_id' => $lewat->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(13), 'tanggal_akhir' => now()->subDays(5)]);
+
+        $this->actingAs($user)->get('/dashboard')->assertOk()
+            ->assertSee(route('sdm.karyawan.detail', $lewat).'?tab=kontrak', false)
+            ->assertSeeInOrder(['Sudah Lewat', 'Akan Berakhir']);
+    }
+
+    public function test_kartu_sip_tampil_bila_ada_yang_hampir_habis(): void
+    {
+        $user = $this->userSdm();
+        Karyawan::factory()->withSip()->create([
+            'nama_lengkap' => 'Perawat Sip',
+            'sip_berlaku_akhir' => now()->addDays(12),
+        ]);
+
+        $this->actingAs($user)->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Pengingat SIP')
+            ->assertSee('Perawat Sip');
     }
 
     public function test_user_tanpa_kelola_sdm_tidak_lihat_stat(): void
