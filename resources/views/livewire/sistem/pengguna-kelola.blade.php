@@ -145,6 +145,61 @@
     @endif
 
     @if ($tab === 'role')
-        <p class="text-sm text-neutral-400">Matriks RBAC menyusul di task berikutnya.</p>
+        {{-- Kartu role --}}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach ($daftarRole as $role)
+                <div class="card card-pad">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="badge {{ $role->name === 'Admin Sistem' ? 'badge-danger' : ($role->name === 'Direktur' ? 'badge-warning' : 'badge-brand') }}">{{ $role->name }}</span>
+                        <span class="text-xs text-neutral-400 font-mono">{{ $role->users_count }} user</span>
+                    </div>
+                    <p class="text-[13px] text-neutral-500 leading-relaxed">{{ $deskripsiRole[$role->name] ?? '' }}</p>
+                </div>
+            @endforeach
+            <div class="card card-pad sm:col-span-2 lg:col-span-3">
+                <p class="text-[13px] text-neutral-500 leading-relaxed">
+                    <b>Atasan / Koordinator / Kabid bukan role.</b> Kemampuan approve cuti &amp; kelola jadwal
+                    diturunkan otomatis dari struktur (punya bawahan via <code>atasan_id</code>, level jabatan) —
+                    tidak perlu dan tidak bisa di-assign di sini.
+                </p>
+            </div>
+        </div>
+
+        {{-- Matriks --}}
+        <div class="card overflow-x-auto">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">Matriks Hak Akses</div>
+                    <div class="text-xs text-neutral-400 mt-0.5">Multi-role: hak = gabungan semua role. Data langsung dari database.</div>
+                </div>
+            </div>
+            <table class="w-full text-sm min-w-[860px]">
+                <thead>
+                    <tr class="text-left text-neutral-400 border-b border-neutral-200">
+                        <th class="px-4 py-2.5 font-semibold">Kemampuan</th>
+                        @foreach ($daftarRole as $role)
+                            <th class="px-3 py-2.5 font-semibold text-center">{{ $role->name }}</th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($daftarPermission as $p)
+                        <tr class="border-b border-neutral-100 last:border-0">
+                            <td class="px-4 py-2.5 font-medium">{{ $labelPermission[$p->value] ?? $p->value }}</td>
+                            @foreach ($daftarRole as $role)
+                                <td class="px-3 py-2.5 text-center">
+                                    @if ($role->name === 'Admin Sistem' || $role->permissions->contains('name', $p->value))
+                                        <span class="font-bold" style="color:var(--brand-600)">✓</span>
+                                    @else
+                                        <span class="text-neutral-300">—</span>
+                                    @endif
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="px-4 py-2.5 text-xs text-neutral-400 border-t border-neutral-100">Kolom Admin Sistem ✓ semua karena bypass RBAC (Gate::before).</div>
+        </div>
     @endif
 </div>

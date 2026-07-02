@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sistem;
 
+use App\Enums\Permission;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -9,11 +10,38 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 #[Layout('components.layouts.app')]
 class PenggunaKelola extends Component
 {
     use WithPagination;
+
+    /** Deskripsi singkat per role untuk kartu di tab Role. */
+    private const DESKRIPSI_ROLE = [
+        'Karyawan' => 'Role dasar semua orang — lihat data sendiri, ajukan cuti/absen. Diberikan otomatis saat klaim.',
+        'Staff HR' => 'Kelola karyawan, kontrak, org, jabatan. Tidak bisa acc cuti.',
+        'HRD' => 'Hak Staff HR + acc cuti final. Kepala SDM, satu orang.',
+        'IT' => 'Kerjakan tiket & aset tim IT.',
+        'Teknisi' => 'Kerjakan tiket & aset tim Sarana.',
+        'ATEM' => 'Kerjakan tiket & aset alat medis.',
+        'Direktur' => 'Approve level atas (Kabid & HRD) + lihat semua laporan.',
+        'Admin Sistem' => 'Akses penuh seluruh aplikasi (bypass RBAC).',
+    ];
+
+    /** Label Indonesia per permission untuk baris matriks. */
+    private const LABEL_PERMISSION = [
+        'lihat-data-sendiri' => 'Lihat data sendiri',
+        'ajukan-cuti-absen' => 'Ajukan cuti / absen',
+        'kelola-sdm' => 'Kelola data SDM',
+        'acc-cuti-final' => 'Acc cuti final',
+        'kerjakan-tiket-it' => 'Kerjakan tiket IT',
+        'kerjakan-tiket-sarana' => 'Kerjakan tiket Sarana',
+        'kerjakan-tiket-alkes' => 'Kerjakan tiket Alkes',
+        'lihat-laporan' => 'Lihat laporan',
+        'kelola-rbac' => 'Kelola pengguna & role',
+        'pengaturan-sistem' => 'Pengaturan sistem',
+    ];
 
     #[Url]
     public string $tab = 'pengguna';
@@ -136,9 +164,20 @@ class PenggunaKelola extends Component
             ->orderBy('name')
             ->paginate(15);
 
+        // Tab Role: kartu + matriks dari database (urutan ikut enum). Query kecil (8×10).
+        $spatieRoles = SpatieRole::with('permissions')->withCount('users')->get()->keyBy('name');
+        $daftarRole = collect(Role::cases())
+            ->map(fn (Role $r) => $spatieRoles->get($r->value))
+            ->filter()
+            ->values();
+
         return view('livewire.sistem.pengguna-kelola', [
             'users' => $users,
             'semuaRole' => Role::cases(),
+            'daftarRole' => $daftarRole,
+            'deskripsiRole' => self::DESKRIPSI_ROLE,
+            'daftarPermission' => Permission::cases(),
+            'labelPermission' => self::LABEL_PERMISSION,
         ]);
     }
 }
