@@ -59,6 +59,12 @@ class Karyawan extends Model
         return $this->hasMany(Kontrak::class);
     }
 
+    /** Kontrak terbaru (tanggal_mulai lalu id) — bisa di-eager-load & difilter SQL. */
+    public function kontrakTerbaru(): HasOne
+    {
+        return $this->hasOne(Kontrak::class)->latestOfMany(['tanggal_mulai', 'id']);
+    }
+
     public function dokumen(): HasMany
     {
         return $this->hasMany(Dokumen::class);

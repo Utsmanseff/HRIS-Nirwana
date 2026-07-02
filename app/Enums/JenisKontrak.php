@@ -11,6 +11,16 @@ enum JenisKontrak: string
     case Pkwt = 'pkwt';
     case Tetap = 'tetap';
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::PercobaanUnpaid => 'Percobaan unpaid',
+            self::Percobaan => 'Percobaan',
+            self::Pkwt => 'PKWT',
+            self::Tetap => 'Tetap',
+        };
+    }
+
     public function berbatasWaktu(): bool
     {
         return $this !== self::Tetap;
