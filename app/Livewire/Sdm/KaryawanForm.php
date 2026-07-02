@@ -7,12 +7,15 @@ use App\Models\Jabatan;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 class KaryawanForm extends Component
 {
+    public ?Karyawan $karyawan = null;
+
     // Identitas
     public string $nip = '';
 
@@ -65,10 +68,38 @@ class KaryawanForm extends Component
 
     public string $kontrakKeterangan = '';
 
+    public function mount(?Karyawan $karyawan = null): void
+    {
+        if (! $karyawan?->exists) {
+            return;
+        }
+
+        $this->karyawan = $karyawan;
+        $this->nip = $karyawan->nip;
+        $this->namaLengkap = $karyawan->nama_lengkap;
+        $this->nik = $karyawan->nik ?? '';
+        $this->tempatLahir = $karyawan->tempat_lahir ?? '';
+        $this->tanggalLahir = $karyawan->tanggal_lahir?->format('Y-m-d') ?? '';
+        $this->jenisKelamin = $karyawan->jenis_kelamin?->value ?? '';
+        $this->agama = $karyawan->agama ?? '';
+        $this->statusNikah = $karyawan->status_nikah?->value ?? '';
+        $this->pendidikan = $karyawan->pendidikan_terakhir ?? '';
+        $this->sipNomor = $karyawan->sip_nomor ?? '';
+        $this->sipMulai = $karyawan->sip_berlaku_mulai?->format('Y-m-d') ?? '';
+        $this->sipAkhir = $karyawan->sip_berlaku_akhir?->format('Y-m-d') ?? '';
+        $this->noHp = $karyawan->no_hp ?? '';
+        $this->email = $karyawan->email ?? '';
+        $this->alamat = $karyawan->alamat ?? '';
+        $this->orgUnitId = (string) $karyawan->org_unit_id;
+        $this->jabatanId = (string) $karyawan->jabatan_id;
+        $this->atasanId = (string) ($karyawan->atasan_id ?? '');
+        $this->tanggalMasuk = $karyawan->tanggal_masuk?->format('Y-m-d') ?? '';
+    }
+
     protected function aturan(): array
     {
         return [
-            'nip' => ['required', 'string', 'max:50', 'unique:karyawan,nip'],
+            'nip' => ['required', 'string', 'max:50', Rule::unique('karyawan', 'nip')->ignore($this->karyawan?->id)],
             'namaLengkap' => ['required', 'string', 'max:150'],
             'nik' => ['nullable', 'string', 'max:20'],
             'tempatLahir' => ['nullable', 'string', 'max:100'],
@@ -87,13 +118,14 @@ class KaryawanForm extends Component
             'jabatanId' => ['required', 'exists:jabatan,id'],
             'atasanId' => ['nullable', 'exists:karyawan,id'],
             'tanggalMasuk' => ['required', 'date'],
+        ] + ($this->karyawan ? [] : [
             'jenisKontrak' => ['required', 'in:percobaan_unpaid,percobaan,pkwt,tetap'],
             'kontrakMulai' => ['required', 'date'],
             'kontrakAkhir' => $this->jenisKontrak === 'tetap'
                 ? ['nullable']
                 : ['required', 'date', 'after:kontrakMulai'],
             'kontrakKeterangan' => ['nullable', 'string', 'max:255'],
-        ];
+        ]);
     }
 
     /** Nilai kolom karyawan dari properti form ('' → null untuk kolom nullable). */
@@ -127,6 +159,12 @@ class KaryawanForm extends Component
     public function simpan()
     {
         $this->validate($this->aturan());
+
+        if ($this->karyawan) {
+            $this->karyawan->update($this->nilaiKaryawan());
+
+            return $this->redirectRoute('sdm.karyawan.detail', $this->karyawan);
+        }
 
         $karyawan = DB::transaction(function () {
             $karyawan = Karyawan::create($this->nilaiKaryawan() + ['status' => 'aktif']);

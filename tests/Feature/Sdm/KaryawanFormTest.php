@@ -110,4 +110,39 @@ class KaryawanFormTest extends TestCase
         $kar = Karyawan::where('nip', '2026.07.0003')->first();
         $this->assertDatabaseHas('kontrak', ['karyawan_id' => $kar->id, 'jenis' => 'tetap', 'tanggal_akhir' => null]);
     }
+
+    public function test_form_ubah_terisi_dan_update(): void
+    {
+        $kar = Karyawan::factory()->create(['nama_lengkap' => 'Nama Lama', 'nip' => 'TETAP-01']);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class, ['karyawan' => $kar])
+            ->assertSet('namaLengkap', 'Nama Lama')
+            ->assertSet('nip', 'TETAP-01')
+            ->set('namaLengkap', 'Nama Baru')
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('karyawan', ['id' => $kar->id, 'nama_lengkap' => 'Nama Baru', 'nip' => 'TETAP-01']);
+    }
+
+    public function test_ubah_nip_unik_abaikan_diri_sendiri(): void
+    {
+        $kar = Karyawan::factory()->create(['nip' => 'SAYA-01']);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class, ['karyawan' => $kar])
+            ->call('simpan')
+            ->assertHasNoErrors();
+    }
+
+    public function test_ubah_tidak_menambah_kontrak(): void
+    {
+        $kar = Karyawan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class, ['karyawan' => $kar])
+            ->set('namaLengkap', 'Ganti Nama')
+            ->call('simpan');
+
+        $this->assertSame(0, $kar->kontrak()->count());
+    }
 }

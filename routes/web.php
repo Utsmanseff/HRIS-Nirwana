@@ -52,6 +52,7 @@ Route::middleware(['auth', 'claimed'])->group(function () {
         // '/tambah' harus SEBELUM '{karyawan}' agar tak ditelan route-model-binding.
         Route::get('/sdm/karyawan/tambah', KaryawanForm::class)->name('sdm.karyawan.tambah');
         Route::get('/sdm/karyawan/{karyawan}', KaryawanDetail::class)->name('sdm.karyawan.detail');
+        Route::get('/sdm/karyawan/{karyawan}/ubah', KaryawanForm::class)->name('sdm.karyawan.ubah');
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
     });

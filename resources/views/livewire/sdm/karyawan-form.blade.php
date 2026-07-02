@@ -1,7 +1,7 @@
 <div class="space-y-4 rise max-w-3xl">
     <div>
-        <h1 class="text-lg font-extrabold tracking-tight">Tambah Karyawan</h1>
-        <p class="text-sm text-neutral-500">Isi data induk karyawan baru beserta kontrak tahap awalnya.</p>
+        <h1 class="text-lg font-extrabold tracking-tight">{{ $karyawan ? 'Ubah Karyawan' : 'Tambah Karyawan' }}</h1>
+        <p class="text-sm text-neutral-500">{{ $karyawan ? 'Perbarui data induk karyawan.' : 'Isi data induk karyawan baru beserta kontrak tahap awalnya.' }}</p>
     </div>
 
     {{-- Identitas --}}
@@ -110,7 +110,8 @@
         </div>
     </div>
 
-    {{-- Kontrak tahap awal --}}
+    {{-- Kontrak tahap awal (hanya saat tambah — riwayat kontrak dikelola di detail) --}}
+    @if (! $karyawan)
     <div class="card card-pad space-y-3">
         <div class="card-title">Kontrak / Tahap Awal</div>
         <div class="grid sm:grid-cols-3 gap-3">
@@ -133,9 +134,10 @@
             <div class="sm:col-span-3"><label class="field-label">Keterangan</label><input wire:model="kontrakKeterangan" class="input" placeholder="mis. Percobaan unpaid 2 minggu"></div>
         </div>
     </div>
+    @endif
 
     <div class="flex gap-2">
-        <button wire:click="simpan" class="btn btn-primary flex-1">Simpan Karyawan</button>
-        <a href="{{ route('sdm.karyawan') }}" class="btn btn-ghost">Batal</a>
+        <button wire:click="simpan" class="btn btn-primary flex-1">{{ $karyawan ? 'Simpan Perubahan' : 'Simpan Karyawan' }}</button>
+        <a href="{{ $karyawan ? route('sdm.karyawan.detail', $karyawan) : route('sdm.karyawan') }}" class="btn btn-ghost">Batal</a>
     </div>
 </div>

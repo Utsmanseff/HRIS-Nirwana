@@ -22,6 +22,9 @@
                         <span class="font-mono">NIP {{ $karyawan->nip }}</span>
                     </p>
                 </div>
+                <div class="flex items-center gap-2 pb-1">
+                    <a href="{{ route('sdm.karyawan.ubah', $karyawan) }}" class="btn btn-secondary btn-sm">Ubah</a>
+                </div>
             </div>
         </div>
         <div class="px-4 sm:px-6 flex gap-1 border-t border-neutral-100 overflow-x-auto whitespace-nowrap">
