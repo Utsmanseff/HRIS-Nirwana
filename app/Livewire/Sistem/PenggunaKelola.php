@@ -100,6 +100,19 @@ class PenggunaKelola extends Component
         $user->update(['nonaktif_pada' => $user->akunAktif() ? now() : null]);
     }
 
+    public function unlink(): void
+    {
+        if (! $user = $this->targetKelola()) {
+            return;
+        }
+
+        // Lepas tautan + cabut semua role: akun kembali netral, data karyawan
+        // bisa diklaim ulang (kasus salah klaim / penyalahgunaan identitas).
+        $user->syncRoles([]);
+        $user->update(['karyawan_id' => null]);
+        $this->rolePilihan = [];
+    }
+
     public function updating($name, $value): void
     {
         if (in_array($name, ['q', 'filterRole', 'filterStatus'], true)) {

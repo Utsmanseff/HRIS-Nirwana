@@ -121,7 +121,14 @@
                                                     <button wire:click="toggleAktif" class="btn btn-secondary btn-sm w-full">Aktifkan Lagi</button>
                                                 @endif
                                             </div>
-                                            {{-- Aksi akun lain: diisi Task 8 (unlink) --}}
+                                            @if ($u->karyawan)
+                                                <div>
+                                                    <button wire:click="unlink"
+                                                            wire:confirm="Putuskan tautan akun {{ $u->name }} dari karyawan {{ $u->karyawan->nama_lengkap }} ({{ $u->karyawan->nip }})? Semua role dicabut dan data karyawan bisa diklaim ulang."
+                                                            class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Putuskan Tautan Karyawan</button>
+                                                    <p class="text-xs text-neutral-400 mt-1">Untuk kasus salah klaim / penyalahgunaan identitas.</p>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
