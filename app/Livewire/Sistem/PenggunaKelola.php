@@ -91,6 +91,15 @@ class PenggunaKelola extends Component
         $this->sandiSementara = $sandi;
     }
 
+    public function toggleAktif(): void
+    {
+        if (! $user = $this->targetKelola()) {
+            return;
+        }
+
+        $user->update(['nonaktif_pada' => $user->akunAktif() ? now() : null]);
+    }
+
     public function updating($name, $value): void
     {
         if (in_array($name, ['q', 'filterRole', 'filterStatus'], true)) {

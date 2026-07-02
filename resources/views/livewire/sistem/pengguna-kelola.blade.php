@@ -112,7 +112,16 @@
                                                     </div>
                                                 @endif
                                             </div>
-                                            {{-- Aksi akun lain: diisi Task 7 (nonaktif), Task 8 (unlink) --}}
+                                            <div>
+                                                @if ($u->akunAktif())
+                                                    <button wire:click="toggleAktif"
+                                                            wire:confirm="Nonaktifkan akun {{ $u->name }}? Ia tidak akan bisa login dan sesi berjalannya diputus."
+                                                            class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Nonaktifkan Akun</button>
+                                                @else
+                                                    <button wire:click="toggleAktif" class="btn btn-secondary btn-sm w-full">Aktifkan Lagi</button>
+                                                @endif
+                                            </div>
+                                            {{-- Aksi akun lain: diisi Task 8 (unlink) --}}
                                         </div>
                                     </div>
                                 </td>
