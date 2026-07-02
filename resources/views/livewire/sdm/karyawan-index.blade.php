@@ -37,9 +37,27 @@
                 @endforeach
             </div>
         </div>
+        @if (count($pilihan))
+            <div class="px-4 py-2.5 bg-brand-50 border-b border-brand-100 flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
+                    <span class="w-5 h-5 rounded-full bg-brand-500 text-white grid place-items-center text-[11px] tnum">{{ count($pilihan) }}</span>dipilih
+                </span>
+                <div class="w-px h-5 bg-brand-200 mx-1"></div>
+                <select wire:model="unitTujuan" class="select w-auto">
+                    <option value="">Pindah ke unit…</option>
+                    @foreach ($unitOptions as $u)
+                        <option value="{{ $u->id }}">{{ $u->nama }}</option>
+                    @endforeach
+                </select>
+                <button wire:click="terapkanUbahUnit" class="btn btn-sm btn-secondary">Ubah unit</button>
+                @error('unitTujuan') <span class="text-xs" style="color:var(--danger-500)">{{ $message }}</span> @enderror
+                <button wire:click="batalPilih" class="btn btn-icon btn-sm btn-ghost ml-auto" aria-label="batal pilih">✕</button>
+            </div>
+        @endif
         <table class="table">
             <thead>
                 <tr>
+                    <th class="w-10"><input type="checkbox" wire:model.live="pilihSemua" class="w-4 h-4 accent-brand-500"></th>
                     <th>Karyawan</th><th>NIP</th><th>Unit / Jabatan</th><th>Atasan</th><th>Kontrak</th><th>Status</th>
                 </tr>
             </thead>
@@ -47,6 +65,7 @@
                 @forelse ($karyawan as $k)
                     @php [$badgeTeks, $badgeKelas] = $this->badgeKontrak($k); @endphp
                     <tr class="table-row-link">
+                        <td onclick="event.stopPropagation()"><input type="checkbox" wire:model.live="pilihan" value="{{ $k->id }}" class="w-4 h-4 accent-brand-500"></td>
                         <td>
                             <div class="font-semibold">{{ $k->nama_lengkap }}</div>
                             <div class="text-xs text-neutral-400">{{ $k->jabatan->nama }} · L{{ $k->jabatan->level->value }}</div>
@@ -67,7 +86,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="text-center text-neutral-400 py-8">Tidak ada karyawan.</td></tr>
+                    <tr><td colspan="7" class="text-center text-neutral-400 py-8">Tidak ada karyawan.</td></tr>
                 @endforelse
             </tbody>
         </table>

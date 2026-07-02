@@ -33,29 +33,65 @@ class KaryawanIndex extends Component
     #[Url]
     public string $status = 'aktif';
 
+    /** @var array<int, string> id karyawan terpilih (string dari checkbox) */
+    public array $pilihan = [];
+
+    public bool $pilihSemua = false;
+
+    public string $unitTujuan = '';
+
+    /** @var array<int, string> id pada halaman aktif — diisi tiap render */
+    public array $idsHalaman = [];
+
     public function updatedCari(): void
     {
         $this->resetPage();
+        $this->batalPilih();
     }
 
     public function updatedUnitId(): void
     {
         $this->resetPage();
+        $this->batalPilih();
     }
 
     public function updatedLevel(): void
     {
         $this->resetPage();
+        $this->batalPilih();
     }
 
     public function updatedKontrakJenis(): void
     {
         $this->resetPage();
+        $this->batalPilih();
     }
 
     public function updatedStatus(): void
     {
         $this->resetPage();
+        $this->batalPilih();
+    }
+
+    public function updatedPilihSemua(bool $nilai): void
+    {
+        $this->pilihan = $nilai ? $this->idsHalaman : [];
+    }
+
+    public function batalPilih(): void
+    {
+        $this->reset(['pilihan', 'pilihSemua', 'unitTujuan']);
+    }
+
+    public function terapkanUbahUnit(): void
+    {
+        $this->validate([
+            'unitTujuan' => ['required', 'exists:org_units,id'],
+        ]);
+
+        Karyawan::whereIn('id', $this->pilihan)->update(['org_unit_id' => (int) $this->unitTujuan]);
+
+        $this->batalPilih();
     }
 
     /** Id unit terpilih + seluruh turunannya (tabel org kecil — hitung di PHP). */
@@ -107,6 +143,8 @@ class KaryawanIndex extends Component
             ->when($this->status !== 'semua', fn ($q) => $q->where('status', $this->status))
             ->orderBy('nama_lengkap')
             ->paginate(15);
+
+        $this->idsHalaman = $karyawan->pluck('id')->map(fn ($id) => (string) $id)->all();
 
         return view('livewire.sdm.karyawan-index', [
             'karyawan' => $karyawan,

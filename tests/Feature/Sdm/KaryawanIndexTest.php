@@ -126,4 +126,35 @@ class KaryawanIndexTest extends TestCase
             ->assertSee('Masih Aktif')
             ->assertSee('Sudah Nonaktif');
     }
+
+    public function test_bulk_ubah_unit(): void
+    {
+        $asal = OrgUnit::factory()->create(['nama' => 'Unit Asal']);
+        $tujuan = OrgUnit::factory()->create(['nama' => 'Unit Tujuan']);
+        $a = Karyawan::factory()->create(['org_unit_id' => $asal->id]);
+        $b = Karyawan::factory()->create(['org_unit_id' => $asal->id]);
+        $c = Karyawan::factory()->create(['org_unit_id' => $asal->id]);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanIndex::class)
+            ->set('pilihan', [(string) $a->id, (string) $b->id])
+            ->set('unitTujuan', (string) $tujuan->id)
+            ->call('terapkanUbahUnit')
+            ->assertHasNoErrors()
+            ->assertSet('pilihan', []);
+
+        $this->assertDatabaseHas('karyawan', ['id' => $a->id, 'org_unit_id' => $tujuan->id]);
+        $this->assertDatabaseHas('karyawan', ['id' => $b->id, 'org_unit_id' => $tujuan->id]);
+        $this->assertDatabaseHas('karyawan', ['id' => $c->id, 'org_unit_id' => $asal->id]);
+    }
+
+    public function test_bulk_ubah_unit_wajib_pilih_unit_tujuan(): void
+    {
+        $kar = Karyawan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanIndex::class)
+            ->set('pilihan', [(string) $kar->id])
+            ->set('unitTujuan', '')
+            ->call('terapkanUbahUnit')
+            ->assertHasErrors(['unitTujuan']);
+    }
 }
