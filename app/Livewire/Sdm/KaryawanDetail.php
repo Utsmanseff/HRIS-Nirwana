@@ -18,6 +18,16 @@ class KaryawanDetail extends Component
     #[Url]
     public string $tab = 'profil';
 
+    public bool $showFormKontrak = false;
+
+    public string $kJenis = 'pkwt';
+
+    public string $kMulai = '';
+
+    public string $kAkhir = '';
+
+    public string $kKeterangan = '';
+
     public function mount(Karyawan $karyawan): void
     {
         $this->karyawan = $karyawan->load(['orgUnit.parent', 'jabatan', 'atasan.jabatan', 'kontrak', 'dokumen', 'user.roles']);
@@ -29,6 +39,40 @@ class KaryawanDetail extends Component
             ->filter()->take(2)
             ->map(fn ($kata) => mb_strtoupper(mb_substr($kata, 0, 1)))
             ->implode('');
+    }
+
+    public function formKontrakBaru(): void
+    {
+        $this->reset(['kMulai', 'kAkhir', 'kKeterangan']);
+        $this->kJenis = 'pkwt';
+        $this->showFormKontrak = true;
+    }
+
+    public function batalKontrak(): void
+    {
+        $this->reset(['showFormKontrak', 'kMulai', 'kAkhir', 'kKeterangan']);
+    }
+
+    public function simpanKontrak(): void
+    {
+        $this->validate([
+            'kJenis' => ['required', 'in:percobaan_unpaid,percobaan,pkwt,tetap'],
+            'kMulai' => ['required', 'date'],
+            'kAkhir' => $this->kJenis === 'tetap'
+                ? ['nullable']
+                : ['required', 'date', 'after:kMulai'],
+            'kKeterangan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $this->karyawan->kontrak()->create([
+            'jenis' => $this->kJenis,
+            'tanggal_mulai' => $this->kMulai,
+            'tanggal_akhir' => $this->kJenis === 'tetap' || $this->kAkhir === '' ? null : $this->kAkhir,
+            'keterangan' => $this->kKeterangan === '' ? null : $this->kKeterangan,
+        ]);
+
+        $this->karyawan->load('kontrak')->unsetRelation('kontrakTerbaru');
+        $this->batalKontrak();
     }
 
     /** Kontrak urut terbaru→terlama untuk timeline. */

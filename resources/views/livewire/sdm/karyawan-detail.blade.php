@@ -93,7 +93,39 @@
         @endif
 
         <div class="card">
-            <div class="card-header"><div><div class="card-title">Riwayat Kontrak</div><div class="text-xs text-neutral-400 mt-0.5">Tiap tahap & perpanjangan = baris baru, tidak menimpa.</div></div></div>
+            <div class="card-header"><div><div class="card-title">Riwayat Kontrak</div><div class="text-xs text-neutral-400 mt-0.5">Tiap tahap & perpanjangan = baris baru, tidak menimpa.</div></div><button wire:click="formKontrakBaru" class="btn btn-secondary btn-sm">+ Tambah tahap</button></div>
+            @if ($showFormKontrak)
+                <div class="card-pad border-b border-neutral-100 space-y-3">
+                    <div class="grid sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="field-label">Jenis *</label>
+                            <select wire:model.live="kJenis" class="input">
+                                @foreach (\App\Enums\JenisKontrak::cases() as $jk)
+                                    <option value="{{ $jk->value }}">{{ $jk->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Tanggal Mulai *</label>
+                            <input type="date" wire:model="kMulai" class="input @error('kMulai') input-error @enderror">
+                            @error('kMulai') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="field-label">Tanggal Akhir {{ $kJenis === 'tetap' ? '' : '*' }}</label>
+                            <input type="date" wire:model="kAkhir" class="input @error('kAkhir') input-error @enderror" @disabled($kJenis === 'tetap')>
+                            @error('kAkhir') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="field-label">Keterangan</label>
+                            <input wire:model="kKeterangan" class="input" placeholder="mis. Perpanjangan ke-2 / Lolos review divisi">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button wire:click="simpanKontrak" class="btn btn-primary btn-sm">Simpan Tahap</button>
+                        <button wire:click="batalKontrak" class="btn btn-ghost btn-sm">Batal</button>
+                    </div>
+                </div>
+            @endif
             <div class="card-pad">
                 @if ($this->riwayatKontrak()->isEmpty())
                     <p class="text-sm text-neutral-400 py-4 text-center">Belum ada riwayat kontrak.</p>
