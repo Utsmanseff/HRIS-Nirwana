@@ -80,6 +80,25 @@ class Karyawan extends Model
         return $q->where('status', StatusKaryawan::Aktif->value);
     }
 
+    /**
+     * Saringan bersama layar daftar karyawan & laporan ekspor.
+     * Kunci filter: cari, unit_id, level, kontrak_jenis, status ('' / 'semua' = tanpa filter status).
+     */
+    public function scopeSaring($query, array $f)
+    {
+        $cari = trim((string) ($f['cari'] ?? ''));
+        $status = (string) ($f['status'] ?? '');
+
+        return $query
+            ->when($cari !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->where('nama_lengkap', 'like', "%{$cari}%")
+                ->orWhere('nip', 'like', "%{$cari}%")))
+            ->when(! empty($f['unit_id']), fn ($q) => $q->whereIn('org_unit_id', OrgUnit::denganTurunan((int) $f['unit_id'])))
+            ->when(! empty($f['level']), fn ($q) => $q->whereHas('jabatan', fn ($w) => $w->where('level', (int) $f['level'])))
+            ->when(! empty($f['kontrak_jenis']), fn ($q) => $q->whereHas('kontrakTerbaru', fn ($w) => $w->where('jenis', $f['kontrak_jenis'])))
+            ->when($status !== '' && $status !== 'semua', fn ($q) => $q->where('status', $status));
+    }
+
     public function kontrakTerakhir(): ?Kontrak
     {
         return $this->kontrak()->orderByDesc('tanggal_mulai')->orderByDesc('id')->first();

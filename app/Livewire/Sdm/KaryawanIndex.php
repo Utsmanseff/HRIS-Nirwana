@@ -94,21 +94,6 @@ class KaryawanIndex extends Component
         $this->batalPilih();
     }
 
-    /** Id unit terpilih + seluruh turunannya (tabel org kecil — hitung di PHP). */
-    private function unitIds(): array
-    {
-        $semua = OrgUnit::get(['id', 'parent_id']);
-        $ids = [(int) $this->unitId];
-        $antrian = [(int) $this->unitId];
-        while ($antrian) {
-            $anak = $semua->whereIn('parent_id', $antrian)->pluck('id')->all();
-            $ids = array_merge($ids, $anak);
-            $antrian = $anak;
-        }
-
-        return $ids;
-    }
-
     /** Teks + kelas badge untuk kolom Kontrak. */
     public function badgeKontrak(Karyawan $k): array
     {
@@ -134,13 +119,13 @@ class KaryawanIndex extends Component
     {
         $karyawan = Karyawan::query()
             ->with(['orgUnit.parent', 'jabatan', 'atasan.jabatan', 'kontrakTerbaru', 'kontrak'])
-            ->when($this->cari !== '', fn ($q) => $q->where(fn ($w) => $w
-                ->where('nama_lengkap', 'like', '%'.$this->cari.'%')
-                ->orWhere('nip', 'like', '%'.$this->cari.'%')))
-            ->when($this->unitId !== '', fn ($q) => $q->whereIn('org_unit_id', $this->unitIds()))
-            ->when($this->level !== '', fn ($q) => $q->whereHas('jabatan', fn ($w) => $w->where('level', (int) $this->level)))
-            ->when($this->kontrakJenis !== '', fn ($q) => $q->whereHas('kontrakTerbaru', fn ($w) => $w->where('jenis', $this->kontrakJenis)))
-            ->when($this->status !== 'semua', fn ($q) => $q->where('status', $this->status))
+            ->saring([
+                'cari' => $this->cari,
+                'unit_id' => $this->unitId,
+                'level' => $this->level,
+                'kontrak_jenis' => $this->kontrakJenis,
+                'status' => $this->status,
+            ])
             ->orderBy('nama_lengkap')
             ->paginate(15);
 

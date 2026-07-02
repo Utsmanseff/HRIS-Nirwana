@@ -42,4 +42,19 @@ class OrgUnit extends Model
     {
         return $q->whereNull('parent_id');
     }
+
+    /** Id unit ini + seluruh turunannya (tabel org kecil — traversal di PHP). */
+    public static function denganTurunan(int $unitId): array
+    {
+        $semua = static::get(['id', 'parent_id']);
+        $ids = [$unitId];
+        $antrian = [$unitId];
+        while ($antrian) {
+            $anak = $semua->whereIn('parent_id', $antrian)->pluck('id')->all();
+            $ids = array_merge($ids, $anak);
+            $antrian = $anak;
+        }
+
+        return $ids;
+    }
 }
