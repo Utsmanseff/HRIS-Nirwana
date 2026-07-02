@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Sdm\DokumenController;
+use App\Http\Controllers\Sdm\LaporanSdmController;
 use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sdm/dokumen/{dokumen}', [DokumenController::class, 'unduh'])->name('sdm.dokumen.unduh');
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
+        Route::get('/sdm/laporan/karyawan', [LaporanSdmController::class, 'karyawan'])->name('sdm.laporan.karyawan');
     });
 
     Route::middleware('permission:kelola-rbac')->group(function () {
