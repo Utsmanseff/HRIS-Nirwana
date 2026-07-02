@@ -4,15 +4,21 @@ namespace App\Livewire\Sdm;
 
 use App\Enums\JenisKontrak;
 use App\Models\Karyawan;
+use App\Support\KompresGambar;
 use App\Support\PengingatKontrak;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app')]
 class KaryawanDetail extends Component
 {
+    use WithFileUploads;
+
     public Karyawan $karyawan;
 
     #[Url]
@@ -27,6 +33,10 @@ class KaryawanDetail extends Component
     public string $kAkhir = '';
 
     public string $kKeterangan = '';
+
+    public $berkas = null;
+
+    public string $tipeDokumen = '';
 
     public function mount(Karyawan $karyawan): void
     {
@@ -73,6 +83,41 @@ class KaryawanDetail extends Component
 
         $this->karyawan->load('kontrak')->unsetRelation('kontrakTerbaru');
         $this->batalKontrak();
+    }
+
+    public function unggahDokumen(): void
+    {
+        $this->validate([
+            'tipeDokumen' => ['required', 'in:ktp,ijazah,kontrak,sip,lainnya'],
+            'berkas' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp,pdf'],
+        ]);
+
+        $namaAsli = pathinfo($this->berkas->getClientOriginalName(), PATHINFO_FILENAME);
+        $dir = 'dokumen/'.$this->karyawan->id;
+
+        if ($this->berkas->getMimeType() === 'application/pdf') {
+            $nama = Str::slug($namaAsli).'-'.Str::random(6).'.pdf';
+            $path = $this->berkas->storeAs($dir, $nama, 'local');
+            $mime = 'application/pdf';
+            $ukuran = $this->berkas->getSize();
+        } else {
+            $webp = KompresGambar::keWebp($this->berkas->get());
+            $nama = Str::slug($namaAsli).'-'.Str::random(6).'.webp';
+            $path = $dir.'/'.$nama;
+            Storage::disk('local')->put($path, $webp);
+            $mime = 'image/webp';
+            $ukuran = strlen($webp);
+        }
+
+        $this->karyawan->dokumen()->create([
+            'tipe' => $this->tipeDokumen,
+            'path' => $path,
+            'mime' => $mime,
+            'ukuran' => $ukuran,
+        ]);
+
+        $this->karyawan->load('dokumen');
+        $this->reset(['berkas', 'tipeDokumen']);
     }
 
     /** Kontrak urut terbaru→terlama untuk timeline. */

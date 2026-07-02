@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\Sdm\DokumenController;
 use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
 use App\Livewire\Profil;
@@ -53,6 +54,7 @@ Route::middleware(['auth', 'claimed'])->group(function () {
         Route::get('/sdm/karyawan/tambah', KaryawanForm::class)->name('sdm.karyawan.tambah');
         Route::get('/sdm/karyawan/{karyawan}', KaryawanDetail::class)->name('sdm.karyawan.detail');
         Route::get('/sdm/karyawan/{karyawan}/ubah', KaryawanForm::class)->name('sdm.karyawan.ubah');
+        Route::get('/sdm/dokumen/{dokumen}', [DokumenController::class, 'unduh'])->name('sdm.dokumen.unduh');
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
     });

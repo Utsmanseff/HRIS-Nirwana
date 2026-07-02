@@ -156,6 +156,29 @@
     @if ($tab === 'dokumen')
         <div class="card">
             <div class="card-header"><div class="card-title">Dokumen Kepegawaian</div></div>
+            <div class="card-pad border-b border-neutral-100">
+                <div class="grid sm:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="field-label">Tipe *</label>
+                        <select wire:model="tipeDokumen" class="input @error('tipeDokumen') input-error @enderror">
+                            <option value="">— Pilih tipe —</option>
+                            <option value="ktp">KTP</option><option value="ijazah">Ijazah</option>
+                            <option value="kontrak">Kontrak</option><option value="sip">SIP</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                        @error('tipeDokumen') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label">Berkas (jpg/png/webp/pdf, maks 5 MB) *</label>
+                        <input type="file" wire:model="berkas" class="input @error('berkas') input-error @enderror">
+                        @error('berkas') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <button wire:click="unggahDokumen" wire:loading.attr="disabled" class="btn btn-primary btn-sm">Unggah</button>
+                        <span wire:loading wire:target="berkas" class="text-xs text-neutral-400 ml-2">Memuat…</span>
+                    </div>
+                </div>
+            </div>
             <div class="card-pad">
                 @if ($karyawan->dokumen->isEmpty())
                     <p class="text-sm text-neutral-400 py-4 text-center">Belum ada dokumen.</p>
@@ -169,6 +192,7 @@
                                     <div class="text-sm font-semibold truncate">{{ basename($dok->path) }}</div>
                                     <div class="text-xs text-neutral-400">{{ ucfirst($dok->tipe) }} · {{ $this->ukuranBaca($dok->ukuran) }} · {{ $dok->created_at->translatedFormat('j M Y') }}</div>
                                 </div>
+                                <a href="{{ route('sdm.dokumen.unduh', $dok) }}" class="btn btn-ghost btn-icon btn-sm" title="Unduh">↓</a>
                             </div>
                         @endforeach
                     </div>
