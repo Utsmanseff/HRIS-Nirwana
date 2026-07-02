@@ -5,6 +5,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Sdm\DokumenController;
 use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
+use App\Livewire\Dashboard;
 use App\Livewire\Profil;
 use App\Livewire\Sdm\JabatanKelola;
 use App\Livewire\Sdm\KaryawanDetail;
@@ -46,7 +47,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
 
 // --- App: auth + claimed gated routes ---
 Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
