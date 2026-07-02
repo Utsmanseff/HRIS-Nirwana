@@ -34,4 +34,41 @@ class OrgStrukturTest extends TestCase
             ->assertSee('Penunjang Medik')
             ->assertSee('Divisi IT');
     }
+
+    public function test_tambah_unit_dengan_parent(): void
+    {
+        $bidang = OrgUnit::factory()->create(['nama' => 'Umum', 'tipe' => 'bidang', 'parent_id' => null]);
+
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('baru', $bidang->id)
+            ->set('nama', 'Divisi SDM')
+            ->set('tipe', 'divisi')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('org_units', ['nama' => 'Divisi SDM', 'tipe' => 'divisi', 'parent_id' => $bidang->id]);
+    }
+
+    public function test_ubah_unit(): void
+    {
+        $unit = OrgUnit::factory()->create(['nama' => 'Lama', 'tipe' => 'divisi', 'parent_id' => null]);
+
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('edit', $unit->id)
+            ->assertSet('nama', 'Lama')
+            ->set('nama', 'Baru')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('org_units', ['id' => $unit->id, 'nama' => 'Baru']);
+    }
+
+    public function test_nama_unit_wajib(): void
+    {
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('baru', null)
+            ->set('nama', '')
+            ->call('simpan')
+            ->assertHasErrors(['nama']);
+    }
 }
