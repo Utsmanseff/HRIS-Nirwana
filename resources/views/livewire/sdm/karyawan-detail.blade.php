@@ -3,9 +3,10 @@
     <div class="card overflow-hidden">
         <div class="h-20" style="background:var(--panel-glow),var(--panel-grad)"></div>
         <div class="px-6 pb-5">
-            <div class="flex flex-wrap items-end gap-4 -mt-10">
-                <span class="avatar w-20 h-20 text-2xl ring-4 ring-white shadow-sm" style="background:var(--brand-100);color:var(--brand-700)">{{ $this->inisial() }}</span>
-                <div class="flex-1 min-w-[200px] pb-1">
+            {{-- Hanya avatar yang overlap band gelap; teks mulai DI BAWAH band supaya terbaca di tema light. --}}
+            <div class="flex flex-wrap items-start gap-4">
+                <span class="avatar w-20 h-20 text-2xl ring-4 shadow-sm shrink-0 -mt-10" style="background:var(--brand-100);color:var(--brand-700);--tw-ring-color:var(--bg-surface)">{{ $this->inisial() }}</span>
+                <div class="flex-1 min-w-[200px] pt-1">
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <h2 class="text-xl font-extrabold tracking-tight">{{ $karyawan->nama_lengkap }}</h2>
                         @if ($karyawan->status->value === 'aktif')
@@ -22,7 +23,7 @@
                         <span class="font-mono">NIP {{ $karyawan->nip }}</span>
                     </p>
                 </div>
-                <div class="flex items-center gap-2 pb-1">
+                <div class="flex items-center gap-2 pt-1">
                     <a href="{{ route('sdm.karyawan.ubah', $karyawan) }}" class="btn btn-secondary btn-sm">Ubah</a>
                     @if ($karyawan->status->value === 'aktif')
                         <button wire:click="formNonaktif" class="btn btn-ghost btn-sm" style="color:var(--danger-600)">Nonaktifkan</button>

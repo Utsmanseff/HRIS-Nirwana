@@ -1,4 +1,4 @@
-<div class="space-y-4 rise max-w-3xl">
+<div class="space-y-4 rise max-w-3xl mx-auto">
     <div>
         <h1 class="text-lg font-extrabold tracking-tight">{{ $karyawan ? 'Ubah Karyawan' : 'Tambah Karyawan' }}</h1>
         <p class="text-sm text-neutral-500">{{ $karyawan ? 'Perbarui data induk karyawan.' : 'Isi data induk karyawan baru beserta kontrak tahap awalnya.' }}</p>

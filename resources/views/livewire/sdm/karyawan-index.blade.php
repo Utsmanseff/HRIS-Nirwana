@@ -9,7 +9,8 @@
         <div class="p-4 flex flex-wrap items-center gap-2.5 border-b border-neutral-100">
             <div class="relative flex-1 min-w-[220px]">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"><svg width="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></span>
-                <input wire:model.live.debounce.300ms="cari" class="input pl-9" placeholder="Cari nama atau NIP…">
+                {{-- padding-left inline: util pl-9 kalah dari padding .input (CSS unlayered menang atas @layer utilities) --}}
+                <input wire:model.live.debounce.300ms="cari" class="input" style="padding-left:2.35rem" placeholder="Cari nama atau NIP…">
             </div>
             <select wire:model.live="unitId" class="select w-auto">
                 <option value="">Semua Unit</option>
