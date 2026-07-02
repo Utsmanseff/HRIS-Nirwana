@@ -38,6 +38,12 @@ class KaryawanDetail extends Component
 
     public string $tipeDokumen = '';
 
+    public bool $showNonaktif = false;
+
+    public string $alasanNonaktif = '';
+
+    public string $tanggalNonaktif = '';
+
     public function mount(Karyawan $karyawan): void
     {
         $this->karyawan = $karyawan->load(['orgUnit.parent', 'jabatan', 'atasan.jabatan', 'kontrak', 'dokumen', 'user.roles']);
@@ -83,6 +89,43 @@ class KaryawanDetail extends Component
 
         $this->karyawan->load('kontrak')->unsetRelation('kontrakTerbaru');
         $this->batalKontrak();
+    }
+
+    public function formNonaktif(): void
+    {
+        $this->alasanNonaktif = '';
+        $this->tanggalNonaktif = now()->format('Y-m-d');
+        $this->showNonaktif = true;
+    }
+
+    public function batalNonaktif(): void
+    {
+        $this->reset(['showNonaktif', 'alasanNonaktif', 'tanggalNonaktif']);
+    }
+
+    public function nonaktifkan(): void
+    {
+        $this->validate([
+            'alasanNonaktif' => ['required', 'in:resign,kontrak_berakhir,phk,pensiun,meninggal'],
+            'tanggalNonaktif' => ['required', 'date'],
+        ]);
+
+        $this->karyawan->update([
+            'status' => 'nonaktif',
+            'alasan_nonaktif' => $this->alasanNonaktif,
+            'tanggal_nonaktif' => $this->tanggalNonaktif,
+        ]);
+
+        $this->batalNonaktif();
+    }
+
+    public function aktifkanLagi(): void
+    {
+        $this->karyawan->update([
+            'status' => 'aktif',
+            'alasan_nonaktif' => null,
+            'tanggal_nonaktif' => null,
+        ]);
     }
 
     public function unggahDokumen(): void

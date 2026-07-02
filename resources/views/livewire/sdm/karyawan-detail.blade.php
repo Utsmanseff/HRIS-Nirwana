@@ -24,6 +24,11 @@
                 </div>
                 <div class="flex items-center gap-2 pb-1">
                     <a href="{{ route('sdm.karyawan.ubah', $karyawan) }}" class="btn btn-secondary btn-sm">Ubah</a>
+                    @if ($karyawan->status->value === 'aktif')
+                        <button wire:click="formNonaktif" class="btn btn-ghost btn-sm" style="color:var(--danger-600)">Nonaktifkan</button>
+                    @else
+                        <button wire:click="aktifkanLagi" class="btn btn-secondary btn-sm">Aktifkan lagi</button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -33,6 +38,36 @@
             @endforeach
         </div>
     </div>
+
+    @if ($showNonaktif)
+        <div class="card card-pad space-y-3" style="border-color:var(--danger-100)">
+            <div class="card-title">Nonaktifkan Karyawan</div>
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="field-label">Alasan *</label>
+                    <select wire:model="alasanNonaktif" class="input @error('alasanNonaktif') input-error @enderror">
+                        <option value="">— Pilih alasan —</option>
+                        <option value="resign">Resign</option>
+                        <option value="kontrak_berakhir">Kontrak berakhir</option>
+                        <option value="phk">PHK</option>
+                        <option value="pensiun">Pensiun</option>
+                        <option value="meninggal">Meninggal</option>
+                    </select>
+                    @error('alasanNonaktif') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="field-label">Tanggal Nonaktif *</label>
+                    <input type="date" wire:model="tanggalNonaktif" class="input @error('tanggalNonaktif') input-error @enderror">
+                    @error('tanggalNonaktif') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                </div>
+            </div>
+            <p class="text-xs text-neutral-400">Karyawan nonaktif hilang dari daftar default (filter Aktif) dan tidak muncul di pengingat kontrak/SIP.</p>
+            <div class="flex gap-2">
+                <button wire:click="nonaktifkan" class="btn btn-primary btn-sm">Nonaktifkan</button>
+                <button wire:click="batalNonaktif" class="btn btn-ghost btn-sm">Batal</button>
+            </div>
+        </div>
+    @endif
 
     {{-- TAB: Profil --}}
     @if ($tab === 'profil')
