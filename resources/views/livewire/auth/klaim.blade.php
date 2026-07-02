@@ -1,18 +1,19 @@
 <div class="auth">
     <div class="auth-brand">
         <div class="auth-grain"></div>
-        <div class="flex items-center gap-3">
-            <span class="grid place-items-center w-11 h-11 rounded-xl shadow-sm bg-white"><x-logo :size="26" /></span>
+        <div class="auth-id flex items-center gap-3">
+            <span class="auth-mark grid place-items-center w-11 h-11 rounded-xl shadow-sm bg-white"><x-logo :size="26" /></span>
             <div>
-                <div class="font-extrabold text-lg tracking-tight">Nirwana<span class="text-brand-200">HRIS</span></div>
-                <div class="text-[11px] text-brand-200/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
+                <div class="auth-word font-extrabold text-lg tracking-tight">Nirwana<span class="text-brand-200">HRIS</span></div>
+                <div class="auth-sub text-[11px] text-brand-200/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
+                <div class="auth-tagline">Sistem Kepegawaian RSU Nirwana</div>
             </div>
         </div>
-        <div class="max-w-sm">
+        <div class="auth-hero max-w-sm">
             <h2 class="text-[2rem] font-extrabold leading-tight tracking-tight mb-3">Satu langkah lagi.</h2>
             <p class="text-white/60 text-[15px] leading-relaxed">Hubungkan akun Google-mu ke data karyawan agar bisa mengakses layanan kepegawaian.</p>
         </div>
-        <div class="text-xs text-white/40">© {{ date('Y') }} RSU Nirwana · Internal use only</div>
+        <div class="auth-foot text-xs text-white/40">© {{ date('Y') }} RSU Nirwana · Internal use only</div>
     </div>
 
     <div class="auth-form">
