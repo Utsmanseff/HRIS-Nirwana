@@ -2,6 +2,7 @@
     <div class="flex items-center justify-between">
         <div><h1 class="text-lg font-extrabold tracking-tight">Karyawan</h1>
             <p class="text-sm text-neutral-500">Data induk karyawan RSU Nirwana.</p></div>
+        <a href="{{ route('sdm.karyawan.tambah') }}" class="btn btn-primary btn-sm">+ Tambah Karyawan</a>
     </div>
 
     <div class="card">

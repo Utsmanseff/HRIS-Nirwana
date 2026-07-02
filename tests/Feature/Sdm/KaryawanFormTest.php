@@ -1,0 +1,113 @@
+<?php
+
+namespace Tests\Feature\Sdm;
+
+use App\Enums\Permission;
+use App\Livewire\Sdm\KaryawanForm;
+use App\Models\Jabatan;
+use App\Models\Karyawan;
+use App\Models\OrgUnit;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Tests\TestCase;
+
+class KaryawanFormTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function userSdm(): User
+    {
+        $kar = Karyawan::factory()->create();
+        $user = User::factory()->create(['karyawan_id' => $kar->id]);
+        $user->givePermissionTo(SpatiePermission::findOrCreate(Permission::KelolaSdm->value, 'web'));
+
+        return $user;
+    }
+
+    public function test_halaman_tambah_terbuka(): void
+    {
+        $this->actingAs($this->userSdm())->get('/sdm/karyawan/tambah')->assertOk();
+    }
+
+    public function test_tambah_karyawan_beserta_kontrak_awal(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $jab = Jabatan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', '2026.07.0001')
+            ->set('namaLengkap', 'Andi Pratama')
+            ->set('orgUnitId', (string) $unit->id)
+            ->set('jabatanId', (string) $jab->id)
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'percobaan_unpaid')
+            ->set('kontrakMulai', '2026-07-01')
+            ->set('kontrakAkhir', '2026-07-14')
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('karyawan', ['nip' => '2026.07.0001', 'nama_lengkap' => 'Andi Pratama', 'status' => 'aktif']);
+        $kar = Karyawan::where('nip', '2026.07.0001')->first();
+        $this->assertDatabaseHas('kontrak', ['karyawan_id' => $kar->id, 'jenis' => 'percobaan_unpaid', 'tanggal_akhir' => '2026-07-14 00:00:00']);
+    }
+
+    public function test_nip_wajib_unik(): void
+    {
+        Karyawan::factory()->create(['nip' => 'DUP-001']);
+        $unit = OrgUnit::factory()->create();
+        $jab = Jabatan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', 'DUP-001')
+            ->set('namaLengkap', 'Siapa Saja')
+            ->set('orgUnitId', (string) $unit->id)
+            ->set('jabatanId', (string) $jab->id)
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'tetap')
+            ->set('kontrakMulai', '2026-07-01')
+            ->call('simpan')
+            ->assertHasErrors(['nip']);
+    }
+
+    public function test_kontrak_berbatas_wajib_tanggal_akhir(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $jab = Jabatan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', '2026.07.0002')
+            ->set('namaLengkap', 'Budi')
+            ->set('orgUnitId', (string) $unit->id)
+            ->set('jabatanId', (string) $jab->id)
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'pkwt')
+            ->set('kontrakMulai', '2026-07-01')
+            ->set('kontrakAkhir', '')
+            ->call('simpan')
+            ->assertHasErrors(['kontrakAkhir']);
+    }
+
+    public function test_kontrak_tetap_tanggal_akhir_diabaikan(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $jab = Jabatan::factory()->create();
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', '2026.07.0003')
+            ->set('namaLengkap', 'Citra')
+            ->set('orgUnitId', (string) $unit->id)
+            ->set('jabatanId', (string) $jab->id)
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'tetap')
+            ->set('kontrakMulai', '2026-07-01')
+            ->set('kontrakAkhir', '2027-01-01')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        $kar = Karyawan::where('nip', '2026.07.0003')->first();
+        $this->assertDatabaseHas('kontrak', ['karyawan_id' => $kar->id, 'jenis' => 'tetap', 'tanggal_akhir' => null]);
+    }
+}
