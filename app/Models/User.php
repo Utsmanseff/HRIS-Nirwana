@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['karyawan_id', 'name', 'email', 'password', 'google_id', 'avatar_url'])]
+#[Fillable(['karyawan_id', 'name', 'email', 'password', 'google_id', 'avatar_url', 'nonaktif_pada'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +30,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'nonaktif_pada' => 'datetime',
         ];
     }
 
@@ -41,5 +42,10 @@ class User extends Authenticatable
     public function sudahKlaim(): bool
     {
         return $this->karyawan_id !== null;
+    }
+
+    public function akunAktif(): bool
+    {
+        return $this->nonaktif_pada === null;
     }
 }

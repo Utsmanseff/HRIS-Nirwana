@@ -34,6 +34,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Akun yang dinonaktifkan admin (diblokir login).
+     */
+    public function nonaktif(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'nonaktif_pada' => now(),
+        ]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static
