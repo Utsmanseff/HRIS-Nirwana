@@ -21,7 +21,7 @@
             ['id' => 'jadwal', 'label' => 'Jadwal Shift', 'href' => '#', 'icon' => 'calendar'],
         ]],
         ['group' => 'Sistem', 'items' => [
-            ['id' => 'pengguna', 'label' => 'Pengguna & Role', 'href' => '#', 'icon' => 'shield'],
+            ['id' => 'pengguna', 'label' => 'Pengguna & Role', 'href' => route('sistem.pengguna'), 'icon' => 'shield', 'can' => 'kelola-rbac'],
             ['id' => 'pengaturan', 'label' => 'Pengaturan', 'href' => '#', 'icon' => 'cog'],
         ]],
     ];
@@ -52,6 +52,7 @@
                 @endif
                 <div class="space-y-0.5">
                     @foreach ($group['items'] as $it)
+                        @continue(isset($it['can']) && ! auth()->user()?->can($it['can']))
                         <a href="{{ $it['href'] }}" title="{{ $it['label'] }}" class="nv-item {{ $it['id'] === $active ? 'nv-active' : '' }}">
                             <span class="nv-ic"><x-icon :name="$it['icon']" /></span>
                             <span class="flex-1 sb-label">{{ $it['label'] }}</span>

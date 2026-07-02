@@ -11,6 +11,7 @@ use App\Livewire\Sdm\KaryawanDetail;
 use App\Livewire\Sdm\KaryawanForm;
 use App\Livewire\Sdm\KaryawanIndex;
 use App\Livewire\Sdm\OrgStruktur;
+use App\Livewire\Sistem\PenggunaKelola;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,5 +58,9 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sdm/dokumen/{dokumen}', [DokumenController::class, 'unduh'])->name('sdm.dokumen.unduh');
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
+    });
+
+    Route::middleware('permission:kelola-rbac')->group(function () {
+        Route::get('/sistem/pengguna', PenggunaKelola::class)->name('sistem.pengguna');
     });
 });
