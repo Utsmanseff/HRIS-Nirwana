@@ -7,8 +7,8 @@
         ]],
         ['group' => 'SDM', 'items' => [
             ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => '#', 'icon' => 'users'],
-            ['id' => 'struktur', 'label' => 'Struktur Organisasi', 'href' => '#', 'icon' => 'tree'],
-            ['id' => 'jabatan', 'label' => 'Jabatan & Level', 'href' => '#', 'icon' => 'badge'],
+            ['id' => 'struktur', 'label' => 'Struktur Organisasi', 'href' => route('sdm.struktur'), 'icon' => 'tree'],
+            ['id' => 'jabatan', 'label' => 'Jabatan & Level', 'href' => route('sdm.jabatan'), 'icon' => 'badge'],
             ['id' => 'kontrak', 'label' => 'Kontrak & Pengingat', 'href' => '#', 'icon' => 'doc'],
             ['id' => 'dokumen', 'label' => 'Dokumen', 'href' => '#', 'icon' => 'folder'],
         ]],
