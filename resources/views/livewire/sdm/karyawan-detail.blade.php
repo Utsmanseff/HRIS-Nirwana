@@ -241,7 +241,7 @@
     @if ($tab === 'akun')
         @if (! $karyawan->user)
             <div class="card card-pad">
-                <p class="text-sm text-neutral-500"><b>Belum tertaut akun.</b> Karyawan ini belum punya akun login — akun terbentuk saat karyawan login Google lalu klaim data, atau dibuat lewat Kelola Pengguna (menyusul).</p>
+                <p class="text-sm text-neutral-500"><b>Belum tertaut akun.</b> Karyawan ini belum punya akun login — akun terbentuk saat karyawan login Google lalu mengklaim datanya.</p>
             </div>
         @else
             <div class="grid lg:grid-cols-3 gap-6">
@@ -256,7 +256,10 @@
                         @empty
                             <p class="text-sm text-neutral-400">Belum punya role.</p>
                         @endforelse
-                        <p class="text-xs text-neutral-400 pt-1">Multi-role: hak akses = gabungan semua role. Kelola role di menu Pengguna &amp; Role (menyusul).</p>
+                        <p class="text-xs text-neutral-400 pt-1">Multi-role: hak akses = gabungan semua role.</p>
+                        @can('kelola-rbac')
+                            <a href="{{ route('sistem.pengguna', ['q' => $karyawan->nip]) }}" class="btn btn-secondary btn-sm">Kelola Role &amp; Akun</a>
+                        @endcan
                     </div>
                 </div>
                 <div class="card h-fit">

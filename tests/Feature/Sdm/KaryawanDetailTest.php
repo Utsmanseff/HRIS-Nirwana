@@ -3,10 +3,12 @@
 namespace Tests\Feature\Sdm;
 
 use App\Enums\Permission;
+use App\Enums\Role;
 use App\Models\Dokumen;
 use App\Models\Karyawan;
 use App\Models\Kontrak;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 use Spatie\Permission\Models\Role as SpatieRole;
@@ -103,5 +105,25 @@ class KaryawanDetailTest extends TestCase
         $this->actingAs($this->userSdm())->get('/sdm/karyawan/'.$kar->id.'?tab=akun')
             ->assertOk()
             ->assertSee('Belum tertaut akun');
+    }
+
+    public function test_tab_akun_menampilkan_link_kelola_pengguna_bagi_yang_berhak(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $karyawan = Karyawan::factory()->create(['nip' => 'NIP-555']);
+        User::factory()->create(['karyawan_id' => $karyawan->id]);
+
+        // Admin Sistem (punya kelola-rbac via bypass) → link kelola tampil.
+        $admin = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+        $admin->assignRole(Role::AdminSistem->value);
+
+        $this->actingAs($admin)
+            ->get(route('sdm.karyawan.detail', $karyawan).'?tab=akun')
+            ->assertSee(route('sistem.pengguna', ['q' => 'NIP-555'], false));
+
+        // Aktor kelola-sdm biasa (tanpa kelola-rbac) → link tidak tampil.
+        $this->actingAs($this->userSdm())
+            ->get(route('sdm.karyawan.detail', $karyawan).'?tab=akun')
+            ->assertDontSee(route('sistem.pengguna', ['q' => 'NIP-555'], false));
     }
 }
