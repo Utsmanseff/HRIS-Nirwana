@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Sdm;
 
 use App\Exports\KaryawanExport;
+use App\Exports\PengingatKontrakExport;
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
+use App\Support\PengingatKontrak;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -30,6 +32,17 @@ class LaporanSdmController extends Controller
             'karyawan' => $karyawan,
             'keteranganFilter' => $this->keteranganFilter($filter),
         ])->setPaper('a4', 'landscape')->download('daftar-karyawan.pdf');
+    }
+
+    public function pengingatKontrak(Request $request)
+    {
+        if ($request->query('format') === 'xlsx') {
+            return Excel::download(new PengingatKontrakExport, 'pengingat-kontrak.xlsx');
+        }
+
+        return Pdf::loadView('laporan.pdf.pengingat-kontrak', [
+            'pengingat' => PengingatKontrak::semua()->sortBy('sisaHari')->values(),
+        ])->setPaper('a4', 'landscape')->download('pengingat-kontrak.pdf');
     }
 
     /** Rangkai keterangan filter utk kop (spec: pembaca wajib tahu cakupan data). */

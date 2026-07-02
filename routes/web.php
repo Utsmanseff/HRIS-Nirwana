@@ -61,6 +61,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
         Route::get('/sdm/laporan/karyawan', [LaporanSdmController::class, 'karyawan'])->name('sdm.laporan.karyawan');
+        Route::get('/sdm/laporan/pengingat-kontrak', [LaporanSdmController::class, 'pengingatKontrak'])->name('sdm.laporan.pengingat');
     });
 
     Route::middleware('permission:kelola-rbac')->group(function () {

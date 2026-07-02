@@ -5,6 +5,7 @@ namespace Tests\Feature\Sdm;
 use App\Enums\Permission;
 use App\Exports\KaryawanExport;
 use App\Models\Karyawan;
+use App\Models\Kontrak;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
@@ -72,5 +73,29 @@ class LaporanSdmTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
 
         $this->actingAs($user)->get('/sdm/laporan/karyawan?format=pdf')->assertForbidden();
+    }
+
+    public function test_ekspor_pengingat_kontrak_xlsx(): void
+    {
+        Excel::fake();
+        $k = Karyawan::factory()->create();
+        Kontrak::factory()->create(['karyawan_id' => $k->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(11), 'tanggal_akhir' => now()->addDays(10)]);
+
+        $this->actingAs($this->userSdm())
+            ->get('/sdm/laporan/pengingat-kontrak?format=xlsx')
+            ->assertOk();
+
+        Excel::assertDownloaded('pengingat-kontrak.xlsx');
+    }
+
+    public function test_ekspor_pengingat_kontrak_pdf(): void
+    {
+        $k = Karyawan::factory()->create(['nama_lengkap' => 'Hampir Habis']);
+        Kontrak::factory()->create(['karyawan_id' => $k->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(11), 'tanggal_akhir' => now()->addDays(10)]);
+
+        $this->actingAs($this->userSdm())
+            ->get('/sdm/laporan/pengingat-kontrak?format=pdf')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 }
