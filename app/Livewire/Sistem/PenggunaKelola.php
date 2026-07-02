@@ -26,6 +26,58 @@ class PenggunaKelola extends Component
     #[Url]
     public string $filterStatus = '';
 
+    public ?int $kelolaId = null;
+
+    /** @var list<string> */
+    public array $rolePilihan = [];
+
+    public ?string $sandiSementara = null;
+
+    public function bukaKelola(int $id): void
+    {
+        $user = User::findOrFail($id);
+        $this->kelolaId = $user->id;
+        $this->rolePilihan = $user->roles->pluck('name')->all();
+        $this->sandiSementara = null;
+        $this->resetErrorBag();
+    }
+
+    public function tutupKelola(): void
+    {
+        $this->reset(['kelolaId', 'rolePilihan', 'sandiSementara']);
+        $this->resetErrorBag();
+    }
+
+    /** Ambil user target aksi; tolak bila akun sendiri (anti terkunci sendiri). */
+    private function targetKelola(): ?User
+    {
+        $user = User::findOrFail($this->kelolaId);
+
+        if ($user->id === auth()->id()) {
+            $this->addError('kelola', 'Tidak bisa mengubah akun sendiri.');
+
+            return null;
+        }
+
+        return $user;
+    }
+
+    public function simpanRole(): void
+    {
+        if (! $user = $this->targetKelola()) {
+            return;
+        }
+
+        $valid = array_values(array_intersect(
+            $this->rolePilihan,
+            array_column(Role::cases(), 'value'),
+        ));
+
+        $user->syncRoles($valid);
+        $this->rolePilihan = $valid;
+        session()->flash('pesan', 'Role tersimpan.');
+    }
+
     public function updating($name, $value): void
     {
         if (in_array($name, ['q', 'filterRole', 'filterStatus'], true)) {

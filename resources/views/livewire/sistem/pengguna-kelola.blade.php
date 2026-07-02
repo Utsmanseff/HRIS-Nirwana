@@ -74,9 +74,38 @@
                                 @endif
                             </td>
                             <td class="px-4 py-2.5 text-right">
-                                {{-- Tombol Kelola diisi Task 5 --}}
+                                <button wire:click="bukaKelola({{ $u->id }})" class="btn btn-ghost btn-sm">Kelola</button>
                             </td>
                         </tr>
+                        @if ($kelolaId === $u->id)
+                            <tr class="border-b border-neutral-100 bg-neutral-50">
+                                <td colspan="6" class="px-4 py-4">
+                                    @error('kelola') <p class="text-sm font-semibold mb-3" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                                    @if (session('pesan')) <p class="text-sm font-semibold mb-3" style="color:var(--brand-600)">{{ session('pesan') }}</p> @endif
+
+                                    <div class="grid gap-4 lg:grid-cols-2">
+                                        <div>
+                                            <div class="field-label mb-2">Role (multi-role — hak = gabungan)</div>
+                                            <div class="grid grid-cols-2 gap-1.5">
+                                                @foreach ($semuaRole as $r)
+                                                    <label class="flex items-center gap-2 text-sm">
+                                                        <input type="checkbox" wire:model="rolePilihan" value="{{ $r->value }}" class="w-4 h-4 accent-brand-500">
+                                                        <span>{{ $r->value }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                            <div class="flex gap-2 mt-3">
+                                                <button wire:click="simpanRole" class="btn btn-primary btn-sm">Simpan Role</button>
+                                                <button wire:click="tutupKelola" class="btn btn-ghost btn-sm">Tutup</button>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-3">
+                                            {{-- Aksi akun: diisi Task 6 (reset sandi), Task 7 (nonaktif), Task 8 (unlink) --}}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr><td colspan="6" class="px-4 py-8 text-center text-neutral-400">Tidak ada pengguna cocok.</td></tr>
                     @endforelse
