@@ -100,7 +100,19 @@
                                             </div>
                                         </div>
                                         <div class="space-y-3">
-                                            {{-- Aksi akun: diisi Task 6 (reset sandi), Task 7 (nonaktif), Task 8 (unlink) --}}
+                                            <div>
+                                                <button wire:click="resetSandi"
+                                                        wire:confirm="Reset sandi akun {{ $u->name }}? Sandi lama tidak berlaku lagi."
+                                                        class="btn btn-secondary btn-sm w-full">Reset Sandi</button>
+                                                @if ($sandiSementara)
+                                                    <div class="mt-2 p-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm">
+                                                        Sandi sementara (catat sekarang, hanya tampil sekali):
+                                                        <div class="font-mono font-bold text-base mt-1">{{ $sandiSementara }}</div>
+                                                        <div class="text-xs text-neutral-400 mt-1">Sampaikan ke karyawan; sarankan ganti di halaman Profil.</div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            {{-- Aksi akun lain: diisi Task 7 (nonaktif), Task 8 (unlink) --}}
                                         </div>
                                     </div>
                                 </td>

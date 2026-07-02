@@ -4,6 +4,7 @@ namespace App\Livewire\Sistem;
 
 use App\Enums\Role;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -76,6 +77,18 @@ class PenggunaKelola extends Component
         $user->syncRoles($valid);
         $this->rolePilihan = $valid;
         session()->flash('pesan', 'Role tersimpan.');
+    }
+
+    public function resetSandi(): void
+    {
+        if (! $user = $this->targetKelola()) {
+            return;
+        }
+
+        $sandi = Str::password(12, symbols: false);
+        $user->update(['password' => $sandi]); // cast 'hashed' otomatis meng-hash
+
+        $this->sandiSementara = $sandi;
     }
 
     public function updating($name, $value): void
