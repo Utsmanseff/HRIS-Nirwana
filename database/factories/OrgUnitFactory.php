@@ -4,6 +4,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\OrgUnitTipe;
 use App\Models\OrgUnit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -13,7 +14,6 @@ class OrgUnitFactory extends Factory
 
     public function definition(): array
     {
-        // Pool nama besar — unique()->randomElement 6 opsi habis saat test membuat banyak karyawan.
-        return ['parent_id' => null, 'nama' => $this->faker->unique()->numerify('Divisi ###'), 'tipe' => 'divisi', 'aktif' => true];
+        return ['parent_id' => null, 'nama' => $this->faker->unique()->numerify('Unit ###'), 'tipe' => OrgUnitTipe::Unit->value, 'aktif' => true];
     }
 }
