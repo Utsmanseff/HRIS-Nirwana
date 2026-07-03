@@ -5,6 +5,7 @@
 namespace App\Models;
 
 use App\Enums\AlasanNonaktif;
+use App\Enums\JabatanLevel;
 use App\Enums\JenisKelamin;
 use App\Enums\JenisKontrak;
 use App\Enums\StatusKaryawan;
@@ -44,14 +45,62 @@ class Karyawan extends Model
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 
-    public function atasan(): BelongsTo
+    protected static function booted(): void
     {
-        return $this->belongsTo(self::class, 'atasan_id');
+        static::saving(function (self $k) {
+            // org_unit mengikuti jabatan; hanya isi bila belum diset eksplisit.
+            if (empty($k->org_unit_id) && $k->jabatan_id) {
+                $k->org_unit_id = Jabatan::whereKey($k->jabatan_id)->value('org_unit_id');
+            }
+        });
     }
 
-    public function bawahan(): HasMany
+    /** Atasan langsung, dihitung dari struktur (bukan kolom). */
+    public function atasanDerived(): ?self
     {
-        return $this->hasMany(self::class, 'atasan_id');
+        $unit = $this->orgUnit;
+        if (! $unit) {
+            return null;
+        }
+
+        $kepala = $unit->kepala();
+        $levelSaya = $this->jabatan?->level?->value ?? 0;
+
+        // Ada kepala di unit ini yang levelnya di atasku → dia atasanku.
+        if ($kepala && $kepala->id !== $this->id && $kepala->jabatan->level->value > $levelSaya) {
+            return $kepala;
+        }
+
+        // Aku kepala unit ini (atau tak ada yang lebih tinggi) → naik ke unit induk, skip yang kosong.
+        $induk = $unit->parent;
+        while ($induk) {
+            $kep = $induk->kepala();
+            if ($kep && $kep->id !== $this->id) {
+                return $kep;
+            }
+            $induk = $induk->parent;
+        }
+
+        return null;
+    }
+
+    /** True bila karyawan ini kepala unit dan ada anggota lain di unit/turunannya. */
+    public function punyaBawahan(): bool
+    {
+        $unit = $this->orgUnit;
+        if (! $unit || ($this->jabatan?->level?->value ?? 0) < JabatanLevel::Koordinator->value) {
+            return false;
+        }
+        $kepala = $unit->kepala();
+        if (! $kepala || $kepala->id !== $this->id) {
+            return false;
+        }
+
+        return static::query()
+            ->whereIn('org_unit_id', OrgUnit::denganTurunan($unit->id))
+            ->where('status', StatusKaryawan::Aktif->value)
+            ->where('id', '!=', $this->id)
+            ->exists();
     }
 
     public function kontrak(): HasMany
