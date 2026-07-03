@@ -24,9 +24,9 @@ class AppServiceProvider extends ServiceProvider
         // Admin Sistem bypass penuh.
         Gate::before(fn ($user, $ability) => $user->hasRole(Role::AdminSistem->value) ? true : null);
 
-        // Kemampuan struktural (derived dari atasan_id + jabatan.level), bukan role.
-        Gate::define('approve-cuti', fn ($user) => (bool) $user->karyawan?->bawahan()->exists());
-        Gate::define('usul-disiplin', fn ($user) => (bool) $user->karyawan?->bawahan()->exists());
+        // Kemampuan struktural (derived dari struktur org + jabatan.level), bukan role.
+        Gate::define('approve-cuti', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
+        Gate::define('usul-disiplin', fn ($user) => (bool) $user->karyawan?->punyaBawahan());
         Gate::define('kelola-jadwal-divisi', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2);
     }
 }

@@ -49,15 +49,25 @@ class RbacTest extends TestCase
     public function test_gate_approve_cuti_derived_dari_bawahan(): void
     {
         $this->seed(RoleSeeder::class);
-        $atasanKar = Karyawan::factory()->create();
-        Karyawan::factory()->create(['atasan_id' => $atasanKar->id]); // punya 1 bawahan
-        $atasan = User::factory()->create(['karyawan_id' => $atasanKar->id]);
+
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $koorKar = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        Karyawan::factory()->staffUnit($unit)->create(); // kepala punya 1 bawahan
+        $atasan = User::factory()->create(['karyawan_id' => $koorKar->id]);
         $atasan->assignRole(Role::Karyawan->value);
         $this->assertTrue($atasan->can('approve-cuti'));
 
-        $biasaKar = Karyawan::factory()->create(); // tanpa bawahan
+        $biasaKar = Karyawan::factory()->staffUnit($unit)->create(); // staff, tanpa bawahan
         $biasa = User::factory()->create(['karyawan_id' => $biasaKar->id]);
         $biasa->assignRole(Role::Karyawan->value);
         $this->assertFalse($biasa->can('approve-cuti'));
+    }
+
+    public function test_gate_approve_cuti_untuk_hrd_walau_tanpa_bawahan(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $u = $this->user();
+        $u->assignRole(Role::Hrd->value);
+        $this->assertTrue($u->can('approve-cuti'));
     }
 }

@@ -5,6 +5,7 @@
 namespace Database\Factories;
 
 use App\Models\Jabatan;
+use App\Models\OrgUnit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class JabatanFactory extends Factory
@@ -13,6 +14,6 @@ class JabatanFactory extends Factory
 
     public function definition(): array
     {
-        return ['nama' => $this->faker->jobTitle(), 'level' => 1, 'aktif' => true];
+        return ['nama' => $this->faker->jobTitle(), 'level' => 1, 'org_unit_id' => OrgUnit::factory(), 'aktif' => true];
     }
 }
