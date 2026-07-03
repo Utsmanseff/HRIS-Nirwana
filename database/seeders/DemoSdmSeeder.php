@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\JabatanLevel;
 use App\Enums\JenisKontrak;
 use App\Enums\OrgUnitTipe;
 use App\Enums\Role;
@@ -18,28 +17,59 @@ class DemoSdmSeeder extends Seeder
 {
     public function run(): void
     {
-        $bidang = OrgUnit::create(['nama' => 'Penunjang Medik', 'tipe' => OrgUnitTipe::Bidang->value]);
-        $it = OrgUnit::create(['nama' => 'IT', 'tipe' => OrgUnitTipe::Divisi->value, 'parent_id' => $bidang->id]);
-        $jab = Jabatan::create(['nama' => 'Admin Sistem', 'level' => JabatanLevel::Koordinator->value]);
+        // ── Struktur: Direktorat > 2 Bidang > beberapa Unit ────────────────
+        $direktorat = OrgUnit::create(['nama' => 'Direktorat', 'tipe' => OrgUnitTipe::Direktur->value]);
+        $penunjang = OrgUnit::create(['nama' => 'Penunjang Medik', 'tipe' => OrgUnitTipe::Bidang->value, 'parent_id' => $direktorat->id]);
+        $keperawatan = OrgUnit::create(['nama' => 'Keperawatan', 'tipe' => OrgUnitTipe::Bidang->value, 'parent_id' => $direktorat->id]);
 
-        $adminKar = Karyawan::create([
-            'nip' => 'ADMIN-0001', 'nama_lengkap' => 'Administrator Sistem',
-            'email' => 'admin@rsunirwana.test', 'org_unit_id' => $it->id, 'jabatan_id' => $jab->id,
-            'tanggal_masuk' => now()->subYears(3), 'status' => 'aktif',
-        ]);
-        Kontrak::create(['karyawan_id' => $adminKar->id, 'jenis' => JenisKontrak::Tetap->value, 'tanggal_mulai' => now()->subYears(3)]);
+        $farmasi = OrgUnit::create(['nama' => 'Farmasi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $penunjang->id]);
+        $it = OrgUnit::create(['nama' => 'IT', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $penunjang->id]);
+        $igd = OrgUnit::create(['nama' => 'IGD', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $keperawatan->id]);
+
+        // ── Pimpinan tiap tingkat ──────────────────────────────────────────
+        $this->pimpinan($direktorat, 'Direktur', 4, 'Dr. Direktur Utama', 'DIR-0001', tetap: true);
+        $this->pimpinan($penunjang, 'Kepala Bidang Penunjang', 3, 'Kabid Penunjang', 'KBD-0001', tetap: true);
+        $this->pimpinan($keperawatan, 'Kepala Bidang Keperawatan', 3, 'Kabid Keperawatan', 'KBD-0002', tetap: true);
+        $this->pimpinan($farmasi, 'Koordinator Farmasi', 2, 'Koor Farmasi', 'KOR-0001', tetap: true);
+        $this->pimpinan($igd, 'Koordinator IGD', 2, 'Koor IGD', 'KOR-0002', tetap: true);
+
+        // ── Admin Sistem = Koordinator IT + akun bootstrap ─────────────────
+        $adminKar = $this->pimpinan($it, 'Koordinator IT', 2, 'Administrator Sistem', 'ADMIN-0001', tetap: true, email: 'admin@rsunirwana.test');
         $admin = User::create([
             'karyawan_id' => $adminKar->id, 'name' => $adminKar->nama_lengkap,
             'email' => $adminKar->email, 'password' => Hash::make('password'),
         ]);
         $admin->assignRole(Role::AdminSistem->value);
 
-        // 8 karyawan demo (untuk list/dashboard) — sebagian PKWT mendekati/melewati akhir.
-        Karyawan::factory()->count(8)->create(['org_unit_id' => $it->id, 'jabatan_id' => $jab->id])
-            ->each(fn ($k) => Kontrak::factory()->for($k)->create([
-                'jenis' => JenisKontrak::Pkwt->value,
-                'tanggal_mulai' => now()->subMonths(10),
-                'tanggal_akhir' => now()->addDays(rand(-10, 60)),
-            ]));
+        // ── Staff PKWT (sebagian mendekati/melewati akhir kontrak) ─────────
+        $unitStaff = [$farmasi, $it, $igd];
+        foreach ($unitStaff as $unit) {
+            $jabStaff = Jabatan::create(['nama' => 'Staff '.$unit->nama, 'level' => 1, 'org_unit_id' => $unit->id]);
+            Karyawan::factory()->count(3)->create(['jabatan_id' => $jabStaff->id, 'org_unit_id' => $unit->id])
+                ->each(fn ($k) => Kontrak::factory()->for($k)->create([
+                    'jenis' => JenisKontrak::Pkwt->value,
+                    'tanggal_mulai' => now()->subMonths(10),
+                    'tanggal_akhir' => now()->addDays(rand(-10, 60)),
+                ]));
+        }
+    }
+
+    /** Buat 1 pimpinan (jabatan level + karyawan + kontrak tetap/pkwt) untuk sebuah unit. */
+    private function pimpinan(OrgUnit $unit, string $namaJabatan, int $level, string $nama, string $nip, bool $tetap = false, ?string $email = null): Karyawan
+    {
+        $jab = Jabatan::create(['nama' => $namaJabatan, 'level' => $level, 'org_unit_id' => $unit->id]);
+        $kar = Karyawan::create([
+            'nip' => $nip, 'nama_lengkap' => $nama, 'email' => $email ?? strtolower(str_replace(' ', '.', $nip)).'@rsunirwana.test',
+            'org_unit_id' => $unit->id, 'jabatan_id' => $jab->id,
+            'tanggal_masuk' => now()->subYears(3), 'status' => 'aktif',
+        ]);
+        Kontrak::create([
+            'karyawan_id' => $kar->id,
+            'jenis' => $tetap ? JenisKontrak::Tetap->value : JenisKontrak::Pkwt->value,
+            'tanggal_mulai' => now()->subYears(3),
+            'tanggal_akhir' => $tetap ? null : now()->addYear(),
+        ]);
+
+        return $kar;
     }
 }
