@@ -56,6 +56,37 @@ class OrgUnit extends Model
             ->first();
     }
 
+    /** Nama default jabatan pimpinan untuk unit ini (editable setelah dibuat). */
+    public function namaPimpinan(): string
+    {
+        return match ($this->tipe) {
+            OrgUnitTipe::Direktur => 'Direktur',
+            OrgUnitTipe::Bidang => 'Kabid '.$this->nama,
+            OrgUnitTipe::Bagian => 'Kabag '.$this->nama,
+            OrgUnitTipe::Unit => 'Koordinator '.$this->nama,
+        };
+    }
+
+    /** Jabatan pimpinan unit (1 per unit) — dibuat lazy dengan level sesuai tipe. */
+    public function jabatanPimpinan(): Jabatan
+    {
+        $level = $this->tipe->levelPimpinan()->value;
+
+        return Jabatan::firstOrCreate(
+            ['org_unit_id' => $this->id, 'level' => $level],
+            ['nama' => $this->namaPimpinan(), 'aktif' => true],
+        );
+    }
+
+    /** Jabatan staff generik unit (target demote kepala lama) — dibuat lazy. */
+    public function jabatanStaffDefault(): Jabatan
+    {
+        return Jabatan::firstOrCreate(
+            ['org_unit_id' => $this->id, 'level' => 1, 'nama' => 'Staff '.$this->nama],
+            ['aktif' => true],
+        );
+    }
+
     public function scopeAkar($q)
     {
         return $q->whereNull('parent_id');
