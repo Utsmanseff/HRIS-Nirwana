@@ -14,10 +14,10 @@ class OrgUnitTest extends TestCase
     public function test_pohon_parent_dan_children(): void
     {
         $bidang = OrgUnit::factory()->create(['nama' => 'Penunjang Medik', 'tipe' => OrgUnitTipe::Bidang]);
-        $divisi = OrgUnit::factory()->create(['tipe' => OrgUnitTipe::Divisi, 'parent_id' => $bidang->id]);
-        $this->assertTrue($bidang->children->contains($divisi));
-        $this->assertEquals($bidang->id, $divisi->parent->id);
-        $this->assertSame(OrgUnitTipe::Divisi, $divisi->tipe);
+        $unit = OrgUnit::factory()->create(['tipe' => OrgUnitTipe::Unit, 'parent_id' => $bidang->id]);
+        $this->assertTrue($bidang->children->contains($unit));
+        $this->assertEquals($bidang->id, $unit->parent->id);
+        $this->assertSame(OrgUnitTipe::Unit, $unit->tipe);
     }
 
     public function test_scope_akar(): void
