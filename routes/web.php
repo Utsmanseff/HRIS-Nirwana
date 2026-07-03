@@ -8,7 +8,6 @@ use App\Livewire\Auth\Klaim;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
 use App\Livewire\Profil;
-use App\Livewire\Sdm\JabatanKelola;
 use App\Livewire\Sdm\KaryawanDetail;
 use App\Livewire\Sdm\KaryawanForm;
 use App\Livewire\Sdm\KaryawanIndex;
@@ -58,7 +57,6 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sdm/karyawan/{karyawan}', KaryawanDetail::class)->name('sdm.karyawan.detail');
         Route::get('/sdm/karyawan/{karyawan}/ubah', KaryawanForm::class)->name('sdm.karyawan.ubah');
         Route::get('/sdm/dokumen/{dokumen}', [DokumenController::class, 'unduh'])->name('sdm.dokumen.unduh');
-        Route::get('/sdm/jabatan', JabatanKelola::class)->name('sdm.jabatan');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
         Route::get('/sdm/laporan/karyawan', [LaporanSdmController::class, 'karyawan'])->name('sdm.laporan.karyawan');
         Route::get('/sdm/laporan/pengingat-kontrak', [LaporanSdmController::class, 'pengingatKontrak'])->name('sdm.laporan.pengingat');
