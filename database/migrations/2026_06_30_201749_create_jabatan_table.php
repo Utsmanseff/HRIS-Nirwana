@@ -12,6 +12,7 @@ return new class extends Migration
             $t->id();
             $t->string('nama');
             $t->tinyInteger('level')->default(1);
+            $t->foreignId('org_unit_id')->constrained('org_units');
             $t->boolean('aktif')->default(true);
             $t->timestamps();
         });

@@ -25,7 +25,6 @@ return new class extends Migration
             $t->string('pendidikan_terakhir')->nullable();
             $t->foreignId('org_unit_id')->constrained('org_units');
             $t->foreignId('jabatan_id')->constrained('jabatan');
-            $t->foreignId('atasan_id')->nullable()->constrained('karyawan')->nullOnDelete();
             $t->date('tanggal_masuk')->nullable();
             $t->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $t->enum('alasan_nonaktif', ['resign', 'kontrak_berakhir', 'phk', 'pensiun', 'meninggal'])->nullable();

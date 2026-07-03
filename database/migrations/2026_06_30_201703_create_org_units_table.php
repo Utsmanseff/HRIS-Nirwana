@@ -12,7 +12,7 @@ return new class extends Migration
             $t->id();
             $t->foreignId('parent_id')->nullable()->constrained('org_units')->nullOnDelete();
             $t->string('nama');
-            $t->enum('tipe', ['bidang', 'divisi', 'unit'])->default('divisi');
+            $t->enum('tipe', ['direktur', 'bidang', 'bagian', 'unit'])->default('unit');
             $t->boolean('aktif')->default(true);
             $t->timestamps();
         });
