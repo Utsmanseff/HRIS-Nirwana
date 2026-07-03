@@ -3,6 +3,7 @@
 namespace App\Livewire\Sdm;
 
 use App\Enums\OrgUnitTipe;
+use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -19,6 +20,14 @@ class OrgStruktur extends Component
     public string $tipe = 'unit';
 
     public ?int $parentId = null;
+
+    // Panel Set Kepala
+    public ?int $setKepalaUnitId = null;
+
+    public string $cariKaryawan = '';
+
+    // Panel Kelola Jabatan (dipakai penuh Task 6; di-reset lintas panel di sini)
+    public ?int $jabatanUnitId = null;
 
     public function baru(?int $parentId = null): void
     {
@@ -61,6 +70,26 @@ class OrgStruktur extends Component
         $this->batal();
     }
 
+    public function bukaSetKepala(int $unitId): void
+    {
+        $this->reset(['cariKaryawan']);
+        $this->setKepalaUnitId = $unitId;
+        $this->jabatanUnitId = null;
+        $this->showForm = false;
+    }
+
+    public function tutupSetKepala(): void
+    {
+        $this->reset(['setKepalaUnitId', 'cariKaryawan']);
+    }
+
+    public function pilihKepala(int $karyawanId): void
+    {
+        $unit = OrgUnit::findOrFail($this->setKepalaUnitId);
+        $unit->setKepala(Karyawan::findOrFail($karyawanId));
+        $this->tutupSetKepala();
+    }
+
     public function render()
     {
         // Muat pohon: akar + anak berjenjang (kedalaman wajar 3-4 level).
@@ -71,10 +100,18 @@ class OrgStruktur extends Component
                     ->with('children')])])
             ->orderBy('nama')->get();
 
+        $hasilCari = ($this->setKepalaUnitId && trim($this->cariKaryawan) !== '')
+            ? Karyawan::aktif()
+                ->where(fn ($q) => $q->where('nama_lengkap', 'like', '%'.trim($this->cariKaryawan).'%')
+                    ->orWhere('nip', 'like', '%'.trim($this->cariKaryawan).'%'))
+                ->orderBy('nama_lengkap')->limit(8)->get(['id', 'nama_lengkap', 'nip'])
+            : collect();
+
         return view('livewire.sdm.org-struktur', [
             'akar' => $akar,
             'semuaUnit' => OrgUnit::orderBy('nama')->get(['id', 'nama']),
             'tipeOptions' => OrgUnitTipe::cases(),
+            'hasilCari' => $hasilCari,
         ]);
     }
 }

@@ -41,6 +41,32 @@
         </div>
     @endif
 
+    @if ($setKepalaUnitId)
+        <div class="card card-pad space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="card-title">Set Kepala Unit</div>
+                <button wire:click="tutupSetKepala" class="btn btn-ghost btn-sm">Tutup</button>
+            </div>
+            <div>
+                <label class="field-label">Cari karyawan (nama / NIP)</label>
+                <input wire:model.live.debounce.300ms="cariKaryawan" class="input" placeholder="ketik nama atau NIP…">
+            </div>
+            @if ($hasilCari->isNotEmpty())
+                <div class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg">
+                    @foreach ($hasilCari as $c)
+                        <div class="flex items-center justify-between px-3 py-2">
+                            <div class="text-sm"><span class="font-semibold">{{ $c->nama_lengkap }}</span>
+                                <span class="text-xs text-neutral-400 font-mono">{{ $c->nip }}</span></div>
+                            <button wire:click="pilihKepala({{ $c->id }})" class="btn btn-primary btn-sm">Jadikan kepala</button>
+                        </div>
+                    @endforeach
+                </div>
+            @elseif (trim($cariKaryawan) !== '')
+                <p class="text-xs text-neutral-400">Tak ada hasil. Coba kata kunci lain atau tambah cepat.</p>
+            @endif
+        </div>
+    @endif
+
     <div class="card card-pad">
         <div class="space-y-0.5">
             @forelse ($akar as $unit)

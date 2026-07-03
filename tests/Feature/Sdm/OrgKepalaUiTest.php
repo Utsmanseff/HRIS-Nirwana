@@ -40,4 +40,19 @@ class OrgKepalaUiTest extends TestCase
         Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
             ->assertSee('Belum ada kepala');
     }
+
+    public function test_cari_lalu_pilih_kepala_dari_existing(): void
+    {
+        $unit = OrgUnit::factory()->create(['nama' => 'Radiologi', 'parent_id' => null]);
+        $calon = Karyawan::factory()->staffUnit($unit)->create(['nama_lengkap' => 'Sari Calon', 'nip' => 'RAD-9']);
+
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('bukaSetKepala', $unit->id)
+            ->set('cariKaryawan', 'Sari')
+            ->assertSee('Sari Calon')
+            ->call('pilihKepala', $calon->id)
+            ->assertHasNoErrors();
+
+        $this->assertEquals($calon->id, $unit->fresh()->kepala()->id);
+    }
 }
