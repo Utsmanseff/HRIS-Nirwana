@@ -24,10 +24,27 @@ class KaryawanFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'org_unit_id' => OrgUnit::factory(),
             'jabatan_id' => Jabatan::factory(),
-            'atasan_id' => null,
             'tanggal_masuk' => $this->faker->dateTimeBetween('-5 years', 'now'),
             'status' => 'aktif',
         ];
+    }
+
+    /** Pimpinan sebuah unit (level 2 koordinator / 3 kabid / 4 direktur). */
+    public function pimpinanUnit(OrgUnit $unit, int $level = 2): static
+    {
+        return $this->state(fn () => [
+            'jabatan_id' => Jabatan::factory()->create(['org_unit_id' => $unit->id, 'level' => $level])->id,
+            'org_unit_id' => $unit->id,
+        ]);
+    }
+
+    /** Staff (level 1) di sebuah unit. */
+    public function staffUnit(OrgUnit $unit): static
+    {
+        return $this->state(fn () => [
+            'jabatan_id' => Jabatan::factory()->create(['org_unit_id' => $unit->id, 'level' => 1])->id,
+            'org_unit_id' => $unit->id,
+        ]);
     }
 
     /** Karyawan nakes dengan SIP terisi (berlaku, belum habis). */

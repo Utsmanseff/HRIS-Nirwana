@@ -5,6 +5,7 @@
 namespace App\Models;
 
 use App\Enums\OrgUnitTipe;
+use App\Enums\StatusKaryawan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,23 @@ class OrgUnit extends Model
     public function karyawan(): HasMany
     {
         return $this->hasMany(Karyawan::class, 'org_unit_id');
+    }
+
+    public function jabatan(): HasMany
+    {
+        return $this->hasMany(Jabatan::class, 'org_unit_id');
+    }
+
+    /** Kepala unit = karyawan aktif dengan level jabatan tertinggi (>=2). Null bila tak ada. */
+    public function kepala(): ?Karyawan
+    {
+        return $this->karyawan()
+            ->where('status', StatusKaryawan::Aktif->value)
+            ->with('jabatan')
+            ->get()
+            ->filter(fn (Karyawan $k) => ($k->jabatan?->level?->value ?? 0) >= 2)
+            ->sortByDesc(fn (Karyawan $k) => $k->jabatan->level->value)
+            ->first();
     }
 
     public function scopeAkar($q)
