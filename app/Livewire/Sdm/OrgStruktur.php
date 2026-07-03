@@ -3,6 +3,7 @@
 namespace App\Livewire\Sdm;
 
 use App\Enums\OrgUnitTipe;
+use App\Models\Jabatan;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use Livewire\Attributes\Layout;
@@ -33,8 +34,12 @@ class OrgStruktur extends Component
 
     public string $tcTanggalMasuk = '';
 
-    // Panel Kelola Jabatan (dipakai penuh Task 6; di-reset lintas panel di sini)
+    // Panel Kelola Jabatan Staff
     public ?int $jabatanUnitId = null;
+
+    public string $jNama = '';
+
+    public ?int $editJabatanId = null;
 
     public function baru(?int $parentId = null): void
     {
@@ -121,6 +126,38 @@ class OrgStruktur extends Component
         $this->tutupSetKepala();
     }
 
+    public function bukaJabatan(int $unitId): void
+    {
+        $this->reset(['jNama', 'editJabatanId']);
+        $this->jabatanUnitId = $unitId;
+        $this->setKepalaUnitId = null;
+        $this->showForm = false;
+    }
+
+    public function tutupJabatan(): void
+    {
+        $this->reset(['jabatanUnitId', 'jNama', 'editJabatanId']);
+    }
+
+    public function editJabatanStaff(int $id): void
+    {
+        $jab = Jabatan::findOrFail($id);
+        $this->editJabatanId = $jab->id;
+        $this->jNama = $jab->nama;
+    }
+
+    public function simpanJabatanStaff(): void
+    {
+        $data = $this->validate(['jNama' => ['required', 'string', 'max:120']]);
+
+        Jabatan::updateOrCreate(
+            ['id' => $this->editJabatanId],
+            ['nama' => $data['jNama'], 'level' => 1, 'org_unit_id' => $this->jabatanUnitId, 'aktif' => true],
+        );
+
+        $this->reset(['jNama', 'editJabatanId']);
+    }
+
     public function render()
     {
         // Muat pohon: akar + anak berjenjang (kedalaman wajar 3-4 level).
@@ -138,11 +175,16 @@ class OrgStruktur extends Component
                 ->orderBy('nama_lengkap')->limit(8)->get(['id', 'nama_lengkap', 'nip'])
             : collect();
 
+        $jabatanUnit = $this->jabatanUnitId
+            ? Jabatan::where('org_unit_id', $this->jabatanUnitId)->staff()->orderBy('nama')->get()
+            : collect();
+
         return view('livewire.sdm.org-struktur', [
             'akar' => $akar,
             'semuaUnit' => OrgUnit::orderBy('nama')->get(['id', 'nama']),
             'tipeOptions' => OrgUnitTipe::cases(),
             'hasilCari' => $hasilCari,
+            'jabatanUnit' => $jabatanUnit,
         ]);
     }
 }
