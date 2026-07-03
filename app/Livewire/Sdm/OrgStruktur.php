@@ -26,6 +26,13 @@ class OrgStruktur extends Component
 
     public string $cariKaryawan = '';
 
+    // Tambah cepat kepala
+    public string $tcNip = '';
+
+    public string $tcNama = '';
+
+    public string $tcTanggalMasuk = '';
+
     // Panel Kelola Jabatan (dipakai penuh Task 6; di-reset lintas panel di sini)
     public ?int $jabatanUnitId = null;
 
@@ -72,7 +79,7 @@ class OrgStruktur extends Component
 
     public function bukaSetKepala(int $unitId): void
     {
-        $this->reset(['cariKaryawan']);
+        $this->reset(['cariKaryawan', 'tcNip', 'tcNama', 'tcTanggalMasuk']);
         $this->setKepalaUnitId = $unitId;
         $this->jabatanUnitId = null;
         $this->showForm = false;
@@ -80,13 +87,37 @@ class OrgStruktur extends Component
 
     public function tutupSetKepala(): void
     {
-        $this->reset(['setKepalaUnitId', 'cariKaryawan']);
+        $this->reset(['setKepalaUnitId', 'cariKaryawan', 'tcNip', 'tcNama', 'tcTanggalMasuk']);
     }
 
     public function pilihKepala(int $karyawanId): void
     {
         $unit = OrgUnit::findOrFail($this->setKepalaUnitId);
         $unit->setKepala(Karyawan::findOrFail($karyawanId));
+        $this->tutupSetKepala();
+    }
+
+    public function tambahCepatKepala(): void
+    {
+        $data = $this->validate([
+            'tcNip' => ['required', 'string', 'max:50', 'unique:karyawan,nip'],
+            'tcNama' => ['required', 'string', 'max:150'],
+            'tcTanggalMasuk' => ['nullable', 'date'],
+        ]);
+
+        $unit = OrgUnit::findOrFail($this->setKepalaUnitId);
+
+        // Buat sebagai staff dulu (hindari ambiguitas kepala), lalu promosikan.
+        $kar = Karyawan::create([
+            'nip' => $data['tcNip'],
+            'nama_lengkap' => $data['tcNama'],
+            'tanggal_masuk' => $data['tcTanggalMasuk'] ?: null,
+            'jabatan_id' => $unit->jabatanStaffDefault()->id,
+            'org_unit_id' => $unit->id,
+            'status' => 'aktif',
+        ]);
+        $unit->setKepala($kar);
+
         $this->tutupSetKepala();
     }
 

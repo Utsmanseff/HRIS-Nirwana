@@ -55,4 +55,34 @@ class OrgKepalaUiTest extends TestCase
 
         $this->assertEquals($calon->id, $unit->fresh()->kepala()->id);
     }
+
+    public function test_tambah_cepat_buat_karyawan_lalu_jadi_kepala(): void
+    {
+        $unit = OrgUnit::factory()->create(['nama' => 'Gizi', 'parent_id' => null]);
+
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('bukaSetKepala', $unit->id)
+            ->set('tcNip', 'GZ-001')
+            ->set('tcNama', 'Dewi Baru')
+            ->set('tcTanggalMasuk', '2024-01-10')
+            ->call('tambahCepatKepala')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('karyawan', ['nip' => 'GZ-001', 'nama_lengkap' => 'Dewi Baru']);
+        $kepala = $unit->fresh()->kepala();
+        $this->assertNotNull($kepala);
+        $this->assertSame('GZ-001', $kepala->nip);
+    }
+
+    public function test_tambah_cepat_nip_dan_nama_wajib(): void
+    {
+        $unit = OrgUnit::factory()->create(['parent_id' => null]);
+
+        Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
+            ->call('bukaSetKepala', $unit->id)
+            ->set('tcNip', '')
+            ->set('tcNama', '')
+            ->call('tambahCepatKepala')
+            ->assertHasErrors(['tcNip', 'tcNama']);
+    }
 }

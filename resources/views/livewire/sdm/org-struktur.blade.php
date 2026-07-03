@@ -64,6 +64,26 @@
             @elseif (trim($cariKaryawan) !== '')
                 <p class="text-xs text-neutral-400">Tak ada hasil. Coba kata kunci lain atau tambah cepat.</p>
             @endif
+            <div class="pt-2 border-t border-neutral-100 space-y-2">
+                <div class="text-xs font-semibold text-neutral-500">Atau tambah karyawan baru sebagai kepala</div>
+                <div class="grid sm:grid-cols-3 gap-2">
+                    <div>
+                        <label class="field-label">NIP *</label>
+                        <input wire:model="tcNip" class="input @error('tcNip') input-error @enderror">
+                        @error('tcNip') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label">Nama *</label>
+                        <input wire:model="tcNama" class="input @error('tcNama') input-error @enderror">
+                        @error('tcNama') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label">Tanggal Masuk</label>
+                        <input type="date" wire:model="tcTanggalMasuk" class="input">
+                    </div>
+                </div>
+                <button wire:click="tambahCepatKepala" class="btn btn-secondary btn-sm">Tambah &amp; jadikan kepala</button>
+            </div>
         </div>
     @endif
 
