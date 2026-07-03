@@ -76,9 +76,9 @@ class KaryawanIndexTest extends TestCase
     public function test_filter_unit_termasuk_turunan(): void
     {
         $bidang = OrgUnit::factory()->create(['nama' => 'Penunjang', 'tipe' => 'bidang', 'parent_id' => null]);
-        $divisi = OrgUnit::factory()->create(['nama' => 'Divisi IT', 'tipe' => 'divisi', 'parent_id' => $bidang->id]);
+        $unit = OrgUnit::factory()->create(['nama' => 'Unit IT', 'tipe' => 'unit', 'parent_id' => $bidang->id]);
         $lain = OrgUnit::factory()->create(['nama' => 'Bidang Lain', 'tipe' => 'bidang', 'parent_id' => null]);
-        Karyawan::factory()->create(['nama_lengkap' => 'Anak Divisi', 'org_unit_id' => $divisi->id]);
+        Karyawan::factory()->create(['nama_lengkap' => 'Anak Divisi', 'org_unit_id' => $unit->id]);
         Karyawan::factory()->create(['nama_lengkap' => 'Orang Lain', 'org_unit_id' => $lain->id]);
 
         Livewire::actingAs($this->userSdm())->test(KaryawanIndex::class)

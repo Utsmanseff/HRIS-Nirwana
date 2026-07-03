@@ -19,14 +19,14 @@ class KaryawanTest extends TestCase
         Karyawan::factory()->create(['nip' => '1990.04.21.001']);
     }
 
-    public function test_relasi_org_jabatan_atasan(): void
+    public function test_relasi_org_jabatan_dan_atasan_derived(): void
     {
-        $atasan = Karyawan::factory()->create();
-        $k = Karyawan::factory()->create(['atasan_id' => $atasan->id]);
-        $this->assertEquals($atasan->id, $k->atasan->id);
-        $this->assertTrue($atasan->bawahan->contains($k));
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        $k = Karyawan::factory()->staffUnit($unit)->create();
         $this->assertNotNull($k->orgUnit);
         $this->assertNotNull($k->jabatan);
+        $this->assertEquals($koor->id, $k->atasanDerived()->id);
     }
 
     public function test_scope_aktif(): void

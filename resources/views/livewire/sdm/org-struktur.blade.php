@@ -1,7 +1,7 @@
 <div class="space-y-4 rise">
     <div class="flex items-center justify-between">
         <div><h1 class="text-lg font-extrabold tracking-tight">Struktur Organisasi</h1>
-            <p class="text-sm text-neutral-500 max-w-xl">Pohon unit organisasi (Bidang → Divisi → Unit). Terpisah dari jabatan.</p></div>
+            <p class="text-sm text-neutral-500 max-w-xl">Pohon unit organisasi (Direktur → Bidang/Bagian → Unit). Terpisah dari jabatan.</p></div>
         <button wire:click="baru" class="btn btn-primary btn-sm">+ Tambah Unit</button>
     </div>
 
@@ -10,7 +10,7 @@
             <div class="card-title">{{ $editingId ? 'Ubah Unit' : 'Unit Baru' }}</div>
             <div>
                 <label class="field-label">Nama Unit</label>
-                <input wire:model="nama" class="input @error('nama') input-error @enderror" placeholder="mis. Divisi Farmasi">
+                <input wire:model="nama" class="input @error('nama') input-error @enderror" placeholder="mis. Unit Farmasi">
                 @error('nama') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
             </div>
             <div class="grid sm:grid-cols-2 gap-3">

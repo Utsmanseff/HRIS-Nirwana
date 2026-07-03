@@ -97,7 +97,8 @@
                     <div class="card-header"><div class="card-title">Kepegawaian</div></div>
                     <dl class="card-pad space-y-4 text-sm">
                         <div><dt class="text-neutral-500 text-xs">Tanggal Masuk</dt><dd class="font-semibold">{{ $karyawan->tanggal_masuk?->translatedFormat('j M Y') ?? '—' }}</dd></div>
-                        <div><dt class="text-neutral-500 text-xs">Atasan Langsung</dt><dd class="font-semibold">{{ $karyawan->atasan?->nama_lengkap ?? '—' }}@if ($karyawan->atasan?->jabatan) · {{ $karyawan->atasan->jabatan->nama }}@endif</dd></div>
+                        @php $atasan = $karyawan->atasanDerived(); @endphp
+                        <div><dt class="text-neutral-500 text-xs">Atasan Langsung</dt><dd class="font-semibold">{{ $atasan?->nama_lengkap ?? '—' }}@if ($atasan?->jabatan) · {{ $atasan->jabatan->nama }}@endif</dd></div>
                         <div><dt class="text-neutral-500 text-xs">Level Jabatan</dt><dd class="font-semibold">L{{ $karyawan->jabatan->level->value }} · {{ ucfirst($karyawan->jabatan->level->name) }}</dd></div>
                         @if ($karyawan->sip_nomor)
                             <div><dt class="text-neutral-500 text-xs">Nomor SIP</dt><dd class="font-mono font-semibold">{{ $karyawan->sip_nomor }}</dd></div>

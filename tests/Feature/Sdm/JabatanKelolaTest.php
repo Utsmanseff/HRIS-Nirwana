@@ -37,14 +37,17 @@ class JabatanKelolaTest extends TestCase
 
     public function test_tambah_jabatan_baru(): void
     {
+        $unit = \App\Models\OrgUnit::factory()->create();
+
         Livewire::actingAs($this->userSdm())->test(JabatanKelola::class)
             ->call('baru')
             ->set('nama', 'Radiografer')
             ->set('level', 1)
+            ->set('orgUnitId', $unit->id)
             ->call('simpan')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('jabatan', ['nama' => 'Radiografer', 'level' => 1]);
+        $this->assertDatabaseHas('jabatan', ['nama' => 'Radiografer', 'level' => 1, 'org_unit_id' => $unit->id]);
     }
 
     public function test_ubah_jabatan(): void

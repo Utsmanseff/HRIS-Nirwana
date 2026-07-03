@@ -55,8 +55,6 @@ class KaryawanForm extends Component
 
     public string $jabatanId = '';
 
-    public string $atasanId = '';
-
     public string $tanggalMasuk = '';
 
     // Kontrak tahap awal (hanya saat tambah)
@@ -92,7 +90,6 @@ class KaryawanForm extends Component
         $this->alamat = $karyawan->alamat ?? '';
         $this->orgUnitId = (string) $karyawan->org_unit_id;
         $this->jabatanId = (string) $karyawan->jabatan_id;
-        $this->atasanId = (string) ($karyawan->atasan_id ?? '');
         $this->tanggalMasuk = $karyawan->tanggal_masuk?->format('Y-m-d') ?? '';
     }
 
@@ -116,7 +113,6 @@ class KaryawanForm extends Component
             'alamat' => ['nullable', 'string', 'max:500'],
             'orgUnitId' => ['required', 'exists:org_units,id'],
             'jabatanId' => ['required', 'exists:jabatan,id'],
-            'atasanId' => ['nullable', 'exists:karyawan,id'],
             'tanggalMasuk' => ['required', 'date'],
         ] + ($this->karyawan ? [] : [
             'jenisKontrak' => ['required', 'in:percobaan_unpaid,percobaan,pkwt,tetap'],
@@ -151,7 +147,6 @@ class KaryawanForm extends Component
             'alamat' => $opsional($this->alamat),
             'org_unit_id' => (int) $this->orgUnitId,
             'jabatan_id' => (int) $this->jabatanId,
-            'atasan_id' => $this->atasanId === '' ? null : (int) $this->atasanId,
             'tanggal_masuk' => $this->tanggalMasuk,
         ];
     }
@@ -188,7 +183,6 @@ class KaryawanForm extends Component
         return view('livewire.sdm.karyawan-form', [
             'unitOptions' => OrgUnit::orderBy('nama')->get(['id', 'nama']),
             'jabatanOptions' => Jabatan::orderBy('level')->orderBy('nama')->get(['id', 'nama', 'level']),
-            'atasanOptions' => Karyawan::aktif()->orderBy('nama_lengkap')->get(['id', 'nama_lengkap']),
             'kontrakOptions' => JenisKontrak::cases(),
         ]);
     }

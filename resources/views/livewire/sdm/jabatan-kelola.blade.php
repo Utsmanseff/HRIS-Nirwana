@@ -21,6 +21,16 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <label class="field-label">Unit</label>
+                <select wire:model="orgUnitId" class="input @error('orgUnitId') input-error @enderror">
+                    <option value="">— Pilih unit —</option>
+                    @foreach ($unitOptions as $u)
+                        <option value="{{ $u->id }}">{{ $u->nama }}</option>
+                    @endforeach
+                </select>
+                @error('orgUnitId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
             <div class="flex gap-2 pt-1">
                 <button wire:click="simpan" class="btn btn-primary btn-sm">Simpan</button>
                 <button wire:click="batal" class="btn btn-ghost btn-sm">Batal</button>

@@ -27,7 +27,7 @@
         <div class="card-header"><div class="card-title">Kepegawaian</div></div>
         <dl class="card-pad grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div class="flex justify-between gap-2 border-b border-neutral-100 pb-2"><dt class="text-neutral-500">Unit</dt><dd class="font-semibold text-right">{{ $karyawan->orgUnit?->nama ?: '—' }}</dd></div>
-            <div class="flex justify-between gap-2 border-b border-neutral-100 pb-2"><dt class="text-neutral-500">Atasan Langsung</dt><dd class="font-semibold text-right">{{ $karyawan->atasan?->nama_lengkap ?: '—' }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-neutral-100 pb-2"><dt class="text-neutral-500">Atasan Langsung</dt><dd class="font-semibold text-right">{{ $karyawan->atasanDerived()?->nama_lengkap ?: '—' }}</dd></div>
         </dl>
         <p class="px-4 pb-3 text-[11px] text-neutral-400">Data pribadi &amp; kepegawaian dikelola SDM. Untuk koreksi, hubungi bagian SDM.</p>
     </div>

@@ -16,14 +16,14 @@ class OrgStruktur extends Component
 
     public string $nama = '';
 
-    public string $tipe = 'divisi';
+    public string $tipe = 'unit';
 
     public ?int $parentId = null;
 
     public function baru(?int $parentId = null): void
     {
         $this->reset(['editingId', 'nama']);
-        $this->tipe = 'divisi';
+        $this->tipe = 'unit';
         $this->parentId = $parentId;
         $this->showForm = true;
     }
@@ -47,7 +47,7 @@ class OrgStruktur extends Component
     {
         $data = $this->validate([
             'nama' => ['required', 'string', 'max:120'],
-            'tipe' => ['required', 'in:bidang,divisi,unit'],
+            'tipe' => ['required', 'in:direktur,bidang,bagian,unit'],
             'parentId' => ['nullable', 'exists:org_units,id'],
         ]);
 

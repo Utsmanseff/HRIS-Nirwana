@@ -28,11 +28,11 @@ class OrgStrukturTest extends TestCase
     public function test_tree_menampilkan_akar_dan_anak(): void
     {
         $bidang = OrgUnit::factory()->create(['nama' => 'Penunjang Medik', 'tipe' => 'bidang', 'parent_id' => null]);
-        OrgUnit::factory()->create(['nama' => 'Divisi IT', 'tipe' => 'divisi', 'parent_id' => $bidang->id]);
+        OrgUnit::factory()->create(['nama' => 'Unit IT', 'tipe' => 'unit', 'parent_id' => $bidang->id]);
 
         Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
             ->assertSee('Penunjang Medik')
-            ->assertSee('Divisi IT');
+            ->assertSee('Unit IT');
     }
 
     public function test_tambah_unit_dengan_parent(): void
@@ -41,17 +41,17 @@ class OrgStrukturTest extends TestCase
 
         Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
             ->call('baru', $bidang->id)
-            ->set('nama', 'Divisi SDM')
-            ->set('tipe', 'divisi')
+            ->set('nama', 'Unit SDM')
+            ->set('tipe', 'unit')
             ->call('simpan')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('org_units', ['nama' => 'Divisi SDM', 'tipe' => 'divisi', 'parent_id' => $bidang->id]);
+        $this->assertDatabaseHas('org_units', ['nama' => 'Unit SDM', 'tipe' => 'unit', 'parent_id' => $bidang->id]);
     }
 
     public function test_ubah_unit(): void
     {
-        $unit = OrgUnit::factory()->create(['nama' => 'Lama', 'tipe' => 'divisi', 'parent_id' => null]);
+        $unit = OrgUnit::factory()->create(['nama' => 'Lama', 'tipe' => 'unit', 'parent_id' => null]);
 
         Livewire::actingAs($this->userSdm())->test(OrgStruktur::class)
             ->call('edit', $unit->id)

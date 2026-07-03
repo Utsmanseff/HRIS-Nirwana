@@ -84,7 +84,7 @@
                             <div class="text-[13px]">{{ $k->orgUnit->nama }}</div>
                             <div class="text-xs text-neutral-400">{{ $k->orgUnit->parent?->nama }}</div>
                         </td>
-                        <td class="text-[13px] text-neutral-600">{{ $k->atasan?->nama_lengkap ?? '—' }}</td>
+                        <td class="text-[13px] text-neutral-600">{{ $k->atasanDerived()?->nama_lengkap ?? '—' }}</td>
                         <td><span class="badge {{ $badgeKelas }}">{{ $badgeTeks }}</span></td>
                         <td>
                             @if ($k->status->value === 'aktif')

@@ -83,18 +83,18 @@
             <div class="card-header"><div class="card-title">Tabel responsif (.rtable)</div></div>
             <div class="px-2 sm:px-0">
                 <table class="table rtable">
-                    <thead><tr><th>Nama</th><th>NIP</th><th>Divisi</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Nama</th><th>NIP</th><th>Unit</th><th>Status</th></tr></thead>
                     <tbody>
                         <tr>
                             <td data-primary><div class="font-semibold">Siti Rahmawati</div></td>
                             <td data-label="NIP"><span class="font-mono text-sm">1990.04.21.001</span></td>
-                            <td data-label="Divisi">Farmasi</td>
+                            <td data-label="Unit">Farmasi</td>
                             <td data-label="Status"><span class="badge badge-success"><span class="dot"></span>Aktif</span></td>
                         </tr>
                         <tr>
                             <td data-primary><div class="font-semibold">Budi Santoso</div></td>
                             <td data-label="NIP"><span class="font-mono text-sm">1988.11.02.014</span></td>
-                            <td data-label="Divisi">Kasir</td>
+                            <td data-label="Unit">Kasir</td>
                             <td data-label="Status"><span class="badge badge-warning"><span class="dot"></span>PKWT H-12</span></td>
                         </tr>
                     </tbody>

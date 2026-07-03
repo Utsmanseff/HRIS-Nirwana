@@ -159,7 +159,7 @@
             <div class="card card-pad sm:col-span-2 lg:col-span-3">
                 <p class="text-[13px] text-neutral-500 leading-relaxed">
                     <b>Atasan / Koordinator / Kabid bukan role.</b> Kemampuan approve cuti &amp; kelola jadwal
-                    diturunkan otomatis dari struktur (punya bawahan via <code>atasan_id</code>, level jabatan) —
+                    diturunkan otomatis dari struktur org (punya bawahan derived, level jabatan) —
                     tidak perlu dan tidak bisa di-assign di sini.
                 </p>
             </div>

@@ -32,7 +32,7 @@ class Profil extends Component
 
     private function karyawan(): Karyawan
     {
-        return auth()->user()->karyawan()->with(['jabatan', 'orgUnit', 'atasan'])->firstOrFail();
+        return auth()->user()->karyawan()->with(['jabatan', 'orgUnit'])->firstOrFail();
     }
 
     public function simpanKontak(): void

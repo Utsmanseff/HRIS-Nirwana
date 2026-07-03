@@ -96,13 +96,6 @@
                 @error('jabatanId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="field-label">Atasan Langsung</label>
-                <select wire:model="atasanId" class="input">
-                    <option value="">— Tanpa atasan —</option>
-                    @foreach ($atasanOptions as $a)<option value="{{ $a->id }}">{{ $a->nama_lengkap }}</option>@endforeach
-                </select>
-            </div>
-            <div>
                 <label class="field-label">Tanggal Masuk *</label>
                 <input type="date" wire:model="tanggalMasuk" class="input @error('tanggalMasuk') input-error @enderror">
                 @error('tanggalMasuk') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror

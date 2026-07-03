@@ -118,7 +118,7 @@ class KaryawanIndex extends Component
     public function render()
     {
         $karyawan = Karyawan::query()
-            ->with(['orgUnit.parent', 'jabatan', 'atasan.jabatan', 'kontrakTerbaru', 'kontrak'])
+            ->with(['orgUnit.parent', 'jabatan', 'kontrakTerbaru', 'kontrak'])
             ->saring([
                 'cari' => $this->cari,
                 'unit_id' => $this->unitId,
