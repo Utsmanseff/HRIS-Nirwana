@@ -25,11 +25,10 @@ class MasterDataAksesTest extends TestCase
         return $user;
     }
 
-    public function test_punya_kelola_sdm_boleh_akses_jabatan_dan_struktur(): void
+    public function test_punya_kelola_sdm_boleh_akses_struktur(): void
     {
         $user = $this->userDgnPermission(Permission::KelolaSdm->value);
 
-        $this->actingAs($user)->get('/sdm/jabatan')->assertOk();
         $this->actingAs($user)->get('/sdm/struktur')->assertOk();
     }
 
@@ -37,7 +36,6 @@ class MasterDataAksesTest extends TestCase
     {
         $user = $this->userDgnPermission(null);
 
-        $this->actingAs($user)->get('/sdm/jabatan')->assertForbidden();
         $this->actingAs($user)->get('/sdm/struktur')->assertForbidden();
     }
 }

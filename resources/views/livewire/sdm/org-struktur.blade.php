@@ -1,6 +1,6 @@
 <div class="space-y-4 rise">
     <div class="flex items-center justify-between">
-        <div><h1 class="text-lg font-extrabold tracking-tight">Struktur Organisasi</h1>
+        <div><h1 class="text-lg font-extrabold tracking-tight">Organisasi</h1>
             <p class="text-sm text-neutral-500 max-w-xl">Pohon unit organisasi (Direktur → Bidang/Bagian → Unit). Terpisah dari jabatan.</p></div>
         <button wire:click="baru" class="btn btn-primary btn-sm">+ Tambah Unit</button>
     </div>
