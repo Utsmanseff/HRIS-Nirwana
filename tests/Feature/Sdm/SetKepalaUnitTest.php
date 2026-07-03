@@ -33,4 +33,39 @@ class SetKepalaUnitTest extends TestCase
         $this->assertSame(3, $bidang->jabatanPimpinan()->level->value);
         $this->assertSame(4, $dir->jabatanPimpinan()->level->value);
     }
+
+    public function test_set_kepala_unit_kosong(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $kar = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+        $unit->setKepala($kar);
+        $this->assertEquals($kar->id, $unit->kepala()->id);
+        $this->assertGreaterThanOrEqual(2, $kar->fresh()->jabatan->level->value);
+    }
+
+    public function test_set_kepala_baru_demote_kepala_lama_jadi_staff(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create(['nama' => 'IGD']);
+        $lama = \App\Models\Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        $baru = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+
+        $unit->setKepala($baru);
+
+        $this->assertEquals($baru->id, $unit->kepala()->id);
+        // Kepala lama tetap di unit, tapi turun jadi staff (level 1).
+        $this->assertSame(1, $lama->fresh()->jabatan->level->value);
+        $this->assertSame($unit->id, $lama->fresh()->org_unit_id);
+    }
+
+    public function test_set_kepala_karyawan_dari_unit_lain_pindah_masuk(): void
+    {
+        $unitA = \App\Models\OrgUnit::factory()->create();
+        $unitB = \App\Models\OrgUnit::factory()->create();
+        $kar = \App\Models\Karyawan::factory()->staffUnit($unitA)->create();
+
+        $unitB->setKepala($kar);
+
+        $this->assertEquals($kar->id, $unitB->kepala()->id);
+        $this->assertSame($unitB->id, $kar->fresh()->org_unit_id);
+    }
 }

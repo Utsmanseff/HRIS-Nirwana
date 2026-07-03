@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class OrgUnit extends Model
 {
@@ -85,6 +86,25 @@ class OrgUnit extends Model
             ['org_unit_id' => $this->id, 'level' => 1, 'nama' => 'Staff '.$this->nama],
             ['aktif' => true],
         );
+    }
+
+    /**
+     * Tetapkan $kar sebagai kepala unit ini.
+     * Kepala lama (bila ada & beda orang) di-demote jadi staff unit ini.
+     * $kar dipindah ke unit ini (org_unit_id) + jabatan pimpinan.
+     */
+    public function setKepala(Karyawan $kar): void
+    {
+        DB::transaction(function () use ($kar) {
+            $lama = $this->kepala();
+            if ($lama && $lama->id !== $kar->id) {
+                $lama->update(['jabatan_id' => $this->jabatanStaffDefault()->id]);
+            }
+            $kar->update([
+                'jabatan_id' => $this->jabatanPimpinan()->id,
+                'org_unit_id' => $this->id,
+            ]);
+        });
     }
 
     public function scopeAkar($q)
