@@ -9,8 +9,9 @@
     header table { width: 100%; border-collapse: collapse; }
     header td { vertical-align: middle; border: none; padding: 0; }
     header .logo img { height: 42px; }
-    header .identitas { font-size: 9px; color: #555; padding-left: 10px; }
-    header .identitas .nama { font-size: 12px; font-weight: bold; color: #14532d; margin-bottom: 2px; }
+    header .identitas { font-size: 9px; color: #555; text-align: center; }
+    header .identitas .nama { font-size: 13px; font-weight: bold; color: #14532d; margin-bottom: 2px; }
+    header .identitas div { line-height: 1.35; }
     header .akreditasi { text-align: right; }
     header .akreditasi .placeholder {
         display: inline-block; width: 52px; height: 52px; line-height: 52px;
@@ -32,9 +33,10 @@
         <tr>
             <td class="logo" width="140"><img src="{{ public_path(config('instansi.logo')) }}" alt="{{ config('instansi.nama') }}"></td>
             <td class="identitas">
-                <div class="nama">{{ config('instansi.nama') }}</div>
+                <div class="nama">{{ config('instansi.nama_resmi') }}</div>
                 <div>{{ config('instansi.alamat') }}</div>
-                <div>{{ config('instansi.kontak') }}</div>
+                <div>{{ config('instansi.telp') }}</div>
+                <div>{{ config('instansi.email_web') }}</div>
             </td>
             <td class="akreditasi" width="70">
                 @if (config('instansi.logo_akreditasi'))

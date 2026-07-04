@@ -7,6 +7,7 @@ use App\Exports\PengingatKontrakExport;
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
+use App\Support\NamaFileLaporan;
 use App\Support\PengingatKontrak;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -17,9 +18,13 @@ class LaporanSdmController extends Controller
     public function karyawan(Request $request)
     {
         $filter = $request->only(['cari', 'unit_id', 'level', 'kontrak_jenis', 'status']);
+        $tokens = $this->tokenFilter($filter);
 
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new KaryawanExport($filter), 'daftar-karyawan.xlsx');
+            return Excel::download(
+                new KaryawanExport($filter, $this->keteranganFilter($filter)),
+                NamaFileLaporan::buat('daftar-karyawan', $tokens, 'xlsx'),
+            );
         }
 
         $karyawan = Karyawan::query()
@@ -31,18 +36,42 @@ class LaporanSdmController extends Controller
         return Pdf::loadView('laporan.pdf.karyawan', [
             'karyawan' => $karyawan,
             'keteranganFilter' => $this->keteranganFilter($filter),
-        ])->setPaper('a4', 'landscape')->download('daftar-karyawan.pdf');
+        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('daftar-karyawan', $tokens, 'pdf'));
     }
 
     public function pengingatKontrak(Request $request)
     {
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new PengingatKontrakExport, 'pengingat-kontrak.xlsx');
+            return Excel::download(new PengingatKontrakExport, NamaFileLaporan::buat('pengingat-kontrak', [], 'xlsx'));
         }
 
         return Pdf::loadView('laporan.pdf.pengingat-kontrak', [
             'pengingat' => PengingatKontrak::semua()->sortBy('sisaHari')->values(),
-        ])->setPaper('a4', 'landscape')->download('pengingat-kontrak.pdf');
+        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('pengingat-kontrak', [], 'pdf'));
+    }
+
+    /** Token filter aktif utk nama file (status, unit, level, kontrak, cari). */
+    private function tokenFilter(array $f): array
+    {
+        $tokens = [];
+        $status = $f['status'] ?? '';
+        if ($status !== '' && $status !== 'semua') {
+            $tokens[] = $status;
+        }
+        if (! empty($f['unit_id']) && $unit = OrgUnit::find($f['unit_id'])) {
+            $tokens[] = $unit->nama;
+        }
+        if (! empty($f['level'])) {
+            $tokens[] = 'L'.$f['level'];
+        }
+        if (! empty($f['kontrak_jenis'])) {
+            $tokens[] = $f['kontrak_jenis'];
+        }
+        if (! empty($f['cari'])) {
+            $tokens[] = $f['cari'];
+        }
+
+        return $tokens;
     }
 
     /** Rangkai keterangan filter utk kop (spec: pembaca wajib tahu cakupan data). */
