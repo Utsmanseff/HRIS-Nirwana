@@ -1,4 +1,4 @@
-<div class="space-y-4 rise max-w-3xl mx-auto">
+<div class="space-y-4 rise max-w-5xl mx-auto">
     <div>
         <h1 class="text-lg font-extrabold tracking-tight">{{ $karyawan ? 'Ubah Karyawan' : 'Tambah Karyawan' }}</h1>
         <p class="text-sm text-neutral-500">{{ $karyawan ? 'Perbarui data induk karyawan.' : 'Isi data induk karyawan baru beserta kontrak tahap awalnya.' }}</p>
@@ -24,7 +24,7 @@
     {{-- Data Pribadi --}}
     <div class="card card-pad space-y-3">
         <div class="card-title">Data Pribadi</div>
-        <div class="grid sm:grid-cols-2 gap-3">
+        <div class="grid sm:grid-cols-3 gap-3">
             <div><label class="field-label">NIK (KTP)</label><input wire:model="nik" class="input" placeholder="16 digit"></div>
             <div><label class="field-label">Tempat Lahir</label><input wire:model="tempatLahir" class="input" placeholder="Kota"></div>
             <div><label class="field-label">Tanggal Lahir</label><input type="date" wire:model="tanggalLahir" class="input"></div>
@@ -41,7 +41,7 @@
                     <option value="">— Pilih —</option><option value="belum">Belum</option><option value="menikah">Menikah</option><option value="cerai">Cerai</option>
                 </select>
             </div>
-            <div class="sm:col-span-2"><label class="field-label">Pendidikan Terakhir</label><input wire:model="pendidikan" class="input" placeholder="mis. S1 Keperawatan"></div>
+            <div class="sm:col-span-3"><label class="field-label">Pendidikan Terakhir</label><input wire:model="pendidikan" class="input" placeholder="mis. S1 Keperawatan"></div>
         </div>
         <div class="grid sm:grid-cols-3 gap-3 pt-1 border-t border-neutral-100">
             <div>
