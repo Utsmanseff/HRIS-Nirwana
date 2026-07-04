@@ -30,7 +30,7 @@ class LaporanSdmTest extends TestCase
     {
         $this->assertSame('RUMAH SAKIT UMUM NIRWANA', config('instansi.nama_resmi'));
         $this->assertSame('Jl. Panglima Batur Timur No. 42 Banjarbaru Kalimantan Selatan', config('instansi.alamat'));
-        $this->assertSame('Telp. 0511-674 9722 / 0821 5084 1882', config('instansi.telp'));
+        $this->assertSame('Telp. 0511-674 9272 / 0821 5084 1882', config('instansi.telp'));
         $this->assertSame('Email: official@rsunirwana.id | Website: https://rsunirwana.id', config('instansi.email_web'));
     }
 
