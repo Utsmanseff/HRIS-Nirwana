@@ -39,7 +39,6 @@ class KaryawanFormTest extends TestCase
         Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
             ->set('nip', '2026.07.0001')
             ->set('namaLengkap', 'Andi Pratama')
-            ->set('orgUnitId', (string) $unit->id)
             ->set('jabatanId', (string) $jab->id)
             ->set('tanggalMasuk', '2026-07-01')
             ->set('jenisKontrak', 'percobaan_unpaid')
@@ -63,7 +62,6 @@ class KaryawanFormTest extends TestCase
         Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
             ->set('nip', 'DUP-001')
             ->set('namaLengkap', 'Siapa Saja')
-            ->set('orgUnitId', (string) $unit->id)
             ->set('jabatanId', (string) $jab->id)
             ->set('tanggalMasuk', '2026-07-01')
             ->set('jenisKontrak', 'tetap')
@@ -80,7 +78,6 @@ class KaryawanFormTest extends TestCase
         Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
             ->set('nip', '2026.07.0002')
             ->set('namaLengkap', 'Budi')
-            ->set('orgUnitId', (string) $unit->id)
             ->set('jabatanId', (string) $jab->id)
             ->set('tanggalMasuk', '2026-07-01')
             ->set('jenisKontrak', 'pkwt')
@@ -98,7 +95,6 @@ class KaryawanFormTest extends TestCase
         Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
             ->set('nip', '2026.07.0003')
             ->set('namaLengkap', 'Citra')
-            ->set('orgUnitId', (string) $unit->id)
             ->set('jabatanId', (string) $jab->id)
             ->set('tanggalMasuk', '2026-07-01')
             ->set('jenisKontrak', 'tetap')
@@ -144,5 +140,59 @@ class KaryawanFormTest extends TestCase
             ->call('simpan');
 
         $this->assertSame(0, $kar->kontrak()->count());
+    }
+
+    public function test_pilih_jabatan_set_id_dan_label(): void
+    {
+        $unit = OrgUnit::factory()->create(['nama' => 'Farmasi']);
+        $jab = Jabatan::factory()->create(['org_unit_id' => $unit->id, 'nama' => 'Apoteker', 'level' => 1]);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->call('pilihJabatan', $jab->id)
+            ->assertSet('jabatanId', (string) $jab->id)
+            ->assertSee('Apoteker')
+            ->assertSee('Farmasi');
+    }
+
+    public function test_org_unit_auto_dari_jabatan_saat_simpan(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $jab = Jabatan::factory()->create(['org_unit_id' => $unit->id]);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', 'AUTO-1')
+            ->set('namaLengkap', 'Auto Unit')
+            ->call('pilihJabatan', $jab->id)
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'tetap')
+            ->set('kontrakMulai', '2026-07-01')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('karyawan', [
+            'nip' => 'AUTO-1', 'org_unit_id' => $unit->id, 'jabatan_id' => $jab->id,
+        ]);
+    }
+
+    public function test_cari_jabatan_menampilkan_hasil_by_unit(): void
+    {
+        $unit = OrgUnit::factory()->create(['nama' => 'Radiologi']);
+        Jabatan::factory()->create(['org_unit_id' => $unit->id, 'nama' => 'Radiografer', 'level' => 1]);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('cariJabatan', 'Radiolog')
+            ->assertSee('Radiografer');
+    }
+
+    public function test_jabatan_wajib(): void
+    {
+        Livewire::actingAs($this->userSdm())->test(KaryawanForm::class)
+            ->set('nip', 'NOJAB-1')
+            ->set('namaLengkap', 'Tanpa Jabatan')
+            ->set('tanggalMasuk', '2026-07-01')
+            ->set('jenisKontrak', 'tetap')
+            ->set('kontrakMulai', '2026-07-01')
+            ->call('simpan')
+            ->assertHasErrors(['jabatanId']);
     }
 }

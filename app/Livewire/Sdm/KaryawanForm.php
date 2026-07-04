@@ -5,7 +5,6 @@ namespace App\Livewire\Sdm;
 use App\Enums\JenisKontrak;
 use App\Models\Jabatan;
 use App\Models\Karyawan;
-use App\Models\OrgUnit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -50,10 +49,12 @@ class KaryawanForm extends Component
 
     public string $alamat = '';
 
-    // Penempatan
-    public string $orgUnitId = '';
-
+    // Penempatan (unit auto dari jabatan — tak ada input unit manual)
     public string $jabatanId = '';
+
+    public string $jabatanLabel = '';
+
+    public string $cariJabatan = '';
 
     public string $tanggalMasuk = '';
 
@@ -88,9 +89,26 @@ class KaryawanForm extends Component
         $this->noHp = $karyawan->no_hp ?? '';
         $this->email = $karyawan->email ?? '';
         $this->alamat = $karyawan->alamat ?? '';
-        $this->orgUnitId = (string) $karyawan->org_unit_id;
         $this->jabatanId = (string) $karyawan->jabatan_id;
+        if ($karyawan->jabatan) {
+            $this->jabatanLabel = $karyawan->jabatan->nama
+                .' · '.($karyawan->orgUnit?->nama ?? '—')
+                .' · L'.$karyawan->jabatan->level->value;
+        }
         $this->tanggalMasuk = $karyawan->tanggal_masuk?->format('Y-m-d') ?? '';
+    }
+
+    public function pilihJabatan(int $id): void
+    {
+        $jab = Jabatan::with('orgUnit')->findOrFail($id);
+        $this->jabatanId = (string) $jab->id;
+        $this->jabatanLabel = $jab->nama.' · '.($jab->orgUnit?->nama ?? '—').' · L'.$jab->level->value;
+        $this->reset(['cariJabatan']);
+    }
+
+    public function gantiJabatan(): void
+    {
+        $this->reset(['jabatanId', 'jabatanLabel', 'cariJabatan']);
     }
 
     protected function aturan(): array
@@ -111,7 +129,6 @@ class KaryawanForm extends Component
             'noHp' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
-            'orgUnitId' => ['required', 'exists:org_units,id'],
             'jabatanId' => ['required', 'exists:jabatan,id'],
             'tanggalMasuk' => ['required', 'date'],
         ] + ($this->karyawan ? [] : [
@@ -145,7 +162,7 @@ class KaryawanForm extends Component
             'no_hp' => $opsional($this->noHp),
             'email' => $opsional($this->email),
             'alamat' => $opsional($this->alamat),
-            'org_unit_id' => (int) $this->orgUnitId,
+            'org_unit_id' => (int) Jabatan::whereKey($this->jabatanId)->value('org_unit_id'),
             'jabatan_id' => (int) $this->jabatanId,
             'tanggal_masuk' => $this->tanggalMasuk,
         ];
@@ -180,9 +197,15 @@ class KaryawanForm extends Component
 
     public function render()
     {
+        $jabatanHasil = trim($this->cariJabatan) !== '' && $this->jabatanLabel === ''
+            ? Jabatan::query()->with('orgUnit')
+                ->where(fn ($q) => $q->where('nama', 'like', '%'.trim($this->cariJabatan).'%')
+                    ->orWhereHas('orgUnit', fn ($w) => $w->where('nama', 'like', '%'.trim($this->cariJabatan).'%')))
+                ->orderBy('level')->orderBy('nama')->limit(10)->get()
+            : collect();
+
         return view('livewire.sdm.karyawan-form', [
-            'unitOptions' => OrgUnit::orderBy('nama')->get(['id', 'nama']),
-            'jabatanOptions' => Jabatan::orderBy('level')->orderBy('nama')->get(['id', 'nama', 'level']),
+            'jabatanHasil' => $jabatanHasil,
             'kontrakOptions' => JenisKontrak::cases(),
         ]);
     }

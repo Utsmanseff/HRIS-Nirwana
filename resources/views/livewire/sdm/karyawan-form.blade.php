@@ -79,21 +79,32 @@
     <div class="card card-pad space-y-3">
         <div class="card-title">Penempatan &amp; Jabatan</div>
         <div class="grid sm:grid-cols-2 gap-3">
-            <div>
-                <label class="field-label">Unit Organisasi *</label>
-                <select wire:model="orgUnitId" class="input @error('orgUnitId') input-error @enderror">
-                    <option value="">— Pilih unit —</option>
-                    @foreach ($unitOptions as $u)<option value="{{ $u->id }}">{{ $u->nama }}</option>@endforeach
-                </select>
-                @error('orgUnitId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
-            </div>
-            <div>
+            <div class="sm:col-span-2">
                 <label class="field-label">Jabatan *</label>
-                <select wire:model="jabatanId" class="input @error('jabatanId') input-error @enderror">
-                    <option value="">— Pilih jabatan —</option>
-                    @foreach ($jabatanOptions as $j)<option value="{{ $j->id }}">{{ $j->nama }} (L{{ $j->level->value }})</option>@endforeach
-                </select>
+                @if ($jabatanLabel !== '')
+                    <div class="flex items-center gap-2">
+                        <span class="badge badge-brand">{{ $jabatanLabel }}</span>
+                        <button type="button" wire:click="gantiJabatan" class="btn btn-ghost btn-sm">Ganti</button>
+                    </div>
+                @else
+                    <input wire:model.live.debounce.300ms="cariJabatan"
+                        class="input @error('jabatanId') input-error @enderror" placeholder="cari jabatan atau unit…">
+                    @if ($jabatanHasil->isNotEmpty())
+                        <div class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg mt-1 max-h-56 overflow-auto">
+                            @foreach ($jabatanHasil as $j)
+                                <button type="button" wire:click="pilihJabatan({{ $j->id }})"
+                                    class="w-full text-left px-3 py-2 hover:bg-neutral-50">
+                                    <span class="text-sm font-semibold">{{ $j->nama }}</span>
+                                    <span class="text-xs text-neutral-400">· {{ $j->orgUnit?->nama ?? '—' }} · L{{ $j->level->value }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    @elseif (trim($cariJabatan) !== '')
+                        <p class="field-hint text-neutral-400">Tak ada jabatan cocok. Buat jabatan/pimpinan di halaman Organisasi.</p>
+                    @endif
+                @endif
                 @error('jabatanId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                <p class="field-hint text-neutral-400">Unit &amp; atasan otomatis mengikuti jabatan.</p>
             </div>
             <div>
                 <label class="field-label">Tanggal Masuk *</label>
