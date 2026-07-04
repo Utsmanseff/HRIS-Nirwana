@@ -104,4 +104,20 @@ class KaryawanDokumenTest extends TestCase
         $tanpaAkses = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
         $this->actingAs($tanpaAkses)->get('/sdm/dokumen/'.$dok->id.'/lihat')->assertForbidden();
     }
+
+    public function test_dokumen_gambar_tampil_thumbnail(): void
+    {
+        Storage::fake('local');
+        $kar = Karyawan::factory()->create();
+        Storage::disk('local')->put('dokumen/'.$kar->id.'/f.webp', 'x');
+        $dok = Dokumen::create([
+            'karyawan_id' => $kar->id, 'tipe' => 'ktp',
+            'path' => 'dokumen/'.$kar->id.'/f.webp', 'mime' => 'image/webp', 'ukuran' => 1,
+        ]);
+
+        Livewire::actingAs($this->userSdm())->test(KaryawanDetail::class, ['karyawan' => $kar])
+            ->set('tab', 'dokumen')
+            ->assertSeeHtml('<img')
+            ->assertSeeHtml(route('sdm.dokumen.lihat', $dok));
+    }
 }

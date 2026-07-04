@@ -220,18 +220,39 @@
                 @if ($karyawan->dokumen->isEmpty())
                     <p class="text-sm text-neutral-400 py-4 text-center">Belum ada dokumen.</p>
                 @else
-                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         @foreach ($karyawan->dokumen as $dok)
                             @php $pdf = $dok->mime === 'application/pdf'; @endphp
-                            <div class="flex items-center gap-3 p-3 rounded-lg border border-neutral-200">
-                                <span class="w-10 h-10 rounded-md {{ $pdf ? 'bg-danger-50 text-danger-600' : 'bg-info-50 text-info-600' }} grid place-items-center font-bold text-[10px]">{{ $pdf ? 'PDF' : 'WEBP' }}</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-semibold truncate">{{ basename($dok->path) }}</div>
-                                    <div class="text-xs text-neutral-400">{{ ucfirst($dok->tipe) }} · {{ $this->ukuranBaca($dok->ukuran) }} · {{ $dok->created_at->translatedFormat('j M Y') }}</div>
+                            <div class="rounded-lg border border-neutral-200 overflow-hidden">
+                                @if ($pdf)
+                                    <a href="{{ route('sdm.dokumen.lihat', $dok) }}" target="_blank" rel="noopener"
+                                        class="flex items-center justify-center h-28 bg-danger-50 text-danger-600 font-bold text-xs">PDF</a>
+                                @else
+                                    <button type="button" class="block w-full h-28 bg-neutral-100"
+                                        x-on:click="$dispatch('buka-lightbox', { src: '{{ route('sdm.dokumen.lihat', $dok) }}' })">
+                                        <img src="{{ route('sdm.dokumen.lihat', $dok) }}" alt="{{ ucfirst($dok->tipe) }}"
+                                            class="w-full h-28 object-cover" loading="lazy">
+                                    </button>
+                                @endif
+                                <div class="p-2.5 flex items-center gap-2">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-semibold truncate">{{ ucfirst($dok->tipe) }}</div>
+                                        <div class="text-xs text-neutral-400">{{ $this->ukuranBaca($dok->ukuran) }} · {{ $dok->created_at->translatedFormat('j M Y') }}</div>
+                                    </div>
+                                    <a href="{{ route('sdm.dokumen.unduh', $dok) }}" class="btn btn-ghost btn-icon btn-sm" title="Unduh">↓</a>
                                 </div>
-                                <a href="{{ route('sdm.dokumen.unduh', $dok) }}" class="btn btn-ghost btn-icon btn-sm" title="Unduh">↓</a>
                             </div>
                         @endforeach
+                    </div>
+
+                    {{-- Lightbox gambar (Alpine bundled Livewire). style display:none = anti-flash sebelum init. --}}
+                    <div x-data="{ open: false, src: '' }"
+                        x-on:buka-lightbox.window="open = true; src = $event.detail.src"
+                        x-show="open" style="display:none"
+                        x-on:keydown.escape.window="open = false"
+                        x-on:click="open = false"
+                        class="fixed inset-0 z-50 bg-black/70 grid place-items-center p-6">
+                        <img :src="src" class="max-h-[85vh] max-w-full rounded-lg shadow-2xl" x-on:click.stop alt="preview">
                     </div>
                 @endif
             </div>
