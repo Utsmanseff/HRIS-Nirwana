@@ -86,4 +86,22 @@ class KaryawanDokumenTest extends TestCase
         $tanpaAkses = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
         $this->actingAs($tanpaAkses)->get('/sdm/dokumen/'.$dok->id)->assertForbidden();
     }
+
+    public function test_lihat_dokumen_inline_gated(): void
+    {
+        Storage::fake('local');
+        $kar = Karyawan::factory()->create();
+        Storage::disk('local')->put('dokumen/'.$kar->id.'/foto.webp', 'RIFF....WEBP');
+        $dok = Dokumen::create([
+            'karyawan_id' => $kar->id, 'tipe' => 'ktp',
+            'path' => 'dokumen/'.$kar->id.'/foto.webp', 'mime' => 'image/webp', 'ukuran' => 12,
+        ]);
+
+        $res = $this->actingAs($this->userSdm())->get('/sdm/dokumen/'.$dok->id.'/lihat');
+        $res->assertOk();
+        $this->assertStringContainsString('inline', (string) $res->headers->get('content-disposition'));
+
+        $tanpaAkses = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+        $this->actingAs($tanpaAkses)->get('/sdm/dokumen/'.$dok->id.'/lihat')->assertForbidden();
+    }
 }

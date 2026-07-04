@@ -13,4 +13,10 @@ class DokumenController extends Controller
     {
         return Storage::disk('local')->download($dokumen->path);
     }
+
+    public function lihat(Dokumen $dokumen): StreamedResponse
+    {
+        // Stream inline (Content-Disposition: inline) untuk preview di browser.
+        return Storage::disk('local')->response($dokumen->path);
+    }
 }
