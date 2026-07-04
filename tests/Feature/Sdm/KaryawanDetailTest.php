@@ -82,7 +82,7 @@ class KaryawanDetailTest extends TestCase
 
         $this->actingAs($this->userSdm())->get('/sdm/karyawan/'.$kar->id.'?tab=dokumen')
             ->assertOk()
-            ->assertSee('ijazah-s1.pdf')
+            ->assertSee('Ijazah')
             ->assertSee('1.2 MB');
     }
 
