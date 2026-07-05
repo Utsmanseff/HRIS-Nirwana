@@ -1,30 +1,9 @@
 @props(['active' => ''])
 @php
-    // Nav model. href '#' = route not wired yet (filled in per-phase implementation).
-    $nav = [
-        ['group' => null, 'items' => [
-            ['id' => 'dashboard', 'label' => 'Dashboard', 'href' => '#', 'icon' => 'grid'],
-        ]],
-        ['group' => 'SDM', 'items' => [
-            ['id' => 'karyawan', 'label' => 'Karyawan', 'href' => route('sdm.karyawan'), 'icon' => 'users'],
-            ['id' => 'struktur', 'label' => 'Organisasi', 'href' => route('sdm.struktur'), 'icon' => 'tree'],
-            // 'Kontrak & Pengingat' & 'Dokumen' sengaja TIDAK ada: kontrak/dokumen
-            // dikelola per-karyawan (tab detail), pengingat tampil di Dashboard —
-            // satu informasi satu tempat (keputusan 2026-07-02).
-        ]],
-        ['group' => 'Operasional', 'items' => [
-            ['id' => 'cuti', 'label' => 'Cuti', 'href' => route('cuti'), 'icon' => 'calendar'],
-            ['id' => 'disiplin', 'label' => 'Disiplin', 'href' => '#', 'icon' => 'gavel'],
-            ['id' => 'tiket', 'label' => 'Ticketing', 'href' => '#', 'icon' => 'ticket'],
-            ['id' => 'inventaris', 'label' => 'Inventaris', 'href' => '#', 'icon' => 'box'],
-            ['id' => 'absensi', 'label' => 'Absensi', 'href' => '#', 'icon' => 'clock'],
-            ['id' => 'jadwal', 'label' => 'Jadwal Shift', 'href' => '#', 'icon' => 'calendar'],
-        ]],
-        ['group' => 'Sistem', 'items' => [
-            ['id' => 'pengguna', 'label' => 'Pengguna & Role', 'href' => route('sistem.pengguna'), 'icon' => 'shield', 'can' => 'kelola-rbac'],
-            ['id' => 'pengaturan', 'label' => 'Pengaturan', 'href' => '#', 'icon' => 'cog'],
-        ]],
-    ];
+    // Item nav dari registry (source of truth, gate-permission). Dikelompokkan by group.
+    $items = \App\Support\NavMenu::untuk(auth()->user());
+    $grouped = collect($items)->groupBy(fn ($it) => $it['group'] ?? '')->all();
+    $urutanGrup = ['', 'SDM', 'Operasional', 'Sistem'];
 @endphp
 <aside class="sidebar">
     <div class="sb-brand">
@@ -45,20 +24,21 @@
     </div>
 
     <nav class="py-4 flex-1 overflow-y-auto">
-        @foreach ($nav as $group)
+        @foreach ($urutanGrup as $g)
+            @php $daftar = $grouped[$g] ?? collect(); @endphp
+            @continue($daftar->isEmpty())
             <div class="px-3">
-                @if ($group['group'])
-                    <div class="nv-group sb-label">{{ $group['group'] }}</div>
+                @if ($g !== '')
+                    <div class="nv-group sb-label">{{ $g }}</div>
                 @endif
                 <div class="space-y-0.5">
-                    @foreach ($group['items'] as $it)
-                        @continue(isset($it['can']) && ! auth()->user()?->can($it['can']))
-                        <a href="{{ $it['href'] }}" title="{{ $it['label'] }}" class="nv-item {{ $it['id'] === $active ? 'nv-active' : '' }}">
+                    @foreach ($daftar as $it)
+                        @php $placeholder = $it['route'] === null; @endphp
+                        <a href="{{ \App\Support\NavMenu::href($it) }}" title="{{ $it['label'] }}"
+                           @class(['nv-item', 'nv-active' => $it['id'] === $active, 'nv-soon' => $placeholder])
+                           @if ($placeholder) aria-disabled="true" @endif>
                             <span class="nv-ic"><x-icon :name="$it['icon']" /></span>
                             <span class="flex-1 sb-label">{{ $it['label'] }}</span>
-                            @isset($it['badge'])
-                                <span class="nv-badge">{{ $it['badge'] }}</span>
-                            @endisset
                         </a>
                     @endforeach
                 </div>

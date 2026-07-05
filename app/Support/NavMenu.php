@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Enums\Permission;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 class NavMenu
 {
@@ -39,9 +40,9 @@ class NavMenu
         ));
     }
 
-    /** Resolve URL item: route bernama → URL, null → '#'. */
+    /** Resolve URL item: route bernama & terdaftar → URL, selain itu → '#' (placeholder). */
     public static function href(array $item): string
     {
-        return $item['route'] ? route($item['route']) : '#';
+        return $item['route'] && Route::has($item['route']) ? route($item['route']) : '#';
     }
 }

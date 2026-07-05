@@ -39,7 +39,7 @@ class AccessControlTest extends TestCase
     {
         $u = $this->userKlaim();
         $u->assignRole(Role::Karyawan->value);
-        $this->actingAs($u)->get('/dashboard')->assertOk()->assertSee('Dashboard');
+        $this->actingAs($u)->get('/dashboard')->assertOk()->assertSee('Beranda');
     }
 
     public function test_rute_sdm_butuh_permission(): void
