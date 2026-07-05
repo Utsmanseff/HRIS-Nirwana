@@ -13,7 +13,7 @@
             // satu informasi satu tempat (keputusan 2026-07-02).
         ]],
         ['group' => 'Operasional', 'items' => [
-            ['id' => 'cuti', 'label' => 'Cuti', 'href' => '#', 'icon' => 'calendar'],
+            ['id' => 'cuti', 'label' => 'Cuti', 'href' => route('cuti'), 'icon' => 'calendar'],
             ['id' => 'disiplin', 'label' => 'Disiplin', 'href' => '#', 'icon' => 'gavel'],
             ['id' => 'tiket', 'label' => 'Ticketing', 'href' => '#', 'icon' => 'ticket'],
             ['id' => 'inventaris', 'label' => 'Inventaris', 'href' => '#', 'icon' => 'box'],
