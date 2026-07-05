@@ -7,8 +7,11 @@ use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Support\AturanCuti;
+use App\Support\KompresGambar;
 use App\Support\RantaiApproval;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -63,6 +66,19 @@ class CutiForm extends Component
         }
 
         DB::transaction(function () use ($kar, $jenis) {
+            $lampiranPath = null;
+            if ($this->lampiran) {
+                $dir = 'cuti/'.$kar->id;
+                $asli = Str::slug(pathinfo($this->lampiran->getClientOriginalName(), PATHINFO_FILENAME));
+                if ($this->lampiran->getMimeType() === 'application/pdf') {
+                    $lampiranPath = $this->lampiran->storeAs($dir, $asli.'-'.Str::random(6).'.pdf', 'local');
+                } else {
+                    $webp = KompresGambar::keWebp($this->lampiran->get());
+                    $lampiranPath = $dir.'/'.$asli.'-'.Str::random(6).'.webp';
+                    Storage::disk('local')->put($lampiranPath, $webp);
+                }
+            }
+
             $pengajuan = PengajuanCuti::create([
                 'karyawan_id' => $kar->id,
                 'jenis_cuti_id' => $jenis->id,
@@ -70,7 +86,7 @@ class CutiForm extends Component
                 'tanggal_selesai' => $this->tanggalSelesai,
                 'jumlah_hari' => $this->jumlahHari,
                 'alasan' => $this->alasan === '' ? null : $this->alasan,
-                'lampiran_path' => null, // diisi Task 6 bila ada lampiran
+                'lampiran_path' => $lampiranPath,
                 'status' => StatusPengajuanCuti::Diajukan,
             ]);
 

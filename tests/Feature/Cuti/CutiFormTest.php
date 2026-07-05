@@ -99,4 +99,26 @@ class CutiFormTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_submit_cuti_sakit_backdate_dengan_lampiran_tersimpan(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $user = $this->userEligible();
+        $jenisId = \App\Models\JenisCuti::where('kode', 'cuti_sakit')->value('id');
+
+        Livewire::actingAs($user)->test(CutiForm::class)
+            ->set('jenisCutiId', (string) $jenisId)
+            ->set('tanggalMulai', '2027-05-20') // backdate diizinkan utk sakit
+            ->set('tanggalSelesai', '2027-05-21')
+            ->set('jumlahHari', 2)
+            ->set('lampiran', \Illuminate\Http\UploadedFile::fake()->create('surat.pdf', 100, 'application/pdf'))
+            ->call('simpan')
+            ->assertRedirect(route('cuti'));
+
+        $p = \App\Models\PengajuanCuti::first();
+        $this->assertNotNull($p->lampiran_path);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($p->lampiran_path);
+        Carbon::setTestNow();
+    }
 }
