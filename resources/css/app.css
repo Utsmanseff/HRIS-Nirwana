@@ -1,7 +1,10 @@
 @import 'tailwindcss';
 @import './theme.css';
-@import './shell.css';
-@import './mobile.css';
+/* shell.css & mobile.css set display:flex/grid pada elemen chrome (.sidebar, .phone, .m-nav).
+   Unlayered menang atas @layer utilities di TW v4 → lg:hidden/hidden lg:flex TAK jalan pada
+   elemen itu. Bungkus layer(components) agar utilities Tailwind (utilities > components) menang. */
+@import './shell.css' layer(components);
+@import './mobile.css' layer(components);
 @import './auth.css';
 
 /* Scan Blade + Livewire + compiled views for utility classes */
