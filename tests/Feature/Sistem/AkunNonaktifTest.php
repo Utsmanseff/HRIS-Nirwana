@@ -63,6 +63,6 @@ class AkunNonaktifTest extends TestCase
         $karyawan = Karyawan::factory()->create();
         $user = User::factory()->create(['karyawan_id' => $karyawan->id]);
 
-        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->actingAs($user)->get('/beranda')->assertOk();
     }
 }

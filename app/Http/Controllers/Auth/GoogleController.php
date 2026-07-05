@@ -43,6 +43,6 @@ class GoogleController extends Controller
         session()->regenerate();
 
         // Middleware ensure.claimed akan mengarahkan ke /klaim bila belum klaim.
-        return $user->sudahKlaim() ? redirect()->intended('/dashboard') : redirect('/klaim');
+        return $user->sudahKlaim() ? redirect()->intended('/beranda') : redirect('/klaim');
     }
 }

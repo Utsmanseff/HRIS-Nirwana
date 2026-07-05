@@ -52,11 +52,11 @@ class PenggunaAksesTest extends TestCase
     public function test_link_sidebar_hanya_muncul_untuk_yang_berhak(): void
     {
         $this->actingAs($this->buatUser(Role::AdminSistem->value))
-            ->get('/dashboard')
+            ->get('/beranda')
             ->assertSee('/sistem/pengguna');
 
         $this->actingAs($this->buatUser(Role::Karyawan->value))
-            ->get('/dashboard')
+            ->get('/beranda')
             ->assertDontSee('/sistem/pengguna');
     }
 }

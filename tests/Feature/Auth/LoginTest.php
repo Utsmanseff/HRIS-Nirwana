@@ -26,7 +26,7 @@ class LoginTest extends TestCase
         $this->userNip('1990.04.21.001');
 
         Livewire::test(Login::class)->set('nip', '1990.04.21.001')->set('password', 'rahasia123')
-            ->call('login')->assertRedirect('/dashboard');
+            ->call('login')->assertRedirect('/beranda');
 
         $this->assertAuthenticated();
     }

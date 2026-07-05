@@ -10,7 +10,7 @@ use App\Livewire\Cuti\CutiDetail;
 use App\Livewire\Cuti\CutiForm;
 use App\Livewire\Cuti\CutiIndex;
 use App\Livewire\Auth\Login;
-use App\Livewire\Dashboard;
+use App\Livewire\Beranda;
 use App\Livewire\Profil;
 use App\Livewire\Sdm\KaryawanDetail;
 use App\Livewire\Sdm\KaryawanForm;
@@ -51,7 +51,8 @@ Route::middleware(['auth', 'aktif'])->group(function () {
 
 // --- App: auth + claimed gated routes ---
 Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
-    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+    Route::get('/beranda', Beranda::class)->name('beranda');
+    Route::redirect('/dashboard', '/beranda');
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::get('/cuti', CutiIndex::class)->name('cuti');

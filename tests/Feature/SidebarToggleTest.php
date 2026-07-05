@@ -20,7 +20,7 @@ class SidebarToggleTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => $kar->id]);
         $user->assignRole(Role::AdminSistem->value);
 
-        $res = $this->actingAs($user)->get('/dashboard');
+        $res = $this->actingAs($user)->get('/beranda');
         $res->assertOk();
         $res->assertSee('data-sb-toggle', false);          // tombol toggle sidebar
         $res->assertSee("var KEY = 'nirwana-sidebar'", false); // init state no-flash (head script, pre-paint)

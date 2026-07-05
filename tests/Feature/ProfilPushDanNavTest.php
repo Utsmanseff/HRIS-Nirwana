@@ -30,7 +30,7 @@ class ProfilPushDanNavTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => $kar->id]);
         $user->assignRole(Role::AdminSistem->value);
 
-        $res = $this->actingAs($user)->get('/dashboard');
+        $res = $this->actingAs($user)->get('/beranda');
         $res->assertOk();
         $res->assertSee(route('profil'), false); // href profil ada di shell
     }

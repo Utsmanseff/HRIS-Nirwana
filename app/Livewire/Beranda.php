@@ -5,23 +5,26 @@ namespace App\Livewire;
 use App\Enums\JenisKontrak;
 use App\Enums\StatusKaryawan;
 use App\Models\Karyawan;
+use App\Support\NavMenu;
 use App\Support\PengingatKontrak;
 use App\Support\PengingatSip;
+use App\Support\SaldoCuti;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-class Dashboard extends Component
+class Beranda extends Component
 {
     public function render()
     {
-        $data = [];
+        $user = auth()->user();
+        $bisaSdm = $user->can('kelola-sdm');
+        $data = ['bisaSdm' => $bisaSdm, 'menu' => NavMenu::untuk($user)];
 
-        if (auth()->user()->can('kelola-sdm')) {
+        if ($bisaSdm) {
             $pengingatKontrak = PengingatKontrak::semua()->sortBy('sisaHari')->values();
             $pengingatSip = PengingatSip::semua()->sortBy('sisaHari')->values();
-
-            $data = [
+            $data += [
                 'jumlahAktif' => Karyawan::where('status', StatusKaryawan::Aktif->value)->count(),
                 'jumlahAkanBerakhir' => $pengingatKontrak->where('sisaHari', '>=', 0)->count(),
                 'jumlahTerlewat' => $pengingatKontrak->where('sisaHari', '<', 0)->count(),
@@ -34,6 +37,10 @@ class Dashboard extends Component
             ];
         }
 
-        return view('livewire.dashboard', $data + ['bisaSdm' => auth()->user()->can('kelola-sdm')]);
+        // Kartu jatah cuti untuk siapa pun yang punya data karyawan.
+        $kar = $user->karyawan()->first();
+        $data['saldo'] = $kar ? SaldoCuti::untuk($kar) : null;
+
+        return view('livewire.beranda', $data);
     }
 }

@@ -169,7 +169,7 @@ class LaporanSdmTest extends TestCase
     public function test_dashboard_punya_link_ekspor_pengingat(): void
     {
         $this->actingAs($this->userSdm())
-            ->get('/dashboard')
+            ->get('/beranda')
             ->assertSee('/sdm/laporan/pengingat-kontrak?format=xlsx', false);
     }
 }

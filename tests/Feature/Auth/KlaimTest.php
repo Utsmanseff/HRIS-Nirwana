@@ -42,7 +42,7 @@ class KlaimTest extends TestCase
         $u = User::factory()->create(['karyawan_id' => null]);
         $kar = Karyawan::factory()->create();
 
-        Livewire::actingAs($u)->test(Klaim::class)->call('klaim', $kar->id)->assertRedirect('/dashboard');
+        Livewire::actingAs($u)->test(Klaim::class)->call('klaim', $kar->id)->assertRedirect('/beranda');
 
         $u->refresh();
         $this->assertEquals($kar->id, $u->karyawan_id);

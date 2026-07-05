@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 use Tests\TestCase;
 
-class DashboardTest extends TestCase
+class BerandaTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -24,14 +24,13 @@ class DashboardTest extends TestCase
 
     public function test_stat_karyawan_aktif_dan_belum_tetap(): void
     {
-        // +1 karyawan milik userSdm() (aktif, kontrak dari factory)
         $user = $this->userSdm();
         $tetap = Karyawan::factory()->create();
         Kontrak::factory()->create(['karyawan_id' => $tetap->id, 'jenis' => 'tetap', 'tanggal_mulai' => now()->subYear(), 'tanggal_akhir' => null]);
         $pkwt = Karyawan::factory()->create();
         Kontrak::factory()->create(['karyawan_id' => $pkwt->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(2), 'tanggal_akhir' => now()->addMonths(10)]);
 
-        $this->actingAs($user)->get('/dashboard')
+        $this->actingAs($user)->get('/beranda')
             ->assertOk()
             ->assertSee('Karyawan Aktif')
             ->assertSee('Belum Tetap');
@@ -45,7 +44,7 @@ class DashboardTest extends TestCase
         $lewat = Karyawan::factory()->create();
         Kontrak::factory()->create(['karyawan_id' => $lewat->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(13), 'tanggal_akhir' => now()->subDays(5)]);
 
-        $this->actingAs($user)->get('/dashboard')
+        $this->actingAs($user)->get('/beranda')
             ->assertOk()
             ->assertSee('Kontrak ≤ 30 Hari')
             ->assertSee('Terlewat')
@@ -61,7 +60,7 @@ class DashboardTest extends TestCase
         $lewat = Karyawan::factory()->create(['nama_lengkap' => 'Sudah Lewat']);
         Kontrak::factory()->create(['karyawan_id' => $lewat->id, 'jenis' => 'pkwt', 'tanggal_mulai' => now()->subMonths(13), 'tanggal_akhir' => now()->subDays(5)]);
 
-        $this->actingAs($user)->get('/dashboard')->assertOk()
+        $this->actingAs($user)->get('/beranda')->assertOk()
             ->assertSee(route('sdm.karyawan.detail', $lewat).'?tab=kontrak', false)
             ->assertSeeInOrder(['Sudah Lewat', 'Akan Berakhir']);
     }
@@ -74,7 +73,7 @@ class DashboardTest extends TestCase
             'sip_berlaku_akhir' => now()->addDays(12),
         ]);
 
-        $this->actingAs($user)->get('/dashboard')
+        $this->actingAs($user)->get('/beranda')
             ->assertOk()
             ->assertSee('Pengingat SIP')
             ->assertSee('Perawat Sip');
@@ -84,9 +83,31 @@ class DashboardTest extends TestCase
     {
         $user = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
 
-        $this->actingAs($user)->get('/dashboard')
+        $this->actingAs($user)->get('/beranda')
             ->assertOk()
             ->assertDontSee('Karyawan Aktif')
             ->assertSee('Profil');
+    }
+
+    public function test_karyawan_eligible_lihat_kartu_jatah_cuti(): void
+    {
+        $kar = Karyawan::factory()->create();
+        Kontrak::factory()->create([
+            'karyawan_id' => $kar->id, 'jenis' => 'tetap',
+            'tanggal_mulai' => now()->subYears(2), 'tanggal_akhir' => null,
+        ]);
+        $user = User::factory()->create(['karyawan_id' => $kar->id]);
+
+        $this->actingAs($user)->get('/beranda')
+            ->assertOk()
+            ->assertSee('Jatah')            // istilah UI "Jatah", bukan "Saldo"
+            ->assertDontSee('Karyawan Aktif'); // bukan manajer → tak lihat stat SDM
+    }
+
+    public function test_dashboard_redirect_ke_beranda(): void
+    {
+        $user = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+
+        $this->actingAs($user)->get('/dashboard')->assertRedirect('/beranda');
     }
 }

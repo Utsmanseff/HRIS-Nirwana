@@ -35,7 +35,7 @@ class Login extends Component
         Auth::login($user, $this->remember);
         session()->regenerate();
 
-        return $this->redirect('/dashboard', navigate: true);
+        return $this->redirect('/beranda', navigate: true);
     }
 
     public function render()

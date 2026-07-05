@@ -47,7 +47,7 @@ class Klaim extends Component
         $user->update(['karyawan_id' => $kar->id]);
         $user->assignRole(Role::Karyawan->value);
 
-        return $this->redirect('/dashboard', navigate: true);
+        return $this->redirect('/beranda', navigate: true);
     }
 
     public function render()

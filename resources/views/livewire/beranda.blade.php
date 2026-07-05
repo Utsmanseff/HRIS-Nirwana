@@ -11,6 +11,31 @@
         @endif
     </div>
 
+    {{-- Kartu Jatah Cuti (siapa pun dengan data karyawan) --}}
+    @if ($saldo)
+        @if ($saldo->eligible())
+            <div class="rounded-xl p-4 sm:p-5 text-white" style="background:var(--panel-glow),var(--panel-grad)">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <div class="text-white/60 text-xs font-semibold uppercase tracking-wide">Jatah Cuti Tahunan</div>
+                        <div class="text-4xl font-extrabold tnum mt-1">{{ $saldo->efektif() }}<span class="text-lg text-white/50 font-bold"> hari tersisa</span></div>
+                    </div>
+                    <a href="{{ route('cuti') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:0">Kelola cuti</a>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                    <div class="rounded-lg bg-white/10 py-2"><div class="text-[10px] text-white/55 font-semibold">JATAH</div><div class="font-bold tnum">{{ $saldo->jatah() }}</div></div>
+                    <div class="rounded-lg bg-white/10 py-2"><div class="text-[10px] text-white/55 font-semibold">TERPAKAI</div><div class="font-bold tnum">{{ $saldo->terpakai() }}</div></div>
+                    <div class="rounded-lg bg-white/10 py-2"><div class="text-[10px] text-white/55 font-semibold">PENDING</div><div class="font-bold tnum" style="color:#fcd34d">{{ $saldo->pending() }}</div></div>
+                </div>
+            </div>
+        @else
+            <div class="card card-pad">
+                <div class="text-sm font-semibold mb-1">Jatah Cuti Tahunan</div>
+                <p class="text-sm text-neutral-400">Belum berhak cuti tahunan (masa kerja belum genap 1 tahun). Masih bisa ajukan izin, sakit, atau melahirkan lewat <a href="{{ route('cuti') }}" class="font-semibold" style="color:var(--brand-600)">halaman Cuti</a>.</p>
+            </div>
+        @endif
+    @endif
+
     @unless ($bisaSdm)
         <div class="card card-pad">
             <p class="text-sm text-neutral-500">Lihat dan kelola data dirimu di halaman <a href="{{ route('profil') }}" class="font-semibold" style="color:var(--brand-600)">Profil</a>.</p>
