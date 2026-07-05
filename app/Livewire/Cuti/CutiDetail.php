@@ -15,7 +15,7 @@ class CutiDetail extends Component
     public function mount(PengajuanCuti $pengajuan): void
     {
         abort_unless($pengajuan->karyawan_id === auth()->user()->karyawan_id, 403);
-        $this->pengajuan = $pengajuan->load(['jenisCuti', 'approval.approver']);
+        $this->pengajuan = $pengajuan->load(['karyawan', 'jenisCuti', 'approval.approver']);
     }
 
     /** Pemohon boleh batal hanya bila belum final (diajukan/diproses). */

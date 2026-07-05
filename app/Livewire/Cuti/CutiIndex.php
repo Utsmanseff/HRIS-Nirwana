@@ -25,7 +25,7 @@ class CutiIndex extends Component
         return view('livewire.cuti.cuti-index', [
             'karyawan' => $kar,
             'saldo' => $saldo,
-            'pengajuan' => $kar->pengajuanCuti()->with('jenisCuti')->get(),
+            'pengajuan' => $kar->pengajuanCuti()->with(['jenisCuti', 'approval'])->get(),
             'hariLibur' => HariLibur::dalamRentang(Carbon::today(), Carbon::today()->addMonths(3))->get(),
         ]);
     }

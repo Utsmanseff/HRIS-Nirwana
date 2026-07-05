@@ -20,6 +20,8 @@ class CutiFormTest extends TestCase
     {
         parent::setUp();
         $this->seed(JenisCutiSeeder::class);
+        // Preview alur di form memanggil RantaiApproval::susun (butuh definisi role).
+        $this->seed(\Database\Seeders\RoleSeeder::class);
     }
 
     private function userEligible(): User
@@ -44,7 +46,6 @@ class CutiFormTest extends TestCase
 
     public function test_submit_valid_membuat_pengajuan_dan_rantai(): void
     {
-        $this->seed(\Database\Seeders\RoleSeeder::class);
         $user = $this->userEligible();
         // sediakan HRD agar rantai punya approver final
         $hrd = Karyawan::factory()->create();
@@ -103,7 +104,6 @@ class CutiFormTest extends TestCase
     public function test_submit_cuti_sakit_backdate_dengan_lampiran_tersimpan(): void
     {
         \Illuminate\Support\Facades\Storage::fake('local');
-        $this->seed(\Database\Seeders\RoleSeeder::class);
         $user = $this->userEligible();
         $jenisId = \App\Models\JenisCuti::where('kode', 'cuti_sakit')->value('id');
 

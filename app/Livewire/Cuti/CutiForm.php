@@ -101,8 +101,13 @@ class CutiForm extends Component
 
     public function render()
     {
+        $kar = $this->karyawan();
+        $opsi = AturanCuti::jenisTersedia($kar);
+
         return view('livewire.cuti.cuti-form', [
-            'jenisOptions' => AturanCuti::jenisTersedia($this->karyawan()),
+            'jenisOptions' => $opsi,
+            'jenisTerpilih' => $this->jenisCutiId !== '' ? $opsi->firstWhere('id', (int) $this->jenisCutiId) : null,
+            'rantai' => RantaiApproval::susun($kar),
         ]);
     }
 }
