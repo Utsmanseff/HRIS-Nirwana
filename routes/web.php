@@ -5,6 +5,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Sdm\DokumenController;
 use App\Http\Controllers\Sdm\LaporanSdmController;
 use App\Livewire\Auth\Klaim;
+use App\Livewire\Cuti\CutiForm;
 use App\Livewire\Cuti\CutiIndex;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::get('/cuti', CutiIndex::class)->name('cuti');
+    Route::get('/cuti/ajukan', CutiForm::class)->name('cuti.ajukan');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
         Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');
