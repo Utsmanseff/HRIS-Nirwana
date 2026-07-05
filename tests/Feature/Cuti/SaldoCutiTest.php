@@ -120,11 +120,62 @@ class SaldoCutiTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_tanpa_pkwt_tidak_eligible(): void
+    public function test_tanpa_kontrak_tidak_eligible(): void
     {
-        $kar = Karyawan::factory()->create(); // tak ada kontrak PKWT
+        $kar = Karyawan::factory()->create(); // tak ada kontrak sama sekali
         $this->assertFalse(SaldoCuti::untuk($kar)->eligible());
         $this->assertSame(0, SaldoCuti::untuk($kar)->jatah());
+    }
+
+    public function test_pegawai_tetap_tanpa_pkwt_eligible_setelah_setahun(): void
+    {
+        // Kasus Admin/kartap direkrut langsung tetap (tanpa riwayat PKWT).
+        Carbon::setTestNow('2027-06-01');
+        $kar = Karyawan::factory()->create();
+        Kontrak::factory()->for($kar)->create([
+            'jenis' => \App\Enums\JenisKontrak::Tetap->value,
+            'tanggal_mulai' => '2025-01-01', 'tanggal_akhir' => null,
+        ]);
+        $kar->refresh();
+
+        $saldo = SaldoCuti::untuk($kar);
+        $this->assertTrue($saldo->eligible());
+        $this->assertSame('2027-01-01', $saldo->periodeMulai()->format('Y-m-d'));
+        $this->assertSame(12, $saldo->jatah());
+        Carbon::setTestNow();
+    }
+
+    public function test_periode_reset_ikut_kontrak_terbaru(): void
+    {
+        // PKWT1 Jul-2023 → PKWT2 Agu-2024 → Tetap Agu-2025.
+        // Eligible sejak masa kerja (2023), tapi periode reset ikut kontrak terbaru (Agu).
+        Carbon::setTestNow('2026-01-15');
+        $kar = Karyawan::factory()->create();
+        Kontrak::factory()->for($kar)->create(['jenis' => \App\Enums\JenisKontrak::Pkwt->value, 'tanggal_mulai' => '2023-07-22', 'tanggal_akhir' => '2024-07-22']);
+        Kontrak::factory()->for($kar)->create(['jenis' => \App\Enums\JenisKontrak::Pkwt->value, 'tanggal_mulai' => '2024-08-18', 'tanggal_akhir' => '2025-08-18']);
+        Kontrak::factory()->for($kar)->create(['jenis' => \App\Enums\JenisKontrak::Tetap->value, 'tanggal_mulai' => '2025-08-22', 'tanggal_akhir' => null]);
+        $kar->refresh();
+
+        $saldo = SaldoCuti::untuk($kar);
+        $this->assertTrue($saldo->eligible()); // masa kerja > 1 thn sejak 2023
+        // Periode aktif memuat 2026-01-15, anchor kontrak terbaru 2025-08-22 → [2025-08-22, 2026-08-22)
+        $this->assertSame('2025-08-22', $saldo->periodeMulai()->format('Y-m-d'));
+        $this->assertSame('2026-08-22', $saldo->periodeSelesai()->format('Y-m-d'));
+        Carbon::setTestNow();
+    }
+
+    public function test_masa_percobaan_tak_dihitung_masa_kerja(): void
+    {
+        // Percobaan Jan → PKWT Apr. Eligibility dihitung dari PKWT (Apr), bukan percobaan.
+        Carbon::setTestNow('2025-02-01'); // 13 bln sejak percobaan, tapi 10 bln sejak PKWT
+        $kar = Karyawan::factory()->create();
+        Kontrak::factory()->for($kar)->create(['jenis' => \App\Enums\JenisKontrak::Percobaan->value, 'tanggal_mulai' => '2024-01-01', 'tanggal_akhir' => '2024-04-01']);
+        Kontrak::factory()->for($kar)->create(['jenis' => \App\Enums\JenisKontrak::Pkwt->value, 'tanggal_mulai' => '2024-04-01', 'tanggal_akhir' => '2026-04-01']);
+        $kar->refresh();
+
+        // 2025-02-01 < 2024-04-01 + 1thn = 2025-04-01 → belum eligible (percobaan tak dihitung).
+        $this->assertFalse(SaldoCuti::untuk($kar)->eligible());
+        Carbon::setTestNow();
     }
 
     public function test_penyesuaian_yatim_saat_anchor_bergeser_terdokumentasi(): void

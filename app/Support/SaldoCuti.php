@@ -23,24 +23,30 @@ class SaldoCuti
     }
 
     /**
-     * Awal periode-cuti aktif (anchor + N tahun, N>=1) yang memuat $acuan.
-     * Null bila tak eligible (belum genap 1 tahun sejak PKWT pertama / tanpa PKWT).
+     * Awal periode-cuti aktif yang memuat $acuan.
+     * Anchor = kontrak nyata TERBARU yang berlaku (reset ikut siklus kontrak terbaru).
+     * Null bila belum eligible (masa kerja < 1 tahun / tanpa kontrak nyata).
      */
     public function periodeMulai(?Carbon $acuan = null): ?Carbon
     {
-        $anchor = $this->karyawan->anchorCutiTahunan();
+        $acuan = ($acuan ?? Carbon::today())->copy()->startOfDay();
+        if (! $this->eligible($acuan)) {
+            return null;
+        }
+
+        $anchor = $this->karyawan->anchorPeriodeCuti($acuan) ?? $this->karyawan->anchorMasaKerja();
         if (! $anchor) {
             return null;
         }
-        $acuan = ($acuan ?? Carbon::today())->copy()->startOfDay();
 
-        // N terbesar dengan (anchor + N tahun) <= acuan. Pakai addYears (aman leap year), hindari float.
-        $n = 0;
-        while ($anchor->copy()->addYears($n + 1)->lessThanOrEqualTo($acuan)) {
-            $n++;
+        // K terbesar dengan (anchor + K tahun) <= acuan. K>=0 (eligibility sudah dijamin masa kerja).
+        // Pakai addYears (aman leap year), hindari float.
+        $k = 0;
+        while ($anchor->copy()->addYears($k + 1)->lessThanOrEqualTo($acuan)) {
+            $k++;
         }
 
-        return $n >= 1 ? $anchor->copy()->addYears($n) : null;
+        return $anchor->copy()->addYears($k);
     }
 
     public function periodeSelesai(?Carbon $acuan = null): ?Carbon
@@ -48,9 +54,16 @@ class SaldoCuti
         return $this->periodeMulai($acuan)?->copy()->addYear();
     }
 
+    /** Eligible = masa kerja (kontrak nyata terlama) >= 1 tahun pada $acuan. Tak reset saat kontrak diperbarui. */
     public function eligible(?Carbon $acuan = null): bool
     {
-        return $this->periodeMulai($acuan) !== null;
+        $mulai = $this->karyawan->anchorMasaKerja();
+        if (! $mulai) {
+            return false;
+        }
+        $acuan = ($acuan ?? Carbon::today())->copy()->startOfDay();
+
+        return $mulai->copy()->addYear()->lessThanOrEqualTo($acuan);
     }
 
     /** Jatah = 12 + Σ penyesuaian(periode aktif). 0 bila tak eligible. */

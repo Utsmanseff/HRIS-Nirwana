@@ -158,9 +158,32 @@ class Karyawan extends Model
         return $this->kontrak()->orderByDesc('tanggal_mulai')->orderByDesc('id')->first();
     }
 
-    public function anchorCutiTahunan(): ?Carbon
+    /** Jenis kontrak yang dihitung sebagai masa kerja (masa percobaan dikecualikan). */
+    private function jenisKontrakKerja(): array
     {
-        return $this->kontrak()->where('jenis', JenisKontrak::Pkwt->value)
+        return [JenisKontrak::Pkwt->value, JenisKontrak::Tetap->value];
+    }
+
+    /**
+     * Awal masa kerja: kontrak nyata (PKWT/Tetap) paling awal.
+     * Basis eligibility cuti tahunan — tetap walau kontrak diperbarui.
+     */
+    public function anchorMasaKerja(): ?Carbon
+    {
+        return $this->kontrak()->whereIn('jenis', $this->jenisKontrakKerja())
             ->orderBy('tanggal_mulai')->orderBy('id')->first()?->tanggal_mulai;
+    }
+
+    /**
+     * Anchor periode cuti aktif: kontrak nyata TERBARU yang sudah berlaku pada $acuan.
+     * Reset saldo mengikuti siklus kontrak terbaru (mis. PKWT Jul → PKWT Agu ⇒ reset Agu).
+     */
+    public function anchorPeriodeCuti(?Carbon $acuan = null): ?Carbon
+    {
+        $acuan = ($acuan ?? Carbon::today())->copy()->startOfDay();
+
+        return $this->kontrak()->whereIn('jenis', $this->jenisKontrakKerja())
+            ->whereDate('tanggal_mulai', '<=', $acuan)
+            ->orderByDesc('tanggal_mulai')->orderByDesc('id')->first()?->tanggal_mulai;
     }
 }
