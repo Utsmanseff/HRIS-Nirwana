@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    {{-- Panel saldo cuti tahunan --}}
+    {{-- Panel jatah cuti tahunan --}}
     @if ($saldo->eligible())
         @php
             $jatah = $saldo->jatah();
@@ -46,7 +46,7 @@
         </div>
     @else
         <div class="card card-pad rise">
-            <div class="text-sm font-semibold mb-1">Saldo Cuti Tahunan</div>
+            <div class="text-sm font-semibold mb-1">Jatah Cuti Tahunan</div>
             <p class="text-sm text-neutral-400">Belum berhak cuti tahunan (masa kerja belum genap 1 tahun sejak kontrak pertama). Anda masih dapat mengajukan izin, sakit, atau melahirkan.</p>
         </div>
     @endif
