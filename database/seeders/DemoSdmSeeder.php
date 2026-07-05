@@ -27,7 +27,7 @@ class DemoSdmSeeder extends Seeder
         $igd = OrgUnit::create(['nama' => 'IGD', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $keperawatan->id]);
 
         // ── Pimpinan tiap tingkat ──────────────────────────────────────────
-        $this->pimpinan($direktorat, 'Direktur', 4, 'Dr. Direktur Utama', 'DIR-0001', tetap: true);
+        $direktur = $this->pimpinan($direktorat, 'Direktur', 4, 'Dr. Direktur Utama', 'DIR-0001', tetap: true);
         $this->pimpinan($penunjang, 'Kepala Bidang Penunjang', 3, 'Kabid Penunjang', 'KBD-0001', tetap: true);
         $this->pimpinan($keperawatan, 'Kepala Bidang Keperawatan', 3, 'Kabid Keperawatan', 'KBD-0002', tetap: true);
         $this->pimpinan($farmasi, 'Koordinator Farmasi', 2, 'Koor Farmasi', 'KOR-0001', tetap: true);
@@ -40,6 +40,22 @@ class DemoSdmSeeder extends Seeder
             'email' => $adminKar->email, 'password' => Hash::make('password'),
         ]);
         $admin->assignRole(Role::AdminSistem->value);
+
+        // ── Akun HRD & Direktur (agar rantai approval Cuti bisa dijalankan) ──
+        $direktur->user()->create([
+            'name' => $direktur->nama_lengkap,
+            'email' => $direktur->email,
+            'password' => Hash::make('password'),
+        ])->assignRole(Role::Direktur->value);
+
+        // HRD = koordinator unit SDM ringkas di bawah Bidang Penunjang.
+        $hrUnit = OrgUnit::create(['nama' => 'SDM', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $penunjang->id]);
+        $hrdKar = $this->pimpinan($hrUnit, 'Koordinator SDM', 2, 'Kepala HRD', 'HRD-0001', tetap: true, email: 'hrd@rsunirwana.test');
+        $hrdKar->user()->create([
+            'name' => $hrdKar->nama_lengkap,
+            'email' => $hrdKar->email,
+            'password' => Hash::make('password'),
+        ])->assignRole(Role::Hrd->value);
 
         // ── Staff PKWT (sebagian mendekati/melewati akhir kontrak) ─────────
         $unitStaff = [$farmasi, $it, $igd];

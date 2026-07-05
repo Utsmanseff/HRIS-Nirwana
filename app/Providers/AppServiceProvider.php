@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn ($user, $ability) => $user->hasRole(Role::AdminSistem->value) ? true : null);
 
         // Kemampuan struktural (derived dari struktur org + jabatan.level), bukan role.
+        Gate::define('ajukan-cuti', fn ($user) => $user->karyawan !== null);
         Gate::define('approve-cuti', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
         Gate::define('usul-disiplin', fn ($user) => (bool) $user->karyawan?->punyaBawahan());
         Gate::define('kelola-jadwal-divisi', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2);
