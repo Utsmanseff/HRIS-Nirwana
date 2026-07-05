@@ -7,8 +7,12 @@ namespace App\Support;
 use App\Enums\JabatanLevel;
 use App\Enums\PeranApproval;
 use App\Enums\Role;
+use App\Enums\StatusApproval;
+use App\Models\ApprovalCuti;
 use App\Models\Karyawan;
+use App\Models\PengajuanCuti;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class RantaiApproval
 {
@@ -57,6 +61,25 @@ class RantaiApproval
         }
 
         return self::beriUrutan($steps);
+    }
+
+    /** Tulis rantai approval untuk sebuah pengajuan (mengganti baris lama bila ada). */
+    public static function bangunUntuk(PengajuanCuti $pengajuan): void
+    {
+        $steps = self::susun($pengajuan->karyawan);
+
+        DB::transaction(function () use ($pengajuan, $steps) {
+            ApprovalCuti::where('pengajuan_cuti_id', $pengajuan->id)->delete();
+            foreach ($steps as $s) {
+                ApprovalCuti::create([
+                    'pengajuan_cuti_id' => $pengajuan->id,
+                    'urutan' => $s['urutan'],
+                    'approver_id' => $s['approver']->id,
+                    'peran' => $s['peran'],
+                    'status' => StatusApproval::Menunggu,
+                ]);
+            }
+        });
     }
 
     private static function pemohonPunyaRole(Karyawan $kar, Role $role): bool
