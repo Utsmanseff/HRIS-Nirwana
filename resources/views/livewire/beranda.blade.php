@@ -36,11 +36,22 @@
         @endif
     @endif
 
-    @unless ($bisaSdm)
-        <div class="card card-pad">
-            <p class="text-sm text-neutral-500">Lihat dan kelola data dirimu di halaman <a href="{{ route('profil') }}" class="font-semibold" style="color:var(--brand-600)">Profil</a>.</p>
+    {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}
+    <div>
+        <div class="text-[13px] font-bold text-neutral-700 mb-3">Menu</div>
+        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+            @foreach ($menu as $it)
+                @continue($it['id'] === 'beranda')
+                @php $placeholder = $it['route'] === null; @endphp
+                <a href="{{ \App\Support\NavMenu::href($it) }}"
+                   @class(['tile', 'opacity-40 pointer-events-none' => $placeholder])
+                   @if ($placeholder) aria-disabled="true" @endif>
+                    <span class="tile-ic bg-brand-50 text-brand-600"><x-icon :name="$it['icon']" :size="22" /></span>
+                    <span class="text-[11px] font-semibold leading-tight">{{ $it['label'] }}</span>
+                </a>
+            @endforeach
         </div>
-    @endunless
+    </div>
 
     @if ($bisaSdm)
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
