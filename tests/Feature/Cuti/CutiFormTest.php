@@ -41,4 +41,62 @@ class CutiFormTest extends TestCase
             ->assertViewHas('jenisOptions', fn ($opts) => $opts->pluck('kode')->map(fn ($k) => $k->value)->contains('cuti_tahunan'));
         Carbon::setTestNow();
     }
+
+    public function test_submit_valid_membuat_pengajuan_dan_rantai(): void
+    {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $user = $this->userEligible();
+        // sediakan HRD agar rantai punya approver final
+        $hrd = Karyawan::factory()->create();
+        User::factory()->create(['karyawan_id' => $hrd->id])->assignRole(\App\Enums\Role::Hrd->value);
+
+        $jenisId = \App\Models\JenisCuti::where('kode', 'cuti_tahunan')->value('id');
+
+        Livewire::actingAs($user)->test(CutiForm::class)
+            ->set('jenisCutiId', (string) $jenisId)
+            ->set('tanggalMulai', '2027-07-10')
+            ->set('tanggalSelesai', '2027-07-12')
+            ->set('jumlahHari', 3)
+            ->call('simpan')
+            ->assertRedirect(route('cuti'));
+
+        $p = \App\Models\PengajuanCuti::where('karyawan_id', $user->karyawan_id)->first();
+        $this->assertNotNull($p);
+        $this->assertSame(\App\Enums\StatusPengajuanCuti::Diajukan, $p->status);
+        $this->assertGreaterThanOrEqual(1, $p->approval()->count());
+        Carbon::setTestNow();
+    }
+
+    public function test_submit_cuti_tahunan_lebih_dari_enam_ditolak(): void
+    {
+        $user = $this->userEligible();
+        $jenisId = \App\Models\JenisCuti::where('kode', 'cuti_tahunan')->value('id');
+
+        Livewire::actingAs($user)->test(CutiForm::class)
+            ->set('jenisCutiId', (string) $jenisId)
+            ->set('tanggalMulai', '2027-07-01')
+            ->set('tanggalSelesai', '2027-07-10')
+            ->set('jumlahHari', 7)
+            ->call('simpan')
+            ->assertHasErrors('jumlahHari');
+
+        $this->assertSame(0, \App\Models\PengajuanCuti::count());
+        Carbon::setTestNow();
+    }
+
+    public function test_submit_izin_biasa_tanpa_lampiran_ditolak(): void
+    {
+        $user = $this->userEligible();
+        $jenisId = \App\Models\JenisCuti::where('kode', 'izin_biasa')->value('id');
+
+        Livewire::actingAs($user)->test(CutiForm::class)
+            ->set('jenisCutiId', (string) $jenisId)
+            ->set('tanggalMulai', '2027-07-01')
+            ->set('tanggalSelesai', '2027-07-02')
+            ->set('jumlahHari', 2)
+            ->call('simpan')
+            ->assertHasErrors('lampiran');
+
+        Carbon::setTestNow();
+    }
 }
