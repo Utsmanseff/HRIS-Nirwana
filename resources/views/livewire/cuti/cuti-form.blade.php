@@ -63,7 +63,7 @@
             <input type="number" min="1" max="6" wire:model="jumlahHari" class="input tnum">
             <div class="flex gap-2.5 p-2.5 rounded-lg bg-neutral-50 border border-neutral-200 mt-2 text-[11px] text-neutral-500">
                 <svg width="14" class="shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1" stroke-linecap="round"/></svg>
-                <span>≤ hari kalender dalam rentang, cuti tahunan ≤ saldo & maks 6/pengajuan, hari penuh. Hari kerja shift/akhir pekan dihitung sendiri. HRD verifikasi saat acc.</span>
+                <span>≤ hari kalender dalam rentang, cuti tahunan ≤ jatah & maks 6/pengajuan, hari penuh. Hari kerja shift/akhir pekan dihitung sendiri. HRD verifikasi saat acc.</span>
             </div>
             @error('jumlahHari') <div class="text-danger-600 text-xs mt-1">{{ $message }}</div> @enderror
         </div>

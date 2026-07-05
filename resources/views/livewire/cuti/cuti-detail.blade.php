@@ -28,7 +28,7 @@
         <div class="grid grid-cols-2 gap-3 text-sm">
             <div><div class="text-xs text-neutral-400">Jumlah hari</div><div class="font-bold tnum">{{ $pengajuan->jumlah_hari }} hari</div></div>
             <div>
-                <div class="text-xs text-neutral-400">Potong saldo</div>
+                <div class="text-xs text-neutral-400">Potong jatah</div>
                 <div class="font-bold">
                     @if ($pot)
                         {{ $pengajuan->jumlah_hari }} hari
@@ -86,7 +86,7 @@
     @if ($pot && $pend)
         <div class="flex gap-2.5 p-3 rounded-lg bg-info-50 border border-info-100 text-xs text-info-700">
             <svg width="16" class="shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1" stroke-linecap="round"/></svg>
-            <span class="leading-relaxed">Saldo dipotong saat <b>disetujui HRD</b>. Sekarang {{ $pengajuan->jumlah_hari }} hari <b>ditahan</b> (pending).</span>
+            <span class="leading-relaxed">Jatah dipotong saat <b>disetujui HRD</b>. Sekarang {{ $pengajuan->jumlah_hari }} hari <b>ditahan</b> (pending).</span>
         </div>
     @endif
 
