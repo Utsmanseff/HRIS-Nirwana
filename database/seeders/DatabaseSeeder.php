@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,   // harus duluan: DemoSdmSeeder pakai assignRole
+            JenisCutiSeeder::class,
             DemoSdmSeeder::class,
         ]);
     }
