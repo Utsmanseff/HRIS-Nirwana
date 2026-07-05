@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Support;
+
+use App\Enums\Permission;
+use App\Models\User;
+
+class NavMenu
+{
+    /**
+     * Registry nav — source of truth. 'route' = nama route (null = placeholder '#').
+     * NAMA route, bukan URL: hindari panggil route() saat class load (route 'beranda' baru ada Task 6).
+     * 'can' = permission string wajib; null = selalu tampil.
+     * 'group' = grup sidebar; item grup null muncul juga di bottom-nav/grid.
+     *
+     * @return list<array{id:string,label:string,icon:string,route:?string,can:?string,group:?string}>
+     */
+    public static function semua(): array
+    {
+        return [
+            ['id' => 'beranda',  'label' => 'Beranda',        'icon' => 'home',     'route' => 'beranda',        'can' => null, 'group' => null],
+            ['id' => 'cuti',     'label' => 'Cuti',           'icon' => 'calendar', 'route' => 'cuti',           'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
+            ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => null,             'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
+            ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
+            ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => null,             'can' => Permission::KelolaSdm->value, 'group' => 'Operasional'],
+            ['id' => 'karyawan', 'label' => 'Karyawan',       'icon' => 'users',    'route' => 'sdm.karyawan',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
+            ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
+            ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],
+            ['id' => 'profil',   'label' => 'Profil',         'icon' => 'user',     'route' => 'profil',         'can' => null, 'group' => null],
+        ];
+    }
+
+    /** Item yang lolos permission user. */
+    public static function untuk(User $user): array
+    {
+        return array_values(array_filter(
+            self::semua(),
+            fn (array $it) => $it['can'] === null || $user->can($it['can']),
+        ));
+    }
+
+    /** Resolve URL item: route bernama → URL, null → '#'. */
+    public static function href(array $item): string
+    {
+        return $item['route'] ? route($item['route']) : '#';
+    }
+}
