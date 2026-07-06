@@ -21,6 +21,7 @@ class NavMenu
         return [
             ['id' => 'beranda',  'label' => 'Beranda',        'icon' => 'home',     'route' => 'beranda',        'can' => null, 'group' => null],
             ['id' => 'cuti',     'label' => 'Cuti',           'icon' => 'calendar', 'route' => 'cuti',           'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
+            ['id' => 'persetujuan', 'label' => 'Persetujuan Cuti', 'icon' => 'check-circle', 'route' => 'cuti.persetujuan', 'can' => 'approve-cuti', 'group' => 'Operasional'],
             ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => null,             'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
             ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
             ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => null,             'can' => Permission::KelolaSdm->value, 'group' => 'Operasional'],

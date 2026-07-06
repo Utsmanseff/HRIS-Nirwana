@@ -57,6 +57,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
 
     Route::get('/cuti', CutiIndex::class)->name('cuti');
     Route::get('/cuti/ajukan', CutiForm::class)->name('cuti.ajukan');
+    Route::get('/cuti/persetujuan', \App\Livewire\Cuti\Persetujuan::class)
+        ->middleware('can:approve-cuti')->name('cuti.persetujuan');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
 
