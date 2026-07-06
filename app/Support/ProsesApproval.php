@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\KodeJenisCuti;
+use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
 use App\Models\ApprovalCuti;
@@ -79,9 +80,27 @@ class ProsesApproval
 
     private static function pastikanWewenang(PengajuanCuti $pengajuan, ApprovalCuti $step, User $aktor): void
     {
-        if ($step->approver_id !== $aktor->karyawan_id) {
-            throw new ProsesApprovalException('Anda bukan approver tahap ini.');
+        if ($step->approver_id === $aktor->karyawan_id) {
+            return;
         }
+        // Self-approve HRD: pemohon ber-role HRD boleh acc tahap final pengajuannya sendiri.
+        if (self::hrdSelfApprove($pengajuan, $step, $aktor)) {
+            return;
+        }
+        throw new ProsesApprovalException('Anda bukan approver tahap ini.');
+    }
+
+    private static function hrdSelfApprove(PengajuanCuti $pengajuan, ApprovalCuti $step, User $aktor): bool
+    {
+        if ($aktor->karyawan_id !== $pengajuan->karyawan_id || ! $aktor->hasRole(Role::Hrd->value)) {
+            return false;
+        }
+        $adaBerikut = $pengajuan->approval()
+            ->where('status', StatusApproval::Menunggu)
+            ->where('urutan', '>', $step->urutan)
+            ->exists();
+
+        return ! $adaBerikut; // hanya bila tahap terakhir
     }
 
     /** Guard defensif: total cuti-tahunan disetujui tak boleh melampaui jatah periode. */

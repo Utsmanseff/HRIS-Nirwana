@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
+use App\Enums\Role;
 use App\Models\ApprovalCuti;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
@@ -17,6 +18,7 @@ use App\Support\ProsesApprovalException;
 use App\Support\SaldoCuti;
 use Illuminate\Support\Carbon;
 use Database\Seeders\JenisCutiSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -28,6 +30,7 @@ class ProsesApprovalTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(RoleSeeder::class);
         $this->seed(JenisCutiSeeder::class);
     }
 
@@ -129,5 +132,23 @@ class ProsesApprovalTest extends TestCase
         $this->assertSame(StatusPengajuanCuti::Ditolak, $p->refresh()->status);
         $this->assertSame(StatusApproval::Tolak, $p->approval()->where('urutan', 1)->first()->status);
         Notification::assertSentTo($userPemohon, \App\Notifications\CutiDitolak::class);
+    }
+
+    public function test_hrd_self_approve_tahap_final_sendiri(): void
+    {
+        Notification::fake();
+        $hrd = Karyawan::factory()->create();
+        $userHrd = User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $direktur = Karyawan::factory()->create();
+
+        // Rantai pemohon HRD = Direktur final (approver bukan HRD).
+        $p = PengajuanCuti::factory()->for($hrd)->jenis(KodeJenisCuti::CutiSakit)
+            ->status(StatusPengajuanCuti::Diajukan)->create(['jumlah_hari' => 1]);
+        ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $direktur->id, 'peran' => 'direktur', 'status' => StatusApproval::Menunggu]);
+
+        \App\Support\ProsesApproval::setujui($p->tahapAktif(), $userHrd);
+
+        $this->assertSame(StatusPengajuanCuti::Disetujui, $p->refresh()->status);
     }
 }
