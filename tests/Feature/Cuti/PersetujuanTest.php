@@ -95,6 +95,27 @@ class PersetujuanTest extends TestCase
         $this->assertSame(\App\Enums\StatusPengajuanCuti::Disetujui, $p->refresh()->status);
     }
 
+    public function test_panel_tinjau_menampilkan_detail_pengajuan(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $hrd = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Hendra HRD']);
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create(['nama_lengkap' => 'Sinta Pemohon']);
+
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->jenis(\App\Enums\KodeJenisCuti::CutiSakit)
+            ->status(\App\Enums\StatusPengajuanCuti::Diproses)->create(['jumlah_hari' => 2, 'alasan' => 'demam tinggi']);
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->call('tinjau', $p->id)
+            ->assertSee('Tinjau Pengajuan Cuti')
+            ->assertSee('demam tinggi')       // alasan
+            ->assertSee('Alur Persetujuan')
+            ->assertSee('Hendra HRD');         // approver di alur
+    }
+
     public function test_approver_tolak_wajib_catatan(): void
     {
         $unit = \App\Models\OrgUnit::factory()->create();

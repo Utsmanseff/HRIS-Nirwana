@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Cuti;
 
+use App\Enums\KodeJenisCuti;
 use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
 use App\Models\PengajuanCuti;
 use App\Support\ProsesApproval;
 use App\Support\ProsesApprovalException;
+use App\Support\SaldoCuti;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -170,13 +173,38 @@ class Persetujuan extends Component
             ->values();
     }
 
+    /** Info jatah (hanya cuti_tahunan) untuk panel tinjau. */
+    private function saldoTinjau(?PengajuanCuti $p): ?array
+    {
+        if (! $p || $p->jenisCuti->kode !== KodeJenisCuti::CutiTahunan) {
+            return null;
+        }
+        $acuan = Carbon::parse($p->tanggal_mulai);
+        $saldo = SaldoCuti::untuk($p->karyawan);
+        $jatah = $saldo->jatah($acuan);
+        $terpakai = $saldo->terpakai($acuan);
+
+        return [
+            'jatah' => $jatah,
+            'terpakai' => $terpakai,
+            'diminta' => $p->jumlah_hari,
+            'sisa' => $jatah - $terpakai - $p->jumlah_hari,
+        ];
+    }
+
     public function render()
     {
+        $tinjauan = $this->tinjauId
+            ? PengajuanCuti::with(['karyawan.jabatan', 'jenisCuti', 'approval.approver'])->find($this->tinjauId)
+            : null;
+
         return view('livewire.cuti.persetujuan', [
             'perluAksi' => $this->perluAksi(),
             'bolehSemua' => $this->bolehSemua(),
             'semua' => $this->tab === 'semua' ? $this->semuaPengajuan() : collect(),
             'jenisOpsi' => \App\Models\JenisCuti::orderBy('nama')->get(),
+            'tinjauan' => $tinjauan,
+            'saldoTinjau' => $this->saldoTinjau($tinjauan),
         ]);
     }
 }

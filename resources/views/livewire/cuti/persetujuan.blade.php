@@ -86,29 +86,69 @@
     </div>
 
     {{-- Slide-over review --}}
-    <div x-show="$wire.tinjauId !== null" class="fixed inset-0 z-50" x-cloak>
-        <div class="absolute inset-0 bg-black/20" @click="$wire.tutup()"></div>
-        <div class="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl overflow-y-auto">
-            <div class="flex items-center justify-between border-b px-4 py-3">
-                <h2 class="text-lg font-bold">Tinjau Pengajuan</h2>
-                <button @click="$wire.tutup()" class="btn btn-ghost btn-sm">&times;</button>
-            </div>
-            <div class="p-4 space-y-4">
-                <div class="text-sm text-neutral-500">Detail pengajuan di sini.</div>
-
-                <div>
-                    <label class="label">Catatan</label>
-                    <textarea wire:model="catatan" class="input w-full" rows="3" placeholder="Catatan (wajib saat menolak)"></textarea>
-                    @error('catatan') <p class="text-xs text-error-500 mt-1">{{ $message }}</p> @enderror
+    @if($tinjauan)
+        <div class="fixed inset-0 z-50">
+            <div class="absolute inset-0" style="background:rgba(8,12,11,.55)" wire:click="tutup"></div>
+            <div class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto" style="background:var(--bg-surface);box-shadow:var(--shadow-lg)">
+                <div class="card-header sticky top-0" style="background:var(--bg-surface)">
+                    <div class="card-title">Tinjau Pengajuan Cuti</div>
+                    <button class="btn btn-ghost btn-icon" wire:click="tutup"><x-icon name="back" :size="18" /></button>
                 </div>
+                <div class="p-5 space-y-5">
+                    <div>
+                        <div class="font-bold">{{ $tinjauan->karyawan->nama_lengkap }}</div>
+                        <div class="text-xs text-neutral-400">{{ $tinjauan->karyawan->jabatan?->nama }} · <span class="font-mono">{{ $tinjauan->karyawan->nip }}</span></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-lg bg-neutral-50 border border-neutral-200 p-3"><div class="text-xs text-neutral-400">Jenis</div><div class="font-semibold">{{ $tinjauan->jenisCuti->nama }}</div></div>
+                        <div class="rounded-lg bg-neutral-50 border border-neutral-200 p-3"><div class="text-xs text-neutral-400">Tanggal</div><div class="font-semibold tnum">{{ $tinjauan->tanggal_mulai->format('d M') }}–{{ $tinjauan->tanggal_selesai->format('d M Y') }}</div></div>
+                        <div class="rounded-lg bg-neutral-50 border border-neutral-200 p-3"><div class="text-xs text-neutral-400">Jumlah hari</div><div class="font-semibold tnum">{{ $tinjauan->jumlah_hari }}</div></div>
+                        <div class="rounded-lg bg-neutral-50 border border-neutral-200 p-3"><div class="text-xs text-neutral-400">Tahap saya</div><div class="font-semibold">{{ ucfirst($tinjauan->tahapAktif()?->peran?->value ?? '') }}</div></div>
+                    </div>
+                    @if($tinjauan->alasan)
+                        <div><div class="text-xs text-neutral-400 mb-1">Alasan</div><div class="text-sm">{{ $tinjauan->alasan }}</div></div>
+                    @endif
+                    @if($tinjauan->lampiran_path)
+                        <a href="{{ route('cuti.lampiran', $tinjauan) }}" target="_blank" class="text-sm text-brand-600 underline">Lihat lampiran</a>
+                    @endif
 
-                <div class="flex gap-2 pt-2">
-                    <button wire:click="setujui" class="btn btn-primary btn-sm flex-1">Setujui</button>
-                    <button wire:click="tolak" class="btn btn-danger btn-sm flex-1">Tolak</button>
+                    @if($saldoTinjau)
+                        <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3.5">
+                            <div class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Jatah Cuti Tahunan</div>
+                            <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                                <div><div class="text-neutral-400">Jatah</div><div class="font-bold tnum">{{ $saldoTinjau['jatah'] }}</div></div>
+                                <div><div class="text-neutral-400">Terpakai</div><div class="font-bold tnum">{{ $saldoTinjau['terpakai'] }}</div></div>
+                                <div><div class="text-neutral-400">Diminta</div><div class="font-bold tnum">{{ $saldoTinjau['diminta'] }}</div></div>
+                                <div><div class="text-neutral-400">Sisa stlh acc</div><div class="font-bold tnum {{ $saldoTinjau['sisa'] < 0 ? 'text-danger-600' : '' }}">{{ $saldoTinjau['sisa'] }}</div></div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div>
+                        <div class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">Alur Persetujuan</div>
+                        <div class="space-y-2 text-sm">
+                            @foreach($tinjauan->approval as $a)
+                                <div class="flex items-center justify-between">
+                                    <span>{{ ucfirst($a->peran->value) }} — {{ $a->approver->nama_lengkap }}</span>
+                                    <span class="badge {{ $a->status->value === 'setuju' ? 'badge-success' : ($a->status->value === 'tolak' ? 'badge-danger' : 'badge-warning') }}">{{ $a->status->value }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="field-label">Catatan <span class="text-neutral-400 font-normal">(wajib bila menolak)</span></label>
+                        <textarea wire:model="catatan" class="textarea" rows="2" placeholder="Catatan untuk pemohon…"></textarea>
+                        @error('catatan') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                <div class="card-pad sticky bottom-0 border-t border-neutral-100 flex gap-3" style="background:var(--bg-surface)">
+                    <button class="btn btn-secondary text-danger-600 flex-1" wire:click="tolak">Tolak</button>
+                    <button class="btn btn-primary flex-1" wire:click="setujui">Setujui</button>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
     {{-- Modal batal HRD --}}
     @if($batalId)
