@@ -110,4 +110,35 @@ class BerandaTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertRedirect('/beranda');
     }
+
+    public function test_hrd_lihat_kartu_pending_cuti(): void
+    {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $this->seed(\Database\Seeders\JenisCutiSeeder::class);
+
+        $kar = Karyawan::factory()->create();
+        $hrd = User::factory()->create(['karyawan_id' => $kar->id]);
+        $hrd->assignRole('HRD');
+
+        $pemohon = Karyawan::factory()->create();
+        $izin = \App\Models\JenisCuti::where('kode', 'izin_biasa')->first();
+        \App\Models\PengajuanCuti::factory()->for($pemohon)->for($izin, 'jenisCuti')->create([
+            'tanggal_mulai' => '2026-06-10', 'tanggal_selesai' => '2026-06-10',
+            'jumlah_hari' => 1, 'status' => 'diajukan',
+        ]);
+
+        $this->actingAs($hrd)->get('/beranda')
+            ->assertOk()
+            ->assertSee('Pending Cuti');
+    }
+
+    public function test_non_hrd_tak_lihat_kartu_pending_cuti(): void
+    {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $kar = Karyawan::factory()->create();
+        $u = User::factory()->create(['karyawan_id' => $kar->id]);
+        $u->assignRole('Karyawan');
+
+        $this->actingAs($u)->get('/beranda')->assertDontSee('Pending Cuti');
+    }
 }
