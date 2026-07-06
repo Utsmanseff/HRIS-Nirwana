@@ -6,6 +6,7 @@ use App\Livewire\Cuti\Persetujuan;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\User;
+use Database\Seeders\JenisCutiSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -19,6 +20,7 @@ class PersetujuanTest extends TestCase
     {
         parent::setUp();
         $this->seed(RoleSeeder::class);
+        $this->seed(JenisCutiSeeder::class);
     }
 
     public function test_route_persetujuan_butuh_gate_approve_cuti(): void
@@ -43,5 +45,31 @@ class PersetujuanTest extends TestCase
         Livewire::actingAs($user)->test(Persetujuan::class)
             ->assertOk()
             ->assertSet('tab', 'perlu-aksi');
+    }
+
+    public function test_perlu_aksi_hanya_pengajuan_di_tahap_saya(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $koor = \App\Models\Karyawan::factory()->pimpinanUnit($unit)->create();
+        $userKoor = \App\Models\User::factory()->create(['karyawan_id' => $koor->id]);
+        $userKoor->assignRole('Karyawan');
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+
+        // Pengajuan menunggu di tahap koordinator (urutan 1) lalu HRD (urutan 2).
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->status(\App\Enums\StatusPengajuanCuti::Diajukan)->create();
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $koor->id, 'peran' => 'koordinator', 'status' => \App\Enums\StatusApproval::Menunggu]);
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 2, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        // Koordinator lihat (tahap 1 aktif = dia).
+        \Livewire\Livewire::actingAs($userKoor)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->assertSee($pemohon->nama_lengkap);
+
+        // Setujui tahap 1 → kini tahap HRD; koordinator tak lagi lihat.
+        \App\Support\ProsesApproval::setujui($p->tahapAktif(), $userKoor);
+        \Livewire\Livewire::actingAs($userKoor)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->assertDontSee($pemohon->nama_lengkap);
     }
 }
