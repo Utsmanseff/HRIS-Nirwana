@@ -36,5 +36,47 @@
                 </table>
             </div>
         @endif
+
+        @if($tab==='jenis')
+            <div class="card-pad space-y-4">
+                <p class="text-xs text-neutral-500">Kode jenis tetap (tak bisa diubah/dihapus). Ubah label/aturan atau nonaktifkan.</p>
+                <table class="table">
+                    <thead><tr><th>Kode</th><th>Nama</th><th>Potong Jatah</th><th>Lampiran</th><th>Backdate</th><th>Aktif</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach($jenisCuti as $j)
+                            <tr wire:key="jc-{{ $j->id }}">
+                                <td class="font-mono text-xs">{{ $j->kode->value }}</td>
+                                <td class="font-semibold">{{ $j->nama }}</td>
+                                <td>{{ $j->potong_saldo ? 'Ya' : '—' }}</td>
+                                <td>{{ $j->butuh_lampiran ? 'Wajib' : '—' }}</td>
+                                <td>{{ $j->boleh_backdate ? 'Boleh' : '—' }}</td>
+                                <td>
+                                    <button wire:click="toggleAktif({{ $j->id }})" class="badge {{ $j->aktif ? 'badge-success' : 'badge-danger' }}">{{ $j->aktif ? 'Aktif' : 'Nonaktif' }}</button>
+                                </td>
+                                <td class="text-right"><button wire:click="editJenis({{ $j->id }})" class="btn btn-ghost btn-sm">Ubah</button></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                @if($jcId)
+                    <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+                        <div class="font-semibold text-sm">Ubah Jenis Cuti</div>
+                        <div><label class="field-label">Nama</label><input wire:model="jcNama" class="input"></div>
+                        <div><label class="field-label">Efek penggajian (opsional)</label><input wire:model="jcEfek" class="input" placeholder="mis. potong gaji & jasa"></div>
+                        @error('jcNama') <div class="text-xs text-danger-600">{{ $message }}</div> @enderror
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            <label class="flex items-center gap-2"><input type="checkbox" wire:model="jcPotongSaldo"> Potong jatah</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" wire:model="jcButuhLampiran"> Butuh lampiran</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" wire:model="jcBolehBackdate"> Boleh backdate</label>
+                        </div>
+                        <div class="flex gap-2">
+                            <button wire:click="simpanJenis" class="btn btn-primary btn-sm">Simpan</button>
+                            <button wire:click="$set('jcId', null)" class="btn btn-secondary btn-sm">Batal</button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
     </div>
 </div>

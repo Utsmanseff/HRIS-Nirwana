@@ -75,4 +75,26 @@ class KelolaCutiTest extends TestCase
             ->call('simpanHariLibur')
             ->assertHasErrors(['hlTanggal', 'hlNama']);
     }
+
+    public function test_jenis_cuti_edit_dan_toggle_aktif(): void
+    {
+        $jenis = \App\Models\JenisCuti::where('kode', 'izin_biasa')->first();
+
+        Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
+            ->call('editJenis', $jenis->id)
+            ->assertSet('jcNama', $jenis->nama)
+            ->set('jcNama', 'Izin Dinas')
+            ->set('jcButuhLampiran', false)
+            ->call('simpanJenis')
+            ->assertHasNoErrors();
+
+        $jenis->refresh();
+        $this->assertSame('Izin Dinas', $jenis->nama);
+        $this->assertFalse($jenis->butuh_lampiran);
+
+        // Toggle aktif
+        Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
+            ->call('toggleAktif', $jenis->id);
+        $this->assertFalse($jenis->refresh()->aktif);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Livewire\Cuti;
 
 use App\Models\HariLibur;
+use App\Models\JenisCuti;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -55,10 +56,58 @@ class KelolaCuti extends Component
         $this->reset(['hlTanggal', 'hlNama', 'editHlId']);
     }
 
+    public ?int $jcId = null;
+
+    public string $jcNama = '';
+
+    public ?string $jcEfek = null;
+
+    public bool $jcPotongSaldo = false;
+
+    public bool $jcButuhLampiran = false;
+
+    public bool $jcBolehBackdate = false;
+
+    public function editJenis(int $id): void
+    {
+        $j = JenisCuti::findOrFail($id);
+        $this->jcId = $j->id;
+        $this->jcNama = $j->nama;
+        $this->jcEfek = $j->efek_penggajian;
+        $this->jcPotongSaldo = (bool) $j->potong_saldo;
+        $this->jcButuhLampiran = (bool) $j->butuh_lampiran;
+        $this->jcBolehBackdate = (bool) $j->boleh_backdate;
+    }
+
+    public function simpanJenis(): void
+    {
+        $data = $this->validate([
+            'jcNama' => ['required', 'string', 'max:80'],
+            'jcEfek' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        JenisCuti::whereKey($this->jcId)->update([
+            'nama' => $data['jcNama'],
+            'efek_penggajian' => $data['jcEfek'] ?: null,
+            'potong_saldo' => $this->jcPotongSaldo,
+            'butuh_lampiran' => $this->jcButuhLampiran,
+            'boleh_backdate' => $this->jcBolehBackdate,
+        ]);
+        $this->reset(['jcId', 'jcNama', 'jcEfek', 'jcPotongSaldo', 'jcButuhLampiran', 'jcBolehBackdate']);
+        session()->flash('cuti_ok', 'Jenis cuti diperbarui.');
+    }
+
+    public function toggleAktif(int $id): void
+    {
+        $j = JenisCuti::findOrFail($id);
+        $j->update(['aktif' => ! $j->aktif]);
+    }
+
     public function render()
     {
         return view('livewire.cuti.kelola-cuti', [
             'hariLibur' => HariLibur::orderBy('tanggal')->get(),
+            'jenisCuti' => JenisCuti::orderBy('id')->get(),
         ]);
     }
 }
