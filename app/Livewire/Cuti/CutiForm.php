@@ -90,8 +90,10 @@ class CutiForm extends Component
                 'status' => StatusPengajuanCuti::Diajukan,
             ]);
 
-            // Bangun rantai approval berjenjang (notif dikirim di plan 2-3).
+            // Bangun rantai approval berjenjang, lalu notif approver tahap pertama.
             RantaiApproval::bangunUntuk($pengajuan);
+            $tahap1 = $pengajuan->tahapAktif();
+            $tahap1?->approver->user?->notify(new \App\Notifications\CutiPerluPersetujuan($pengajuan));
         });
 
         session()->flash('cuti_ok', 'Pengajuan cuti terkirim.');

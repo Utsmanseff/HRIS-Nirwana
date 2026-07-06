@@ -6,6 +6,7 @@ use App\Livewire\Cuti\Persetujuan;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\User;
+use Database\Seeders\JenisCutiSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -19,6 +20,7 @@ class PersetujuanTest extends TestCase
     {
         parent::setUp();
         $this->seed(RoleSeeder::class);
+        $this->seed(JenisCutiSeeder::class);
     }
 
     public function test_route_persetujuan_butuh_gate_approve_cuti(): void
@@ -43,5 +45,131 @@ class PersetujuanTest extends TestCase
         Livewire::actingAs($user)->test(Persetujuan::class)
             ->assertOk()
             ->assertSet('tab', 'perlu-aksi');
+    }
+
+    public function test_perlu_aksi_hanya_pengajuan_di_tahap_saya(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $koor = \App\Models\Karyawan::factory()->pimpinanUnit($unit)->create();
+        $userKoor = \App\Models\User::factory()->create(['karyawan_id' => $koor->id]);
+        $userKoor->assignRole('Karyawan');
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+
+        // Pengajuan menunggu di tahap koordinator (urutan 1) lalu HRD (urutan 2).
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->status(\App\Enums\StatusPengajuanCuti::Diajukan)->create();
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $koor->id, 'peran' => 'koordinator', 'status' => \App\Enums\StatusApproval::Menunggu]);
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 2, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        // Koordinator lihat (tahap 1 aktif = dia).
+        \Livewire\Livewire::actingAs($userKoor)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->assertSee($pemohon->nama_lengkap);
+
+        // Setujui tahap 1 → kini tahap HRD; koordinator tak lagi lihat.
+        \App\Support\ProsesApproval::setujui($p->tahapAktif(), $userKoor);
+        \Livewire\Livewire::actingAs($userKoor)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->assertDontSee($pemohon->nama_lengkap);
+    }
+
+    public function test_approver_setujui_dari_komponen(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->jenis(\App\Enums\KodeJenisCuti::CutiSakit)
+            ->status(\App\Enums\StatusPengajuanCuti::Diproses)->create(['jumlah_hari' => 1]);
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->call('tinjau', $p->id)
+            ->set('catatan', 'ok')
+            ->call('setujui')
+            ->assertHasNoErrors();
+
+        $this->assertSame(\App\Enums\StatusPengajuanCuti::Disetujui, $p->refresh()->status);
+    }
+
+    public function test_panel_tinjau_menampilkan_detail_pengajuan(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $hrd = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Hendra HRD']);
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create(['nama_lengkap' => 'Sinta Pemohon']);
+
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->jenis(\App\Enums\KodeJenisCuti::CutiSakit)
+            ->status(\App\Enums\StatusPengajuanCuti::Diproses)->create(['jumlah_hari' => 2, 'alasan' => 'demam tinggi']);
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->call('tinjau', $p->id)
+            ->assertSee('Tinjau Pengajuan Cuti')
+            ->assertSee('demam tinggi')       // alasan
+            ->assertSee('Alur Persetujuan')
+            ->assertSee('Hendra HRD');         // approver di alur
+    }
+
+    public function test_approver_tolak_wajib_catatan(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->status(\App\Enums\StatusPengajuanCuti::Diproses)->create();
+        \App\Models\ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => \App\Enums\StatusApproval::Menunggu]);
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->call('tinjau', $p->id)
+            ->set('catatan', '')
+            ->call('tolak')
+            ->assertHasErrors('catatan');
+
+        $this->assertSame(\App\Enums\StatusPengajuanCuti::Diproses, $p->refresh()->status);
+    }
+
+    public function test_tab_semua_hanya_untuk_hrd_dan_filter(): void
+    {
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+
+        $a = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Ana Melati']);
+        $b = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Beni Cahya']);
+        \App\Models\PengajuanCuti::factory()->for($a)->create();
+        \App\Models\PengajuanCuti::factory()->for($b)->create();
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->set('tab', 'semua')
+            ->set('cari', 'Ana')
+            ->assertSee('Ana Melati')
+            ->assertDontSee('Beni Cahya');
+    }
+
+    public function test_hrd_batalkan_dari_komponen(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->create();
+        \App\Models\User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->status(\App\Enums\StatusPengajuanCuti::Disetujui)->create();
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->set('tab', 'semua')
+            ->call('mulaiBatal', $p->id)
+            ->set('alasanBatal', 'double booking')
+            ->call('konfirmasiBatal')
+            ->assertHasNoErrors();
+
+        $this->assertSame(\App\Enums\StatusPengajuanCuti::Dibatalkan, $p->refresh()->status);
     }
 }

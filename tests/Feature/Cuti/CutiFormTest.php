@@ -121,4 +121,39 @@ class CutiFormTest extends TestCase
         \Illuminate\Support\Facades\Storage::disk('local')->assertExists($p->lampiran_path);
         Carbon::setTestNow();
     }
+
+    public function test_submit_kirim_notif_ke_approver_pertama(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        \Illuminate\Support\Carbon::setTestNow('2027-06-01');
+
+        // Koordinator (approver pertama) + staff pemohon eligible (kontrak Pkwt).
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $koor = \App\Models\Karyawan::factory()->pimpinanUnit($unit)->create();
+        $userKoor = \App\Models\User::factory()->create(['karyawan_id' => $koor->id]);
+        $pemohon = \App\Models\Karyawan::factory()->staffUnit($unit)->create();
+        \App\Models\Kontrak::factory()->for($pemohon)->create([
+            'jenis' => \App\Enums\JenisKontrak::Pkwt->value,
+            'tanggal_mulai' => '2026-03-01', 'tanggal_akhir' => '2028-03-01',
+        ]);
+        $userPemohon = \App\Models\User::factory()->create(['karyawan_id' => $pemohon->id]);
+        // HRD final approver agar rantai lengkap.
+        $hrd = \App\Models\Karyawan::factory()->create();
+        \App\Models\User::factory()->create(['karyawan_id' => $hrd->id])->assignRole(\App\Enums\Role::Hrd->value);
+
+        $jenis = \App\Models\JenisCuti::where('kode', \App\Enums\KodeJenisCuti::CutiTahunan->value)->first();
+
+        \Livewire\Livewire::actingAs($userPemohon)->test(\App\Livewire\Cuti\CutiForm::class)
+            ->set('jenisCutiId', (string) $jenis->id)
+            ->set('tanggalMulai', '2027-07-10')
+            ->set('tanggalSelesai', '2027-07-11')
+            ->set('jumlahHari', 2)
+            ->set('alasan', 'acara keluarga')
+            ->call('simpan')
+            ->assertHasNoErrors();
+
+        // Approver pertama = koordinator (kepala unit) dapat notif.
+        \Illuminate\Support\Facades\Notification::assertSentTo($userKoor, \App\Notifications\CutiPerluPersetujuan::class);
+        \Illuminate\Support\Carbon::setTestNow();
+    }
 }
