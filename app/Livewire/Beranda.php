@@ -8,6 +8,7 @@ use App\Models\Karyawan;
 use App\Support\NavMenu;
 use App\Support\PengingatKontrak;
 use App\Support\PengingatSip;
+use App\Support\RekapCuti;
 use App\Support\SaldoCuti;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -40,6 +41,12 @@ class Beranda extends Component
         // Kartu jatah cuti untuk siapa pun yang punya data karyawan.
         $kar = $user->karyawan()->first();
         $data['saldo'] = $kar ? SaldoCuti::untuk($kar) : null;
+
+        // Kartu pending cuti org-wide untuk HRD.
+        $data['bisaKelolaCuti'] = $user->can('kelola-cuti');
+        if ($data['bisaKelolaCuti']) {
+            $data['cutiPending'] = RekapCuti::jumlahPendingOrgWide();
+        }
 
         return view('livewire.beranda', $data);
     }
