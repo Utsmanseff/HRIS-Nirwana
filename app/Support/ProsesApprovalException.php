@@ -1,6 +1,6 @@
 <?php
 
-nemespace App\Support;
+namespace App\Support;
 
 use RuntimeException;
 
