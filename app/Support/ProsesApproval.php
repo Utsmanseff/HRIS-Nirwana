@@ -9,6 +9,7 @@ use App\Models\ApprovalCuti;
 use App\Models\PengajuanCuti;
 use App\Models\User;
 use App\Notifications\CutiDisetujui;
+use App\Notifications\CutiDitolak;
 use App\Notifications\CutiPerluPersetujuan;
 use App\Support\SaldoCuti;
 use Illuminate\Support\Carbon;
@@ -47,6 +48,24 @@ class ProsesApproval
             self::pastikanJatahCukup($pengajuan);
             $pengajuan->update(['status' => StatusPengajuanCuti::Disetujui]);
             $pengajuan->karyawan->user?->notify(new CutiDisetujui($pengajuan));
+        });
+    }
+
+    /** Tolak tahap aktif → pengajuan ditolak (batal total). Catatan wajib. */
+    public static function tolak(ApprovalCuti $step, User $aktor, string $catatan): void
+    {
+        DB::transaction(function () use ($step, $aktor, $catatan) {
+            $pengajuan = PengajuanCuti::whereKey($step->pengajuan_cuti_id)->lockForUpdate()->firstOrFail();
+            self::pastikanTahapAktif($pengajuan, $step);
+            self::pastikanWewenang($pengajuan, $step, $aktor);
+
+            $step->update([
+                'status' => StatusApproval::Tolak,
+                'catatan' => $catatan,
+                'acted_at' => Carbon::now(),
+            ]);
+            $pengajuan->update(['status' => StatusPengajuanCuti::Ditolak]);
+            $pengajuan->karyawan->user?->notify(new CutiDitolak($pengajuan, $catatan));
         });
     }
 

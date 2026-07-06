@@ -112,4 +112,22 @@ class ProsesApprovalTest extends TestCase
             Carbon::setTestNow();
         }
     }
+
+    public function test_tolak_membuat_pengajuan_ditolak_dan_notif_pemohon(): void
+    {
+        Notification::fake();
+        $pemohon = Karyawan::factory()->create();
+        $userPemohon = User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $koor = Karyawan::factory()->create();
+        $userKoor = User::factory()->create(['karyawan_id' => $koor->id]);
+
+        $p = PengajuanCuti::factory()->for($pemohon)->status(StatusPengajuanCuti::Diajukan)->create();
+        ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $koor->id, 'peran' => 'koordinator', 'status' => StatusApproval::Menunggu]);
+
+        \App\Support\ProsesApproval::tolak($p->tahapAktif(), $userKoor, 'dokumen kurang');
+
+        $this->assertSame(StatusPengajuanCuti::Ditolak, $p->refresh()->status);
+        $this->assertSame(StatusApproval::Tolak, $p->approval()->where('urutan', 1)->first()->status);
+        Notification::assertSentTo($userPemohon, \App\Notifications\CutiDitolak::class);
+    }
 }
