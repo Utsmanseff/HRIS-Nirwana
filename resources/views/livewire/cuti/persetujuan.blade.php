@@ -16,6 +16,10 @@
                     Semua Pengajuan
                 </button>
             @endif
+            <button wire:click="$set('tab','kalender')"
+                class="px-4 py-3 text-sm font-medium border-b-2 {{ $tab==='kalender' ? 'text-brand-600 border-brand-500' : 'text-neutral-500 border-transparent' }}">
+                Kalender Tim
+            </button>
         </div>
 
         @if($tab==='perlu-aksi')
@@ -82,6 +86,12 @@
                     @endforelse
                 </tbody>
             </table>
+        @endif
+
+        @if($tab==='kalender')
+            <div class="card-pad">
+                <livewire:cuti.kalender-tim />
+            </div>
         @endif
     </div>
 

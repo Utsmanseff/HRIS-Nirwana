@@ -172,4 +172,16 @@ class PersetujuanTest extends TestCase
 
         $this->assertSame(\App\Enums\StatusPengajuanCuti::Dibatalkan, $p->refresh()->status);
     }
+
+    public function test_tab_kalender_render_komponen_kalender(): void
+    {
+        $kar = Karyawan::factory()->create();
+        $hrd = User::factory()->create(['karyawan_id' => $kar->id]);
+        $hrd->assignRole('HRD');
+
+        Livewire::actingAs($hrd)->test(Persetujuan::class)
+            ->assertSee('Kalender Tim')
+            ->set('tab', 'kalender')
+            ->assertSeeLivewire(\App\Livewire\Cuti\KalenderTim::class);
+    }
 }
