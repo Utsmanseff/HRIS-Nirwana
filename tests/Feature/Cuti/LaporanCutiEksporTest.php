@@ -72,4 +72,21 @@ class LaporanCutiEksporTest extends TestCase
 
         $this->actingAs($u)->get('/cuti/laporan/pengajuan?format=pdf')->assertForbidden();
     }
+
+    public function test_saldo_xlsx_terunduh(): void
+    {
+        $res = $this->actingAs($this->userHrd())->get('/cuti/laporan/saldo?format=xlsx');
+        $res->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            $res->headers->get('content-type').$res->headers->get('content-disposition'),
+        );
+    }
+
+    public function test_saldo_pdf_terunduh(): void
+    {
+        $res = $this->actingAs($this->userHrd())->get('/cuti/laporan/saldo?format=pdf');
+        $res->assertOk();
+        $this->assertSame('application/pdf', $res->headers->get('content-type'));
+    }
 }

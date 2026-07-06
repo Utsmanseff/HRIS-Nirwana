@@ -65,6 +65,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:kelola-cuti')->name('cuti.laporan');
     Route::get('/cuti/laporan/pengajuan', [\App\Http\Controllers\Cuti\LaporanCutiController::class, 'pengajuan'])
         ->middleware('can:kelola-cuti')->name('cuti.laporan.pengajuan');
+    Route::get('/cuti/laporan/saldo', [\App\Http\Controllers\Cuti\LaporanCutiController::class, 'saldo'])
+        ->middleware('can:kelola-cuti')->name('cuti.laporan.saldo');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
 

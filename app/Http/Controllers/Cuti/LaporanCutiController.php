@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cuti;
 
 use App\Exports\PengajuanCutiExport;
+use App\Exports\SaldoCutiExport;
 use App\Http\Controllers\Controller;
 use App\Models\JenisCuti;
 use App\Models\OrgUnit;
@@ -37,6 +38,29 @@ class LaporanCutiController extends Controller
             'pengajuan' => RekapCuti::daftarPengajuan($filter),
             'keteranganFilter' => $keterangan,
         ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('rekap-pengajuan-cuti', $tokens, 'pdf'));
+    }
+
+    public function saldo(Request $request)
+    {
+        $unitId = $request->query('unit_id') ? (int) $request->query('unit_id') : null;
+        $tokens = [];
+        $keterangan = 'Semua unit';
+        if ($unitId && $unit = OrgUnit::find($unitId)) {
+            $tokens[] = $unit->nama;
+            $keterangan = 'Unit: '.$unit->nama.' (termasuk turunan)';
+        }
+
+        if ($request->query('format') === 'xlsx') {
+            return Excel::download(
+                new SaldoCutiExport($unitId, $keterangan),
+                NamaFileLaporan::buat('saldo-cuti', $tokens, 'xlsx'),
+            );
+        }
+
+        return Pdf::loadView('laporan.pdf.saldo-cuti', [
+            'saldo' => RekapCuti::saldoKaryawan($unitId),
+            'keteranganFilter' => $keterangan,
+        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('saldo-cuti', $tokens, 'pdf'));
     }
 
     /** @return array<int,string> */
