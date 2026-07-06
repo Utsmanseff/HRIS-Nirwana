@@ -54,6 +54,22 @@ class SaldoCuti
         return $this->periodeMulai($acuan)?->copy()->addYear();
     }
 
+    /**
+     * Daftar periode_mulai yang boleh disesuaikan HRD (cegah baris yatim):
+     * periode aktif sekarang + periode berikutnya. Kosong bila belum eligible.
+     *
+     * @return list<Carbon>
+     */
+    public function periodeValid(?Carbon $acuan = null): array
+    {
+        $mulai = $this->periodeMulai($acuan);
+        if (! $mulai) {
+            return [];
+        }
+
+        return [$mulai->copy(), $mulai->copy()->addYear()];
+    }
+
     /** Eligible = masa kerja (kontrak nyata terlama) >= 1 tahun pada $acuan. Tak reset saat kontrak diperbarui. */
     public function eligible(?Carbon $acuan = null): bool
     {
