@@ -10,6 +10,12 @@ use App\Models\PengajuanCuti;
 use App\Models\User;
 use App\Notifications\CutiPerluPersetujuan;
 use App\Support\ProsesApproval;
+use App\Enums\KodeJenisCuti;
+use App\Models\JenisCuti;
+use App\Notifications\CutiDisetujui;
+use App\Support\ProsesApprovalException;
+use App\Support\SaldoCuti;
+use Illuminate\Support\Carbon;
 use Database\Seeders\JenisCutiSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -55,5 +61,55 @@ class ProsesApprovalTest extends TestCase
         $this->assertNotNull($step1->acted_at);
         $this->assertSame(2, $p->tahapAktif()->urutan); // tahap aktif kini HRD
         Notification::assertSentTo($userHrd, CutiPerluPersetujuan::class);
+    }
+
+    public function test_setujui_tahap_terakhir_jadi_disetujui_dan_notif_pemohon(): void
+    {
+        Notification::fake();
+        $pemohon = Karyawan::factory()->create();
+        $userPemohon = User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $hrd = Karyawan::factory()->create();
+        $userHrd = User::factory()->create(['karyawan_id' => $hrd->id]);
+
+        $p = PengajuanCuti::factory()->for($pemohon)->jenis(KodeJenisCuti::CutiSakit)
+            ->status(StatusPengajuanCuti::Diproses)->create(['jumlah_hari' => 2]);
+        ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => StatusApproval::Menunggu]);
+
+        ProsesApproval::setujui($p->tahapAktif(), $userHrd);
+
+        $this->assertSame(StatusPengajuanCuti::Disetujui, $p->refresh()->status);
+        Notification::assertSentTo($userPemohon, CutiDisetujui::class);
+    }
+
+    public function test_guard_jatah_kurang_cuti_tahunan_saat_final(): void
+    {
+        Notification::fake();
+        Carbon::setTestNow('2027-06-01');
+        // Eligibility & jatah butuh KONTRAK nyata (Pkwt/Tetap), bukan tanggal_masuk.
+        $pemohon = Karyawan::factory()->create();
+        \App\Models\Kontrak::factory()->for($pemohon)->create([
+            'jenis' => \App\Enums\JenisKontrak::Pkwt->value,
+            'tanggal_mulai' => '2026-03-01', 'tanggal_akhir' => '2028-03-01',
+        ]);
+        // Periode aktif mulai 2027-03-01. 11 hari cuti-tahunan sudah disetujui di periode itu.
+        PengajuanCuti::factory()->for($pemohon)->jenis(KodeJenisCuti::CutiTahunan)
+            ->status(StatusPengajuanCuti::Disetujui)
+            ->create(['tanggal_mulai' => '2027-06-02', 'tanggal_selesai' => '2027-06-02', 'jumlah_hari' => 11]);
+
+        $hrd = Karyawan::factory()->create();
+        $userHrd = User::factory()->create(['karyawan_id' => $hrd->id]);
+        $p = PengajuanCuti::factory()->for($pemohon)->jenis(KodeJenisCuti::CutiTahunan)
+            ->status(StatusPengajuanCuti::Diproses)
+            ->create(['tanggal_mulai' => '2027-06-10', 'tanggal_selesai' => '2027-06-12', 'jumlah_hari' => 3]);
+        ApprovalCuti::create(['pengajuan_cuti_id' => $p->id, 'urutan' => 1, 'approver_id' => $hrd->id, 'peran' => 'hrd', 'status' => StatusApproval::Menunggu]);
+
+        // jatah 12 − terpakai 11 = sisa 1; diminta 3 → ditolak.
+        try {
+            $this->expectException(ProsesApprovalException::class);
+            ProsesApproval::setujui($p->tahapAktif(), $userHrd);
+        } finally {
+            $this->assertSame(StatusPengajuanCuti::Diproses, $p->refresh()->status); // tak berubah
+            Carbon::setTestNow();
+        }
     }
 }

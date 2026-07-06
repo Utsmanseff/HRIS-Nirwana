@@ -2,12 +2,15 @@
 
 namespace App\Support;
 
+use App\Enums\KodeJenisCuti;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
 use App\Models\ApprovalCuti;
 use App\Models\PengajuanCuti;
 use App\Models\User;
+use App\Notifications\CutiDisetujui;
 use App\Notifications\CutiPerluPersetujuan;
+use App\Support\SaldoCuti;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +43,10 @@ class ProsesApproval
                 return;
             }
 
-            // Tahap terakhir → final (implementasi lengkap di Task 4).
+            // Tahap terakhir → final.
+            self::pastikanJatahCukup($pengajuan);
+            $pengajuan->update(['status' => StatusPengajuanCuti::Disetujui]);
+            $pengajuan->karyawan->user?->notify(new CutiDisetujui($pengajuan));
         });
     }
 
@@ -56,6 +62,21 @@ class ProsesApproval
     {
         if ($step->approver_id !== $aktor->karyawan_id) {
             throw new ProsesApprovalException('Anda bukan approver tahap ini.');
+        }
+    }
+
+    /** Guard defensif: total cuti-tahunan disetujui tak boleh melampaui jatah periode. */
+    private static function pastikanJatahCukup(PengajuanCuti $pengajuan): void
+    {
+        $pengajuan->loadMissing('jenisCuti', 'karyawan');
+        if ($pengajuan->jenisCuti->kode !== KodeJenisCuti::CutiTahunan) {
+            return;
+        }
+        $acuan = Carbon::parse($pengajuan->tanggal_mulai);
+        $saldo = SaldoCuti::untuk($pengajuan->karyawan);
+        $sisa = $saldo->jatah($acuan) - $saldo->terpakai($acuan); // terpakai = disetujui, belum termasuk ini
+        if ($pengajuan->jumlah_hari > $sisa) {
+            throw new ProsesApprovalException("Jatah tak cukup: sisa {$sisa} hari, diminta {$pengajuan->jumlah_hari}.");
         }
     }
 }
