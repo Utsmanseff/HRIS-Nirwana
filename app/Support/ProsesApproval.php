@@ -9,6 +9,7 @@ use App\Enums\StatusPengajuanCuti;
 use App\Models\ApprovalCuti;
 use App\Models\PengajuanCuti;
 use App\Models\User;
+use App\Notifications\CutiDibatalkan;
 use App\Notifications\CutiDisetujui;
 use App\Notifications\CutiDitolak;
 use App\Notifications\CutiPerluPersetujuan;
@@ -116,5 +117,26 @@ class ProsesApproval
         if ($pengajuan->jumlah_hari > $sisa) {
             throw new ProsesApprovalException("Jatah tak cukup: sisa {$sisa} hari, diminta {$pengajuan->jumlah_hari}.");
         }
+    }
+
+    /** HRD membatalkan cuti yang sudah disetujui → jatah balik otomatis (derived). */
+    public static function batalkanOlehHrd(PengajuanCuti $pengajuan, User $hrd, string $alasan): void
+    {
+        if (! $hrd->hasRole(Role::Hrd->value)) {
+            throw new ProsesApprovalException('Hanya HRD yang boleh membatalkan cuti disetujui.');
+        }
+
+        DB::transaction(function () use ($pengajuan, $hrd, $alasan) {
+            $terkunci = PengajuanCuti::whereKey($pengajuan->id)->lockForUpdate()->firstOrFail();
+            if ($terkunci->status !== StatusPengajuanCuti::Disetujui) {
+                throw new ProsesApprovalException('Hanya cuti berstatus disetujui yang bisa dibatalkan.');
+            }
+            $terkunci->update([
+                'status' => StatusPengajuanCuti::Dibatalkan,
+                'dibatalkan_oleh' => $hrd->id,
+                'alasan_batal' => $alasan,
+            ]);
+            $terkunci->karyawan->user?->notify(new CutiDibatalkan($terkunci, $alasan));
+        });
     }
 }

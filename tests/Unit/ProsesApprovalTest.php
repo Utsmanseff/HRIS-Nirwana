@@ -151,4 +151,36 @@ class ProsesApprovalTest extends TestCase
 
         $this->assertSame(StatusPengajuanCuti::Disetujui, $p->refresh()->status);
     }
+
+    public function test_hrd_batalkan_cuti_disetujui_jatah_balik(): void
+    {
+        Notification::fake();
+        $pemohon = Karyawan::factory()->create();
+        $userPemohon = User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $hrd = Karyawan::factory()->create();
+        $userHrd = User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+
+        $p = PengajuanCuti::factory()->for($pemohon)->jenis(KodeJenisCuti::CutiTahunan)
+            ->status(StatusPengajuanCuti::Disetujui)->create(['jumlah_hari' => 3]);
+
+        \App\Support\ProsesApproval::batalkanOlehHrd($p, $userHrd, 'salah input');
+
+        $p->refresh();
+        $this->assertSame(StatusPengajuanCuti::Dibatalkan, $p->status);
+        $this->assertSame($userHrd->id, $p->dibatalkan_oleh);
+        $this->assertSame('salah input', $p->alasan_batal);
+        Notification::assertSentTo($userPemohon, \App\Notifications\CutiDibatalkan::class);
+    }
+
+    public function test_batal_hrd_tolak_bila_status_bukan_disetujui(): void
+    {
+        $hrd = Karyawan::factory()->create();
+        $userHrd = User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $p = PengajuanCuti::factory()->status(StatusPengajuanCuti::Diajukan)->create();
+
+        $this->expectException(\App\Support\ProsesApprovalException::class);
+        \App\Support\ProsesApproval::batalkanOlehHrd($p, $userHrd, 'x');
+    }
 }
