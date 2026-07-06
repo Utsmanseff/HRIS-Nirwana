@@ -61,4 +61,23 @@ class LaporanCutiTest extends TestCase
             ->assertSee('Pending')
             ->assertSeeHtml('data-strip="pending"');
     }
+
+    public function test_tabel_tampil_pengajuan_ter_filter(): void
+    {
+        $hrd = $this->userHrd();
+        $kar = Karyawan::factory()->create(['nama_lengkap' => 'Budi Santoso']);
+        $izin = JenisCuti::where('kode', 'izin_biasa')->first();
+        PengajuanCuti::factory()->for($kar)->for($izin, 'jenisCuti')->create([
+            'tanggal_mulai' => '2026-06-10', 'tanggal_selesai' => '2026-06-10',
+            'jumlah_hari' => 1, 'status' => 'disetujui',
+        ]);
+
+        Livewire::actingAs($hrd)->test(LaporanCuti::class)
+            ->set('dari', '2026-06-01')
+            ->set('sampai', '2026-06-30')
+            ->assertSee('Budi Santoso')
+            ->set('dari', '2026-07-01')
+            ->set('sampai', '2026-07-31')
+            ->assertDontSee('Budi Santoso');
+    }
 }

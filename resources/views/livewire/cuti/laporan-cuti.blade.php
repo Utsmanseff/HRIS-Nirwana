@@ -51,8 +51,52 @@
         </div>
     </div>
 
-    {{-- Tabel + ekspor diisi Task 3/4/5 --}}
     <div class="card">
-        <div class="card-pad text-sm text-neutral-500">Tabel & ekspor segera diisi.</div>
+        <table class="table">
+            <thead><tr><th>Pemohon</th><th>Unit</th><th>Jenis</th><th>Mulai</th><th>Selesai</th><th>Hari</th><th>Status</th></tr></thead>
+            <tbody>
+                @forelse($pengajuan as $p)
+                    <tr wire:key="pj-{{ $p->id }}">
+                        <td>
+                            <div class="font-semibold">{{ $p->karyawan->nama_lengkap }}</div>
+                            <div class="text-xs text-neutral-400 font-mono">{{ $p->karyawan->nip }}</div>
+                        </td>
+                        <td>{{ $p->karyawan->orgUnit?->nama ?? '—' }}</td>
+                        <td>{{ $p->jenisCuti->nama }}</td>
+                        <td class="tnum">{{ $p->tanggal_mulai->format('d M Y') }}</td>
+                        <td class="tnum">{{ $p->tanggal_selesai->format('d M Y') }}</td>
+                        <td class="tnum">{{ $p->jumlah_hari }}</td>
+                        <td><span class="badge">{{ ucfirst($p->status->value) }}</span></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="text-sm text-neutral-500">Tak ada pengajuan pada filter ini.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+        @include('livewire.sdm.partials.pager', ['paginator' => $pengajuan])
+    </div>
+
+    {{-- Blok ekspor diisi Task 4/5 --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+        <div class="card card-pad">
+            <h3 class="font-semibold mb-1">Rekap Pengajuan</h3>
+            <p class="text-xs text-neutral-500 mb-3">Ikut filter di atas (periode/unit/jenis/status).</p>
+            @if(Route::has('cuti.laporan.pengajuan'))
+                <a href="{{ route('cuti.laporan.pengajuan', array_merge(request()->query(), ['format' => 'xlsx'])) }}" class="btn btn-secondary btn-sm">Excel</a>
+                <a href="{{ route('cuti.laporan.pengajuan', array_merge(request()->query(), ['format' => 'pdf'])) }}" class="btn btn-secondary btn-sm">PDF</a>
+            @else
+                <span class="text-xs text-neutral-400">Ekspor segera.</span>
+            @endif
+        </div>
+        <div class="card card-pad">
+            <h3 class="font-semibold mb-1">Saldo Karyawan</h3>
+            <p class="text-xs text-neutral-500 mb-3">Jatah / terpakai / sisa periode berjalan (filter unit saja).</p>
+            @if(Route::has('cuti.laporan.saldo'))
+                <a href="{{ route('cuti.laporan.saldo', array_filter(['unit_id' => $unitId, 'format' => 'xlsx'])) }}" class="btn btn-secondary btn-sm">Excel</a>
+                <a href="{{ route('cuti.laporan.saldo', array_filter(['unit_id' => $unitId, 'format' => 'pdf'])) }}" class="btn btn-secondary btn-sm">PDF</a>
+            @else
+                <span class="text-xs text-neutral-400">Ekspor segera.</span>
+            @endif
+        </div>
     </div>
 </div>
