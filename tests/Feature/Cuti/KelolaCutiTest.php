@@ -49,6 +49,14 @@ class KelolaCutiTest extends TestCase
             ->assertSet('tab', 'hari-libur');
     }
 
+    public function test_tiap_tab_render_tanpa_error(): void
+    {
+        $c = Livewire::actingAs($this->userHrd())->test(KelolaCuti::class);
+        $c->assertSee('Hari Libur')->assertSee('Jenis Cuti')->assertSee('Penyesuaian Jatah');
+        $c->set('tab', 'jenis')->assertOk()->assertSee('Kode jenis tetap');
+        $c->set('tab', 'penyesuaian')->assertOk()->assertSee('Cari karyawan');
+    }
+
     public function test_hari_libur_tambah_dan_hapus(): void
     {
         Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
