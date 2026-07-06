@@ -5,6 +5,7 @@
 namespace App\Models;
 
 use App\Enums\StatusPengajuanCuti;
+use App\Enums\StatusApproval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +41,15 @@ class PengajuanCuti extends Model
     public function approval(): HasMany
     {
         return $this->hasMany(ApprovalCuti::class)->orderBy('urutan');
+    }
+
+    /** Baris approval aktif = status menunggu dengan urutan terkecil (sequential). */
+    public function tahapAktif(): ?ApprovalCuti
+    {
+        return $this->approval()
+            ->where('status', StatusApproval::Menunggu)
+            ->orderBy('urutan')
+            ->first();
     }
 
     public function pembatal(): BelongsTo
