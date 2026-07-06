@@ -48,4 +48,31 @@ class KelolaCutiTest extends TestCase
             ->assertOk()
             ->assertSet('tab', 'hari-libur');
     }
+
+    public function test_hari_libur_tambah_dan_hapus(): void
+    {
+        Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
+            ->set('hlTanggal', '2026-08-17')
+            ->set('hlNama', 'HUT RI')
+            ->call('simpanHariLibur')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('hari_libur', ['tanggal' => '2026-08-17 00:00:00', 'nama' => 'HUT RI']);
+
+        $id = \App\Models\HariLibur::first()->id;
+        Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
+            ->call('hapusHariLibur', $id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseMissing('hari_libur', ['id' => $id]);
+    }
+
+    public function test_hari_libur_validasi(): void
+    {
+        Livewire::actingAs($this->userHrd())->test(KelolaCuti::class)
+            ->set('hlTanggal', '')
+            ->set('hlNama', '')
+            ->call('simpanHariLibur')
+            ->assertHasErrors(['hlTanggal', 'hlNama']);
+    }
 }
