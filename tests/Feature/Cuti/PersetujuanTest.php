@@ -113,4 +113,42 @@ class PersetujuanTest extends TestCase
 
         $this->assertSame(\App\Enums\StatusPengajuanCuti::Diproses, $p->refresh()->status);
     }
+
+    public function test_tab_semua_hanya_untuk_hrd_dan_filter(): void
+    {
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+
+        $a = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Ana Melati']);
+        $b = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Beni Cahya']);
+        \App\Models\PengajuanCuti::factory()->for($a)->create();
+        \App\Models\PengajuanCuti::factory()->for($b)->create();
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->set('tab', 'semua')
+            ->set('cari', 'Ana')
+            ->assertSee('Ana Melati')
+            ->assertDontSee('Beni Cahya');
+    }
+
+    public function test_hrd_batalkan_dari_komponen(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $hrd = \App\Models\Karyawan::factory()->create();
+        $userHrd = \App\Models\User::factory()->create(['karyawan_id' => $hrd->id]);
+        $userHrd->assignRole('HRD');
+        $pemohon = \App\Models\Karyawan::factory()->create();
+        \App\Models\User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $p = \App\Models\PengajuanCuti::factory()->for($pemohon)->status(\App\Enums\StatusPengajuanCuti::Disetujui)->create();
+
+        \Livewire\Livewire::actingAs($userHrd)->test(\App\Livewire\Cuti\Persetujuan::class)
+            ->set('tab', 'semua')
+            ->call('mulaiBatal', $p->id)
+            ->set('alasanBatal', 'double booking')
+            ->call('konfirmasiBatal')
+            ->assertHasNoErrors();
+
+        $this->assertSame(\App\Enums\StatusPengajuanCuti::Dibatalkan, $p->refresh()->status);
+    }
 }

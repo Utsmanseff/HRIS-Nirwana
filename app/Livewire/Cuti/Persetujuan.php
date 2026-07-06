@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Cuti;
 
+use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
 use App\Models\PengajuanCuti;
@@ -18,9 +19,22 @@ class Persetujuan extends Component
     #[Url]
     public string $tab = 'perlu-aksi';
 
+    #[Url]
+    public string $cari = '';
+
+    #[Url]
+    public string $filterStatus = '';
+
+    #[Url]
+    public string $filterJenis = '';
+
     public ?int $tinjauId = null;
 
     public string $catatan = '';
+
+    public ?int $batalId = null;
+
+    public string $alasanBatal = '';
 
     public function tinjau(int $id): void
     {
@@ -87,6 +101,58 @@ class Persetujuan extends Component
         $this->tutup();
     }
 
+    private function bolehSemua(): bool
+    {
+        return auth()->user()->hasRole(Role::Hrd->value);
+    }
+
+    private function semuaPengajuan(): Collection
+    {
+        if (! $this->bolehSemua()) {
+            return collect();
+        }
+
+        return PengajuanCuti::query()
+            ->when($this->cari !== '', fn ($q) => $q->whereHas('karyawan', fn ($k) => $k
+                ->where('nama_lengkap', 'like', "%{$this->cari}%")
+                ->orWhere('nip', 'like', "%{$this->cari}%")))
+            ->when($this->filterStatus !== '', fn ($q) => $q->where('status', $this->filterStatus))
+            ->when($this->filterJenis !== '', fn ($q) => $q->where('jenis_cuti_id', $this->filterJenis))
+            ->with(['karyawan.jabatan', 'jenisCuti', 'approval.approver'])
+            ->latest()
+            ->limit(100)
+            ->get();
+    }
+
+    public function mulaiBatal(int $id): void
+    {
+        $this->batalId = $id;
+        $this->alasanBatal = '';
+        $this->resetErrorBag();
+    }
+
+    public function konfirmasiBatal(): void
+    {
+        $this->validate(['alasanBatal' => ['required', 'string', 'max:1000']], [
+            'alasanBatal.required' => 'Alasan pembatalan wajib diisi.',
+        ]);
+        $p = PengajuanCuti::find($this->batalId);
+        if (! $p) {
+            $this->batalId = null;
+
+            return;
+        }
+        try {
+            ProsesApproval::batalkanOlehHrd($p, auth()->user(), $this->alasanBatal);
+            session()->flash('cuti_ok', 'Cuti dibatalkan.');
+        } catch (ProsesApprovalException $e) {
+            $this->addError('alasanBatal', $e->getMessage());
+
+            return;
+        }
+        $this->batalId = null;
+    }
+
     /** Pengajuan yang tahap aktifnya menunjuk karyawan login. */
     private function perluAksi(): Collection
     {
@@ -108,6 +174,9 @@ class Persetujuan extends Component
     {
         return view('livewire.cuti.persetujuan', [
             'perluAksi' => $this->perluAksi(),
+            'bolehSemua' => $this->bolehSemua(),
+            'semua' => $this->tab === 'semua' ? $this->semuaPengajuan() : collect(),
+            'jenisOpsi' => \App\Models\JenisCuti::orderBy('nama')->get(),
         ]);
     }
 }
