@@ -1,11 +1,16 @@
 @import 'tailwindcss';
-@import './theme.css';
-/* shell.css & mobile.css set display:flex/grid pada elemen chrome (.sidebar, .phone, .m-nav).
-   Unlayered menang atas @layer utilities di TW v4 → lg:hidden/hidden lg:flex TAK jalan pada
-   elemen itu. Bungkus layer(components) agar utilities Tailwind (utilities > components) menang. */
+/* Cascade: theme < base < components < utilities (urutan @layer Tailwind v4).
+   - theme.css → layer(base): reset+token+kelas komponen dasar. Taruh di base supaya
+     reset broad `a{color:inherit}` KALAH dari komponen (mis. .sidebar .nv-item di
+     components) — kalau unlayered, `a` menang atas semua layer → teks nav sidebar jadi
+     gelap di light mode.
+   - shell.css & mobile.css → layer(components): kelas chrome (.sidebar/.phone/.m-nav)
+     yang set display; di components supaya utilities (lg:hidden) menang & toggle chrome jalan.
+   - auth.css → layer(components): kelas halaman auth. */
+@import './theme.css' layer(base);
 @import './shell.css' layer(components);
 @import './mobile.css' layer(components);
-@import './auth.css';
+@import './auth.css' layer(components);
 
 /* Scan Blade + Livewire + compiled views for utility classes */
 @source '../**/*.blade.php';
