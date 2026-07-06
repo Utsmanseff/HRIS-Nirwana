@@ -170,6 +170,10 @@ a, a:link, a:visited { color:inherit; text-decoration:none; }
 .btn-ghost:hover { background:var(--neutral-100); color:var(--text); }
 .btn-danger { background:var(--danger-500); color:#fff; }
 .btn-danger:hover { background:var(--danger-600); }
+/* <a> bergaya tombol: reset `a:link{color:inherit}` (spesifisitas 0,1,1) mengimbangi
+   `.btn-primary`(0,1,0) → teks jadi gelap. Selektor a.btn-* (0,1,1) sama-kuat tapi urutan
+   sumber lebih akhir → menang, teks putih kembali. */
+a.btn-primary, a.btn-danger { color:#fff; }
 .btn-sm { padding:.45rem .75rem; font-size:.8125rem; border-radius:var(--r-sm); }
 .btn-lg { padding:.75rem 1.25rem; font-size:.9375rem; }
 .btn-icon { padding:.5rem; }
