@@ -30,7 +30,7 @@
                                 <td data-label="Hari" class="tnum font-semibold">{{ $p->jumlah_hari }}</td>
                                 <td data-label="Tahap">{{ ucfirst($p->tahapAktif()?->peran?->value ?? '') }}</td>
                                 <td class="text-right">
-                                    <a href="{{ route('cuti.detail', $p) }}" class="btn btn-secondary btn-sm">Tinjau</a>
+                                    <button wire:click="tinjau({{ $p->id }})" class="btn btn-secondary btn-sm">Tinjau</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -38,5 +38,30 @@
                 </table>
             @endif
         @endif
+    </div>
+
+    {{-- Slide-over review --}}
+    <div x-show="$wire.tinjauId !== null" class="fixed inset-0 z-50" x-cloak>
+        <div class="absolute inset-0 bg-black/20" @click="$wire.tutup()"></div>
+        <div class="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl overflow-y-auto">
+            <div class="flex items-center justify-between border-b px-4 py-3">
+                <h2 class="text-lg font-bold">Tinjau Pengajuan</h2>
+                <button @click="$wire.tutup()" class="btn btn-ghost btn-sm">&times;</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="text-sm text-neutral-500">Detail pengajuan di sini.</div>
+
+                <div>
+                    <label class="label">Catatan</label>
+                    <textarea wire:model="catatan" class="input w-full" rows="3" placeholder="Catatan (wajib saat menolak)"></textarea>
+                    @error('catatan') <p class="text-xs text-error-500 mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button wire:click="setujui" class="btn btn-primary btn-sm flex-1">Setujui</button>
+                    <button wire:click="tolak" class="btn btn-danger btn-sm flex-1">Tolak</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
