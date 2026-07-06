@@ -109,4 +109,43 @@ class KalenderTimTest extends TestCase
             ->call('bulanSebelumnya')
             ->assertSet('bulan', '2026-06');
     }
+
+    public function test_pending_dan_disetujui_ditandai_beda(): void
+    {
+        $hrd = $this->hrd();
+        $unit = OrgUnit::factory()->create();
+        $this->cuti(Karyawan::factory()->create(['org_unit_id' => $unit->id, 'nama_lengkap' => 'Disetujui Orang']), '2026-06-10', '2026-06-10', 'disetujui');
+        $this->cuti(Karyawan::factory()->create(['org_unit_id' => $unit->id, 'nama_lengkap' => 'Pending Orang']), '2026-06-11', '2026-06-11', 'diajukan');
+
+        Livewire::actingAs($hrd)->test(KalenderTim::class)
+            ->assertSeeHtml('data-status="disetujui"')
+            ->assertSeeHtml('data-status="diajukan"');
+    }
+
+    public function test_pilih_hari_buka_panel_detail(): void
+    {
+        $hrd = $this->hrd();
+        $unit = OrgUnit::factory()->create();
+        $this->cuti(Karyawan::factory()->create(['org_unit_id' => $unit->id, 'nama_lengkap' => 'Detail Orang']), '2026-06-10', '2026-06-10', 'disetujui');
+
+        Livewire::actingAs($hrd)->test(KalenderTim::class)
+            ->call('pilihHari', '2026-06-10')
+            ->assertSet('hariAktif', '2026-06-10')
+            ->assertSeeHtml('data-panel="hari"')
+            ->assertSee('Detail Orang')
+            ->call('pilihHari', '2026-06-10')  // toggle tutup
+            ->assertSet('hariAktif', '');
+    }
+
+    public function test_lebih_dari_tiga_orang_tampil_plus_n(): void
+    {
+        $hrd = $this->hrd();
+        $unit = OrgUnit::factory()->create();
+        foreach (['A', 'B', 'C', 'D', 'E'] as $n) {
+            $this->cuti(Karyawan::factory()->create(['org_unit_id' => $unit->id, 'nama_lengkap' => "Orang $n"]), '2026-06-10', '2026-06-10', 'disetujui');
+        }
+
+        Livewire::actingAs($hrd)->test(KalenderTim::class)
+            ->assertSee('+2'); // 5 orang, cap 3, sisa 2
+    }
 }
