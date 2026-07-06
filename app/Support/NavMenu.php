@@ -23,6 +23,7 @@ class NavMenu
             ['id' => 'cuti',     'label' => 'Cuti',           'icon' => 'calendar', 'route' => 'cuti',           'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
             ['id' => 'persetujuan', 'label' => 'Persetujuan Cuti', 'icon' => 'check-circle', 'route' => 'cuti.persetujuan', 'can' => 'approve-cuti', 'group' => 'Operasional'],
             ['id' => 'kelola-cuti', 'label' => 'Kelola Cuti', 'icon' => 'sliders', 'route' => 'cuti.kelola', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
+            ['id' => 'laporan-cuti', 'label' => 'Laporan Cuti', 'icon' => 'chart', 'route' => 'cuti.laporan', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
             ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => null,             'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
             ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
             ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => null,             'can' => Permission::KelolaSdm->value, 'group' => 'Operasional'],
