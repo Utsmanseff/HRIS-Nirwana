@@ -78,5 +78,66 @@
                 @endif
             </div>
         @endif
+
+        @if($tab==='penyesuaian')
+            <div class="card-pad space-y-4">
+                @if(! $karyawanTerpilih)
+                    <div>
+                        <label class="field-label">Cari karyawan</label>
+                        <input wire:model.live.debounce.400ms="psCari" class="input" placeholder="Nama / NIP…">
+                    </div>
+                    @if($hasilCari->isNotEmpty())
+                        <div class="border border-neutral-200 rounded-lg divide-y">
+                            @foreach($hasilCari as $k)
+                                <button wire:click="pilihKaryawan({{ $k->id }})" class="w-full text-left px-3 py-2 hover:bg-neutral-50">
+                                    <span class="font-semibold">{{ $k->nama_lengkap }}</span> <span class="text-xs text-neutral-400 font-mono">{{ $k->nip }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+                @else
+                    <div class="flex items-center justify-between">
+                        <div><span class="font-semibold">{{ $karyawanTerpilih->nama_lengkap }}</span> <span class="text-xs text-neutral-400 font-mono">{{ $karyawanTerpilih->nip }}</span></div>
+                        <button wire:click="batalKaryawan" class="btn btn-ghost btn-sm">Ganti</button>
+                    </div>
+
+                    @if(empty($periodeOpsi))
+                        <div class="rounded-lg bg-warning-50 border border-warning-100 p-3 text-sm text-warning-700">Karyawan belum berhak jatah (masa kerja &lt; 1 tahun).</div>
+                    @else
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div><label class="field-label">Periode</label>
+                                <select wire:model="psPeriode" class="select w-auto">
+                                    <option value="">Pilih periode…</option>
+                                    @foreach($periodeOpsi as $pd)<option value="{{ $pd }}">{{ \Illuminate\Support\Carbon::parse($pd)->format('d M Y') }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div><label class="field-label">Delta (± hari)</label><input type="number" wire:model="psDelta" class="input w-24" placeholder="mis. 3 / -2"></div>
+                            <div class="flex-1 min-w-[200px]"><label class="field-label">Alasan</label><input wire:model="psAlasan" class="input" placeholder="mis. bonus loyalitas"></div>
+                            <button wire:click="simpanPenyesuaian" class="btn btn-primary">Simpan</button>
+                        </div>
+                        @error('psPeriode') <div class="text-xs text-danger-600">{{ $message }}</div> @enderror
+                        @error('psDelta') <div class="text-xs text-danger-600">{{ $message }}</div> @enderror
+                        @error('psAlasan') <div class="text-xs text-danger-600">{{ $message }}</div> @enderror
+                    @endif
+
+                    <table class="table">
+                        <thead><tr><th>Periode</th><th>Delta</th><th>Alasan</th><th>Oleh</th><th></th></tr></thead>
+                        <tbody>
+                            @forelse($penyesuaian as $ps)
+                                <tr wire:key="ps-{{ $ps->id }}">
+                                    <td class="tnum">{{ $ps->periode_mulai->format('d M Y') }}</td>
+                                    <td class="tnum font-semibold {{ $ps->delta < 0 ? 'text-danger-600' : 'text-success-600' }}">{{ $ps->delta > 0 ? '+' : '' }}{{ $ps->delta }}</td>
+                                    <td>{{ $ps->alasan }}</td>
+                                    <td class="text-xs text-neutral-400">{{ $ps->pembuat?->name ?? '—' }}</td>
+                                    <td class="text-right"><button wire:click="hapusPenyesuaian({{ $ps->id }})" class="btn btn-ghost btn-sm text-danger-600">Hapus</button></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-sm text-neutral-500">Belum ada penyesuaian.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+        @endif
     </div>
 </div>

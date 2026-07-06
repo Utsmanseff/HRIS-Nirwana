@@ -97,4 +97,53 @@ class KelolaCutiTest extends TestCase
             ->call('toggleAktif', $jenis->id);
         $this->assertFalse($jenis->refresh()->aktif);
     }
+
+    public function test_penyesuaian_tambah_ke_periode_valid(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow('2027-06-01');
+        $hrd = $this->userHrd();
+        $kar = \App\Models\Karyawan::factory()->create(['nama_lengkap' => 'Wati Eligible']);
+        \App\Models\Kontrak::factory()->for($kar)->create([
+            'jenis' => \App\Enums\JenisKontrak::Pkwt->value,
+            'tanggal_mulai' => '2026-03-01', 'tanggal_akhir' => '2028-03-01',
+        ]);
+
+        Livewire::actingAs($hrd)->test(KelolaCuti::class)
+            ->set('tab', 'penyesuaian')
+            ->set('psCari', 'Wati')
+            ->call('pilihKaryawan', $kar->id)
+            ->set('psPeriode', '2027-03-01')
+            ->set('psDelta', 3)
+            ->set('psAlasan', 'bonus loyalitas')
+            ->call('simpanPenyesuaian')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('penyesuaian_saldo', [
+            'karyawan_id' => $kar->id, 'periode_mulai' => '2027-03-01 00:00:00', 'delta' => 3, 'dibuat_oleh' => $hrd->id,
+        ]);
+        \Illuminate\Support\Carbon::setTestNow();
+    }
+
+    public function test_penyesuaian_tolak_periode_di_luar_valid(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow('2027-06-01');
+        $hrd = $this->userHrd();
+        $kar = \App\Models\Karyawan::factory()->create();
+        \App\Models\Kontrak::factory()->for($kar)->create([
+            'jenis' => \App\Enums\JenisKontrak::Pkwt->value,
+            'tanggal_mulai' => '2026-03-01', 'tanggal_akhir' => '2028-03-01',
+        ]);
+
+        Livewire::actingAs($hrd)->test(KelolaCuti::class)
+            ->set('tab', 'penyesuaian')
+            ->call('pilihKaryawan', $kar->id)
+            ->set('psPeriode', '2020-01-01') // di luar periode valid
+            ->set('psDelta', 2)
+            ->set('psAlasan', 'ngawur')
+            ->call('simpanPenyesuaian')
+            ->assertHasErrors('psPeriode');
+
+        $this->assertDatabaseCount('penyesuaian_saldo', 0);
+        \Illuminate\Support\Carbon::setTestNow();
+    }
 }

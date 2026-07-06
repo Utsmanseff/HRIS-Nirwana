@@ -4,6 +4,9 @@ namespace App\Livewire\Cuti;
 
 use App\Models\HariLibur;
 use App\Models\JenisCuti;
+use App\Models\Karyawan;
+use App\Models\PenyesuaianSaldo;
+use App\Support\SaldoCuti;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -103,11 +106,89 @@ class KelolaCuti extends Component
         $j->update(['aktif' => ! $j->aktif]);
     }
 
+    public string $psCari = '';
+
+    public ?int $psKaryawanId = null;
+
+    public string $psPeriode = '';
+
+    public ?int $psDelta = null;
+
+    public string $psAlasan = '';
+
+    public function pilihKaryawan(int $id): void
+    {
+        $this->psKaryawanId = $id;
+        $this->psCari = '';
+        $this->reset(['psPeriode', 'psDelta', 'psAlasan']);
+        $this->resetErrorBag();
+    }
+
+    public function batalKaryawan(): void
+    {
+        $this->reset(['psKaryawanId', 'psCari', 'psPeriode', 'psDelta', 'psAlasan']);
+    }
+
+    /** @return list<string> periode_mulai valid (Y-m-d) untuk karyawan terpilih. */
+    private function periodeValidStr(): array
+    {
+        if (! $this->psKaryawanId) {
+            return [];
+        }
+        $kar = Karyawan::find($this->psKaryawanId);
+
+        return $kar
+            ? array_map(fn ($c) => $c->toDateString(), SaldoCuti::untuk($kar)->periodeValid())
+            : [];
+    }
+
+    public function simpanPenyesuaian(): void
+    {
+        $this->validate([
+            'psKaryawanId' => ['required', 'exists:karyawan,id'],
+            'psPeriode' => ['required', 'date'],
+            'psDelta' => ['required', 'integer', 'not_in:0', 'between:-30,30'],
+            'psAlasan' => ['required', 'string', 'max:255'],
+        ]);
+
+        if (! in_array($this->psPeriode, $this->periodeValidStr(), true)) {
+            $this->addError('psPeriode', 'Periode tak valid untuk karyawan ini.');
+
+            return;
+        }
+
+        PenyesuaianSaldo::create([
+            'karyawan_id' => $this->psKaryawanId,
+            'periode_mulai' => $this->psPeriode,
+            'delta' => $this->psDelta,
+            'alasan' => $this->psAlasan,
+            'dibuat_oleh' => auth()->id(),
+        ]);
+        $this->reset(['psPeriode', 'psDelta', 'psAlasan']);
+        session()->flash('cuti_ok', 'Penyesuaian tersimpan.');
+    }
+
+    public function hapusPenyesuaian(int $id): void
+    {
+        PenyesuaianSaldo::whereKey($id)->delete();
+    }
+
     public function render()
     {
         return view('livewire.cuti.kelola-cuti', [
             'hariLibur' => HariLibur::orderBy('tanggal')->get(),
             'jenisCuti' => JenisCuti::orderBy('id')->get(),
+            'hasilCari' => ($this->tab === 'penyesuaian' && trim($this->psCari) !== '')
+                ? Karyawan::aktif()
+                    ->where(fn ($q) => $q->where('nama_lengkap', 'like', '%'.trim($this->psCari).'%')
+                        ->orWhere('nip', 'like', '%'.trim($this->psCari).'%'))
+                    ->limit(8)->get()
+                : collect(),
+            'karyawanTerpilih' => $this->psKaryawanId ? Karyawan::find($this->psKaryawanId) : null,
+            'periodeOpsi' => $this->periodeValidStr(),
+            'penyesuaian' => $this->psKaryawanId
+                ? PenyesuaianSaldo::where('karyawan_id', $this->psKaryawanId)->with('pembuat')->orderByDesc('periode_mulai')->get()
+                : collect(),
         ]);
     }
 }
