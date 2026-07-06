@@ -63,6 +63,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:kelola-cuti')->name('cuti.kelola');
     Route::get('/cuti/laporan', \App\Livewire\Cuti\LaporanCuti::class)
         ->middleware('can:kelola-cuti')->name('cuti.laporan');
+    Route::get('/cuti/laporan/pengajuan', [\App\Http\Controllers\Cuti\LaporanCutiController::class, 'pengajuan'])
+        ->middleware('can:kelola-cuti')->name('cuti.laporan.pengajuan');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
 
