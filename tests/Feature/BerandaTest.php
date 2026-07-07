@@ -104,6 +104,31 @@ class BerandaTest extends TestCase
             ->assertDontSee('Karyawan Aktif'); // bukan manajer → tak lihat stat SDM
     }
 
+    public function test_beranda_tampil_kartu_sanksi_aktif(): void
+    {
+        $kar = Karyawan::factory()->create();
+        $user = User::factory()->create(['karyawan_id' => $kar->id]);
+        \App\Models\SanksiDisiplin::factory()->diterbitkan()->create(['karyawan_id' => $kar->id]);
+
+        $this->actingAs($user)->get('/beranda')
+            ->assertOk()
+            ->assertSee('Sanksi Aktif');
+    }
+
+    public function test_beranda_hrd_lihat_kartu_disiplin(): void
+    {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $kar = Karyawan::factory()->create();
+        $user = User::factory()->create(['karyawan_id' => $kar->id]);
+        $user->assignRole(\App\Enums\Role::Hrd->value);
+        $target = Karyawan::factory()->create();
+        \App\Models\SanksiDisiplin::factory()->create(['karyawan_id' => $target->id, 'status' => \App\Enums\StatusSanksi::Diajukan]);
+
+        $this->actingAs($user)->get('/beranda')
+            ->assertOk()
+            ->assertSee('Usulan Sanksi');
+    }
+
     public function test_dashboard_redirect_ke_beranda(): void
     {
         $user = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);

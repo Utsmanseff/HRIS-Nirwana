@@ -28,6 +28,8 @@ class NavMenu
             ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
             ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => 'disiplin',       'can' => 'usul-disiplin', 'group' => 'Operasional'],
             ['id' => 'disiplin-persetujuan', 'label' => 'Persetujuan Sanksi', 'icon' => 'check-circle', 'route' => 'disiplin.persetujuan', 'can' => 'approve-disiplin', 'group' => 'Operasional'],
+            ['id' => 'disiplin-kelola', 'label' => 'Kelola Sanksi', 'icon' => 'sliders', 'route' => 'disiplin.kelola', 'can' => 'buat-sanksi', 'group' => 'Operasional'],
+            ['id' => 'laporan-disiplin', 'label' => 'Laporan Sanksi', 'icon' => 'chart', 'route' => 'disiplin.laporan', 'can' => 'kelola-disiplin', 'group' => 'Operasional'],
             ['id' => 'karyawan', 'label' => 'Karyawan',       'icon' => 'users',    'route' => 'sdm.karyawan',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],

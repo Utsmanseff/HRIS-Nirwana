@@ -46,7 +46,7 @@ class KaryawanDetail extends Component
 
     public function mount(Karyawan $karyawan): void
     {
-        $this->karyawan = $karyawan->load(['orgUnit.parent', 'jabatan', 'kontrak', 'dokumen', 'user.roles']);
+        $this->karyawan = $karyawan->load(['orgUnit.parent', 'jabatan', 'kontrak', 'dokumen', 'user.roles', 'sanksiDisiplin.pengusul']);
     }
 
     public function inisial(): string
