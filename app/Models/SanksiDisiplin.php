@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\StatusApproval;
 use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SanksiDisiplin extends Model
 {
@@ -46,5 +48,19 @@ class SanksiDisiplin extends Model
     public function pencabut(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dicabut_oleh');
+    }
+
+    public function approval(): HasMany
+    {
+        return $this->hasMany(ApprovalSanksi::class, 'sanksi_id')->orderBy('urutan');
+    }
+
+    /** Baris approval aktif = status menunggu dengan urutan terkecil (sequential). */
+    public function tahapAktif(): ?ApprovalSanksi
+    {
+        return $this->approval()
+            ->where('status', StatusApproval::Menunggu)
+            ->orderBy('urutan')
+            ->first();
     }
 }
