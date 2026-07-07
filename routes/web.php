@@ -75,6 +75,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:usul-disiplin')->name('disiplin');
     Route::get('/disiplin/persetujuan', \App\Livewire\Disiplin\PersetujuanDisiplin::class)
         ->middleware('can:approve-disiplin')->name('disiplin.persetujuan');
+    Route::get('/disiplin/{sanksi}/surat', [\App\Http\Controllers\Disiplin\SuratSanksiController::class, 'lihat'])
+        ->name('disiplin.surat');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
         Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');

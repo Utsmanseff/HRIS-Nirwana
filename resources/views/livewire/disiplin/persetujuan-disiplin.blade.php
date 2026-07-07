@@ -113,6 +113,10 @@
                         </div>
                     </div>
 
+                    @if ($tinjauan->status->value === 'diterbitkan' && $tinjauan->surat_path)
+                        <a href="{{ route('disiplin.surat', $tinjauan) }}" target="_blank" class="btn btn-secondary w-full">Lihat Surat (PDF)</a>
+                    @endif
+
                     @php $final = $tahapAktif && ! $tinjauan->approval->where('urutan', '>', $tahapAktif->urutan)->where('status', 'menunggu')->count(); @endphp
                     @if ($tahapAktif && $tahapAktif->approver_id === auth()->user()->karyawan_id)
                         <div>
