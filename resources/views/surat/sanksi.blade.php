@@ -76,10 +76,19 @@
 <p><b>Perihal pelanggaran</b> (kejadian {{ $tgl($sanksi->tanggal_kejadian) }}):</p>
 <p>{{ $sanksi->uraian }}</p>
 
-<p>Surat ini berlaku selama <b>6 (enam) bulan</b>, terhitung sejak
-{{ $tgl($sanksi->tanggal_terbit) }} sampai
-{{ $tgl($sanksi->berlaku_sampai) }}. Karyawan diharapkan
-memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi tingkat berikutnya.</p>
+<p>Oleh karena itu, surat ini diberikan sebagai pengarahan dan peringatan kepada Saudara
+dengan ketentuan sebagai berikut:</p>
+<ol style="margin:8px 0; padding-left:22px; text-align:justify;">
+    <li style="margin:4px 0;">Surat ini berlaku selama <b>6 (enam) bulan</b>, terhitung sejak
+        <b>{{ $tgl($sanksi->tanggal_terbit) }}</b> sampai <b>{{ $tgl($sanksi->berlaku_sampai) }}</b>.</li>
+    <li style="margin:4px 0;">Akan berkurang jasa pelayanan sebesar
+        <b>{{ config('instansi.sanksi_potongan_persen') }}%</b> dari besaran gaji pokok dan jasa
+        pelayanan yang diterima selama 6 (enam) bulan sesuai dengan SK Direktur Rumah Sakit Nomor
+        {{ config('instansi.sanksi_sk_nomor') }} tentang Petunjuk Teknis Penggajian dan Potongan Penghasilan.</li>
+</ol>
+
+<p>Demikian surat ini dibuat agar dilaksanakan dan disadari sebagaimana mestinya. Surat ini akan
+ditinjau kembali apabila dikemudian hari ditemukan kekeliruan dalam penerbitannya.</p>
 
 @if ($ttd['penerbit'])
     <table class="ttd ttd-tunggal">
@@ -94,6 +103,14 @@ memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi 
         </tr>
     </table>
 @endif
+
+<div style="margin-top:40px; font-size:11px;">
+    <div style="font-style:italic; font-weight:bold;">Tembusan:</div>
+    <ol style="margin:2px 0; padding-left:20px;">
+        <li>{{ $sanksi->pengusul->jabatan?->nama ?? $sanksi->pengusul->orgUnit?->nama ?? 'Atasan langsung' }}</li>
+        <li>Keuangan</li>
+    </ol>
+</div>
 
 {{-- ===== HALAMAN 2: Surat Permohonan Tindak Lanjut (ttd pengusul + Kabid) ===== --}}
 @if ($ttd['pakaiHal2'])

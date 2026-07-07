@@ -14,4 +14,8 @@ return [
     // TODO: logo akreditasi belum ada filenya — taruh di public/img/ lalu isi path di sini.
     // Selagi null, layout PDF render kotak placeholder bergaris di kanan header.
     'logo_akreditasi' => null,
+
+    // Surat sanksi disiplin — ketentuan potongan penghasilan (SK Direktur).
+    'sanksi_potongan_persen' => 10,
+    'sanksi_sk_nomor' => '01.579/SK-DIR/RSUN/IX/2024',
 ];
