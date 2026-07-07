@@ -113,6 +113,16 @@ class Karyawan extends Model
         return $this->hasMany(PengajuanCuti::class)->latest();
     }
 
+    public function sanksiDisiplin(): HasMany
+    {
+        return $this->hasMany(SanksiDisiplin::class, 'karyawan_id')->latest();
+    }
+
+    public function usulanSanksi(): HasMany
+    {
+        return $this->hasMany(SanksiDisiplin::class, 'pengusul_id')->latest();
+    }
+
     /** Kontrak terbaru (tanggal_mulai lalu id) — bisa di-eager-load & difilter SQL. */
     public function kontrakTerbaru(): HasOne
     {
