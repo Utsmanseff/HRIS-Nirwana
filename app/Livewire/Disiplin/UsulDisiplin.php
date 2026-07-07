@@ -3,8 +3,10 @@
 namespace App\Livewire\Disiplin;
 
 use App\Enums\StatusKaryawan;
+use App\Enums\TingkatSanksi;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
+use App\Support\EskalasiSanksi;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -17,6 +19,12 @@ class UsulDisiplin extends Component
     public string $cari = '';
 
     public ?int $karyawanId = null;
+
+    public string $tingkat = '';
+
+    public string $uraian = '';
+
+    public string $tanggalKejadian = '';
 
     public function mount(): void
     {
@@ -49,12 +57,14 @@ class UsulDisiplin extends Component
         }
         $this->karyawanId = $id;
         $this->cari = '';
+        $kena = Karyawan::find($id);
+        $this->tingkat = (string) EskalasiSanksi::sarankan($kena)->value;
         $this->resetErrorBag();
     }
 
     public function batalKaryawan(): void
     {
-        $this->reset(['karyawanId', 'cari']);
+        $this->reset(['karyawanId', 'cari', 'tingkat']);
     }
 
     public function render()
@@ -71,6 +81,9 @@ class UsulDisiplin extends Component
                     ->limit(8)->get()
                 : collect(),
             'karyawanTerpilih' => $this->karyawanId ? Karyawan::find($this->karyawanId) : null,
+            'sanksiAktif' => $this->karyawanId ? EskalasiSanksi::sanksiAktif(Karyawan::find($this->karyawanId)) : collect(),
+            'saran' => $this->karyawanId ? EskalasiSanksi::sarankan(Karyawan::find($this->karyawanId)) : null,
+            'tingkatOpsi' => TingkatSanksi::cases(),
         ]);
     }
 }

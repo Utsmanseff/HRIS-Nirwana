@@ -4,6 +4,7 @@ namespace Tests\Feature\Disiplin;
 
 use App\Enums\OrgUnitTipe;
 use App\Enums\Role;
+use App\Enums\TingkatSanksi;
 use App\Livewire\Disiplin\UsulDisiplin;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
@@ -113,5 +114,29 @@ class UsulDisiplinTest extends TestCase
         Livewire::test(UsulDisiplin::class)
             ->call('pilihKaryawan', $luar->id)
             ->assertSet('karyawanId', null);
+    }
+
+    public function test_pilih_bawahan_dengan_sanksi_aktif_set_saran_tingkat(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+        $staff = $h['staff'];
+        SanksiDisiplin::factory()
+            ->diterbitkan(TingkatSanksi::Teguran1)
+            ->create(['karyawan_id' => $staff->id]);
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $staff->id)
+            ->assertSet('tingkat', '2');
+    }
+
+    public function test_pilih_bawahan_tanpa_sanksi_saran_teguran1(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $h['staff']->id)
+            ->assertSet('tingkat', '1');
     }
 }

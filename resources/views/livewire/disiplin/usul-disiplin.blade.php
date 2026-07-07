@@ -42,6 +42,90 @@
         </div>
     </section>
 
+    @if ($karyawanTerpilih)
+        {{-- Riwayat sanksi aktif + ladder eskalasi --}}
+        <section class="card rise">
+            <div class="card-header"><div class="card-title">Riwayat Sanksi Aktif (≤6 bln)</div></div>
+            <div class="card-pad">
+                @if ($sanksiAktif->isEmpty())
+                    <div class="text-sm text-neutral-400 mb-4">Belum ada sanksi aktif — bersih.</div>
+                @else
+                    <div class="space-y-2 mb-4">
+                        @foreach ($sanksiAktif as $sa)
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="flex items-center gap-2"><span class="badge badge-warning">{{ $sa->tingkat->label() }}</span><span class="truncate">{{ $sa->uraian }}</span></span>
+                                <span class="text-xs text-neutral-400 tnum shrink-0">{{ optional($sa->tanggal_terbit)->translatedFormat('d M Y') }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                @php $tertinggi = $sanksiAktif->max(fn ($s) => $s->tingkat->value); @endphp
+                <div class="flex items-center gap-1">
+                    @foreach ($tingkatOpsi as $t)
+                        @php
+                            $done = $tertinggi !== null && $t->value <= $tertinggi;
+                            $next = $saran && $t === $saran;
+                        @endphp
+                        @if (! $loop->first)
+                            <svg width="11" class="text-neutral-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+                        @endif
+                        <span class="flex-1 text-center text-[.65rem] font-bold px-1 py-1.5 rounded border whitespace-nowrap
+                            @class([
+                                'bg-danger-50 border-danger-100 text-danger-700' => $done,
+                                'bg-brand-50 border-brand-500 text-brand-700 ring-1 ring-brand-500' => $next && ! $done,
+                                'bg-[var(--bg-surface)] border-[var(--border)] text-neutral-400' => ! $done && ! $next,
+                            ])">{{ $t->label() }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        {{-- Detail pelanggaran + tingkat --}}
+        <form wire:submit="simpan" class="space-y-6">
+            <section class="card rise">
+                <div class="card-header"><div class="card-title">Detail Pelanggaran</div></div>
+                <div class="card-pad grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label">Tanggal kejadian</label>
+                        <input type="date" wire:model="tanggalKejadian" max="{{ now()->toDateString() }}" class="input">
+                        @error('tanggalKejadian') <div class="text-danger-600 text-xs mt-1">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="field-label">Uraian kejadian</label>
+                        <textarea wire:model="uraian" rows="3" class="textarea" placeholder="Jelaskan kronologi & bukti pendukung…"></textarea>
+                        @error('uraian') <div class="text-danger-600 text-xs mt-1">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+            </section>
+
+            <section class="card rise">
+                <div class="card-header"><div class="card-title">Tingkat Sanksi Diusulkan</div></div>
+                <div class="card-pad">
+                    @if ($saran)
+                        <div class="flex gap-2.5 p-3 rounded-lg bg-brand-50 border border-brand-100 mb-4 text-xs text-brand-700">
+                            <svg width="15" class="shrink-0 mt-px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.2l.9-5.5-4-3.9 5.5-.8z"/></svg>
+                            <span class="leading-relaxed">Sistem menyarankan <b>{{ $saran->label() }}</b> (eskalasi dari sanksi aktif). Untuk pelanggaran berat, boleh lompat — pilih manual.</span>
+                        </div>
+                    @endif
+                    <label class="field-label">Tingkat</label>
+                    <select wire:model="tingkat" class="select">
+                        @foreach ($tingkatOpsi as $t)
+                            <option value="{{ $t->value }}">{{ $t->label() }}{{ $saran && $t === $saran ? ' (disarankan)' : '' }}</option>
+                        @endforeach
+                    </select>
+                    @error('tingkat') <div class="text-danger-600 text-xs mt-1">{{ $message }}</div> @enderror
+                    <div class="field-hint">Keputusan final ada di HRD. Usulan ini ditinjau berjenjang dulu.</div>
+                </div>
+            </section>
+
+            <div class="flex gap-2.5">
+                <button type="button" wire:click="batalKaryawan" class="btn btn-secondary">Batal</button>
+                <button type="submit" class="btn btn-primary flex-1" wire:loading.attr="disabled">Kirim Usulan</button>
+            </div>
+        </form>
+    @endif
+
     {{-- Daftar usulan yang saya buat --}}
     <section class="card">
         <div class="card-header"><div class="card-title">Usulan Saya</div></div>
