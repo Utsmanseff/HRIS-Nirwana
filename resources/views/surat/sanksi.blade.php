@@ -26,10 +26,13 @@
     table.id td.s { width: 12px; }
     p { margin: 8px 0; text-align: justify; }
     .ttd { width: 100%; margin-top: 34px; border-collapse: collapse; }
-    .ttd td { width: 33%; vertical-align: top; text-align: center; font-size: 10.5px; padding: 6px; }
+    .ttd td { vertical-align: top; text-align: center; font-size: 10.5px; padding: 6px; }
     .ttd .role { font-weight: bold; }
     .ttd .space { height: 46px; }
     .ttd .nm { text-decoration: underline; font-weight: bold; }
+    .ttd-tunggal { width: 55%; margin-left: 45%; }
+    .page-break { page-break-before: always; }
+    .surat-title { font-weight: bold; margin: 4px 0 14px; }
 </style>
 </head>
 <body>
@@ -55,6 +58,7 @@
 </header>
 <footer>Dokumen resmi {{ config('instansi.nama_resmi') }}</footer>
 
+{{-- ===== HALAMAN 1: Surat Peringatan/Teguran (ttd Direktur) ===== --}}
 <h1>Surat {{ $sanksi->tingkat->jenis() === 'sp' ? 'Peringatan' : 'Teguran' }} — {{ $sanksi->tingkat->label() }}</h1>
 <div class="nomor">Nomor: {{ $sanksi->nomor_surat }}</div>
 
@@ -76,18 +80,44 @@
 {{ optional($sanksi->berlaku_sampai)->locale('id')->translatedFormat('j F Y') }}. Karyawan diharapkan
 memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi tingkat berikutnya.</p>
 
-<table class="ttd">
-    <tr>
-        @foreach ($penandatangan as $p)
-            <td style="width: {{ intdiv(100, max(count($penandatangan), 1)) }}%">
-                <div class="role">{{ $p['peran'] }}</div>
-                <div>{{ optional($p['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
+@if ($ttd['penerbit'])
+    <table class="ttd ttd-tunggal">
+        <tr>
+            <td>
+                <div>Mengetahui,</div>
+                <div class="role">{{ $ttd['penerbit']['jabatan'] ?? 'Direktur' }}</div>
+                <div>{{ optional($ttd['penerbit']['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
                 <div class="space"></div>
-                <div class="nm">{{ $p['nama'] }}</div>
-                <div>{{ $p['jabatan'] }}</div>
+                <div class="nm">{{ $ttd['penerbit']['nama'] }}</div>
             </td>
-        @endforeach
-    </tr>
-</table>
+        </tr>
+    </table>
+@endif
+
+{{-- ===== HALAMAN 2: Surat Permohonan Tindak Lanjut (ttd pengusul + Kabid) ===== --}}
+@if ($ttd['pakaiHal2'])
+    <div class="page-break"></div>
+    <div class="surat-title">Hal: Permohonan Tindak Lanjut Pembinaan</div>
+    <p>Yth. HRD {{ config('instansi.nama_resmi') }}<br>di tempat</p>
+    <p>Dengan hormat, sehubungan dengan hasil pembinaan, kami mengajukan permohonan tindak
+    lanjut atas nama <b>{{ $sanksi->karyawan->nama_lengkap }}</b>
+    ({{ $sanksi->karyawan->jabatan?->nama ?? '-' }}). Adapun alasannya:</p>
+    <p>{{ $sanksi->uraian }}</p>
+    <p>Demikian permohonan ini disampaikan, atas perhatiannya kami ucapkan terima kasih.</p>
+
+    <table class="ttd">
+        <tr>
+            @foreach ($ttd['pengusulChain'] as $p)
+                <td style="width: {{ intdiv(100, max(count($ttd['pengusulChain']), 1)) }}%">
+                    <div>{{ $loop->first ? 'Hormat kami,' : 'Mengetahui,' }}</div>
+                    <div class="role">{{ $p['jabatan'] ?? $p['peran'] }}</div>
+                    <div>{{ optional($p['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
+                    <div class="space"></div>
+                    <div class="nm">{{ $p['nama'] }}</div>
+                </td>
+            @endforeach
+        </tr>
+    </table>
+@endif
 </body>
 </html>
