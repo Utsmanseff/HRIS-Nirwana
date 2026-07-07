@@ -35,9 +35,11 @@ class ProsesSanksiTolakTest extends TestCase
         $dir = OrgUnit::create(['nama' => 'Direktorat', 'tipe' => OrgUnitTipe::Direktur->value]);
         $bidang = OrgUnit::create(['nama' => 'Penunjang', 'tipe' => OrgUnitTipe::Bidang->value, 'parent_id' => $dir->id]);
         $unit = OrgUnit::create(['nama' => 'Farmasi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $bidang->id]);
+        $direktur = Karyawan::factory()->pimpinanUnit($dir, 4)->create();
         $kabid = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
         $staff = Karyawan::factory()->staffUnit($unit)->create();
+        User::factory()->create(['karyawan_id' => $direktur->id])->assignRole(Role::Direktur->value);
         $kabidUser = User::factory()->create(['karyawan_id' => $kabid->id]);
         $koorUser = User::factory()->create(['karyawan_id' => $koor->id]);
         $hrd = Karyawan::factory()->create();

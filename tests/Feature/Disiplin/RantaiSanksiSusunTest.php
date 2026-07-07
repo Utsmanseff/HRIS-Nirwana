@@ -23,7 +23,7 @@ class RantaiSanksiSusunTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    /** Direktorat > Bidang > Unit, kepala tiap tingkat. */
+    /** Direktorat > Bidang > Unit + kepala tiap tingkat; Direktur & HRD ber-role. */
     private function hierarki(): array
     {
         $dir = OrgUnit::create(['nama' => 'Direktorat', 'tipe' => OrgUnitTipe::Direktur->value]);
@@ -33,17 +33,17 @@ class RantaiSanksiSusunTest extends TestCase
         $direktur = Karyawan::factory()->pimpinanUnit($dir, 4)->create();
         $kabid = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        $this->beriRole($direktur, Role::Direktur);
 
         return compact('dir', 'bidang', 'unit', 'direktur', 'kabid', 'koor');
     }
 
     private function beriRole(Karyawan $kar, Role $role): void
     {
-        $user = User::factory()->create(['karyawan_id' => $kar->id]);
-        $user->assignRole($role->value);
+        User::factory()->create(['karyawan_id' => $kar->id])->assignRole($role->value);
     }
 
-    public function test_pengusul_koordinator_ke_kabid_lalu_hrd(): void
+    public function test_pengusul_koordinator_naik_ke_kabid_hrd_direktur(): void
     {
         $h = $this->hierarki();
         $hrd = Karyawan::factory()->create();
@@ -51,12 +51,12 @@ class RantaiSanksiSusunTest extends TestCase
 
         $steps = RantaiSanksi::susun($h['koor']);
 
-        $this->assertSame([$h['kabid']->id, $hrd->id], $steps->pluck('approver.id')->all());
-        $this->assertSame([PeranApproval::Kabid, PeranApproval::Hrd], $steps->pluck('peran')->all());
-        $this->assertSame([1, 2], $steps->pluck('urutan')->all());
+        $this->assertSame([$h['kabid']->id, $hrd->id, $h['direktur']->id], $steps->pluck('approver.id')->all());
+        $this->assertSame([PeranApproval::Kabid, PeranApproval::Hrd, PeranApproval::Direktur], $steps->pluck('peran')->all());
+        $this->assertSame([1, 2, 3], $steps->pluck('urutan')->all());
     }
 
-    public function test_pengusul_kabid_langsung_hrd(): void
+    public function test_pengusul_kabid_ke_hrd_direktur(): void
     {
         $h = $this->hierarki();
         $hrd = Karyawan::factory()->create();
@@ -64,32 +64,29 @@ class RantaiSanksiSusunTest extends TestCase
 
         $steps = RantaiSanksi::susun($h['kabid']);
 
-        $this->assertSame([$hrd->id], $steps->pluck('approver.id')->all());
-        $this->assertSame([PeranApproval::Hrd], $steps->pluck('peran')->all());
+        $this->assertSame([$hrd->id, $h['direktur']->id], $steps->pluck('approver.id')->all());
+        $this->assertSame([PeranApproval::Hrd, PeranApproval::Direktur], $steps->pluck('peran')->all());
     }
 
-    public function test_pengusul_direktur_langsung_hrd_direktur_bukan_approver(): void
+    public function test_pengusul_hrd_langsung_direktur(): void
     {
         $h = $this->hierarki();
-        $this->beriRole($h['direktur'], Role::Direktur);
-        $hrd = Karyawan::factory()->create();
-        $this->beriRole($hrd, Role::Hrd);
-
-        $steps = RantaiSanksi::susun($h['direktur']);
-
-        $this->assertSame([$hrd->id], $steps->pluck('approver.id')->all());
-        $this->assertSame([PeranApproval::Hrd], $steps->pluck('peran')->all());
-    }
-
-    public function test_pengusul_hrd_self_terbit_langsung(): void
-    {
-        $h = $this->hierarki();
-        $hrdKar = Karyawan::factory()->pimpinanUnit($h['bidang'], 3)->create();
+        $hrdKar = Karyawan::factory()->create();
         $this->beriRole($hrdKar, Role::Hrd);
 
         $steps = RantaiSanksi::susun($hrdKar);
 
-        $this->assertSame([$hrdKar->id], $steps->pluck('approver.id')->all());
-        $this->assertSame([PeranApproval::Hrd], $steps->pluck('peran')->all());
+        $this->assertSame([$h['direktur']->id], $steps->pluck('approver.id')->all());
+        $this->assertSame([PeranApproval::Direktur], $steps->pluck('peran')->all());
+    }
+
+    public function test_pengusul_direktur_self_terbit(): void
+    {
+        $h = $this->hierarki();
+
+        $steps = RantaiSanksi::susun($h['direktur']);
+
+        $this->assertSame([$h['direktur']->id], $steps->pluck('approver.id')->all());
+        $this->assertSame([PeranApproval::Direktur], $steps->pluck('peran')->all());
     }
 }
