@@ -2,11 +2,17 @@
 
 namespace App\Livewire\Disiplin;
 
+use App\Enums\PeranApproval;
 use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
 use App\Models\Karyawan;
 use App\Models\SanksiDisiplin;
+use App\Notifications\SanksiPerluPersetujuan;
 use App\Support\EskalasiSanksi;
+use App\Support\ProsesSanksi;
+use App\Support\ProsesSanksiException;
+use App\Support\RantaiSanksi;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -71,6 +77,58 @@ class KelolaDisiplin extends Component
     public function batalKaryawan(): void
     {
         $this->reset(['karyawanId', 'cariKaryawan', 'tingkat']);
+    }
+
+    public function simpan()
+    {
+        $this->validate([
+            'karyawanId' => ['required', 'integer', 'exists:karyawan,id'],
+            'uraian' => ['required', 'string', 'max:2000'],
+            'tanggalKejadian' => ['required', 'date', 'before_or_equal:today'],
+            'tingkat' => ['required', 'integer', 'in:1,2,3,4,5,6'],
+            'nomorSurat' => ['required', 'string', 'max:100', 'unique:sanksi_disiplin,nomor_surat'],
+        ]);
+
+        $pengusul = auth()->user()->karyawan()->firstOrFail();
+        $tingkat = TingkatSanksi::from((int) $this->tingkat);
+
+        try {
+            DB::transaction(function () use ($pengusul, $tingkat) {
+                $sanksi = SanksiDisiplin::create([
+                    'karyawan_id' => $this->karyawanId,
+                    'pengusul_id' => $pengusul->id,
+                    'tingkat' => $tingkat,
+                    'uraian' => $this->uraian,
+                    'tanggal_kejadian' => $this->tanggalKejadian,
+                    'nomor_surat' => $this->nomorSurat,
+                    'status' => StatusSanksi::Diajukan,
+                ]);
+
+                RantaiSanksi::bangunUntuk($sanksi);
+                $aktif = $sanksi->tahapAktif();
+
+                // Direktur buat-langsung: tahap tunggal peran Direktur = diri → terbit seketika.
+                if ($aktif
+                    && $aktif->peran === PeranApproval::Direktur
+                    && $aktif->approver_id === $pengusul->id) {
+                    ProsesSanksi::terbit($aktif, auth()->user(), $this->nomorSurat);
+
+                    return;
+                }
+
+                // HRD buat-langsung: rantai [Direktur] → notif approver aktif.
+                $aktif?->approver->user?->notify(new SanksiPerluPersetujuan($sanksi));
+            });
+        } catch (ProsesSanksiException $e) {
+            $this->addError('nomorSurat', $e->getMessage());
+
+            return null;
+        }
+
+        session()->flash('disiplin_ok', 'Sanksi tersimpan.');
+        $this->tutupForm();
+
+        return null;
     }
 
     protected function daftar()

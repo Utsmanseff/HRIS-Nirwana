@@ -2,15 +2,22 @@
 
 namespace Tests\Feature\Disiplin;
 
+use App\Enums\PeranApproval;
 use App\Enums\Role;
 use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
 use App\Livewire\Disiplin\KelolaDisiplin;
+use App\Models\Jabatan;
 use App\Models\Karyawan;
+use App\Models\OrgUnit;
 use App\Models\SanksiDisiplin;
 use App\Models\User;
+use App\Notifications\SanksiDiterbitkan;
+use App\Notifications\SanksiPerluPersetujuan;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -85,5 +92,83 @@ class KelolaDisiplinTest extends TestCase
             ->set('showForm', true)
             ->set('cariKaryawan', 'Zulfikar')
             ->assertSee('Zulfikar Rahman');
+    }
+
+    /** @return array{0: Karyawan, 1: User, 2: Karyawan} [direktur, userDirektur, target] */
+    private function seedDirekturHrdTarget(): array
+    {
+        $this->seed(RoleSeeder::class);
+
+        $direktorat = OrgUnit::factory()->create(['tipe' => 'direktur', 'parent_id' => null]);
+        $unit = OrgUnit::factory()->create(['tipe' => 'unit', 'parent_id' => $direktorat->id]);
+
+        $jabDir = Jabatan::factory()->create(['org_unit_id' => $direktorat->id, 'level' => 4]);
+        $direktur = Karyawan::factory()->create(['org_unit_id' => $direktorat->id, 'jabatan_id' => $jabDir->id]);
+        $uDir = User::factory()->create(['karyawan_id' => $direktur->id]);
+        $uDir->assignRole(Role::Direktur->value);
+
+        $target = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+
+        return [$direktur, $uDir, $target];
+    }
+
+    public function test_direktur_buat_langsung_auto_terbit(): void
+    {
+        Notification::fake();
+        Storage::fake('local');
+        [$direktur, $uDir, $target] = $this->seedDirekturHrdTarget();
+        User::factory()->create(['karyawan_id' => $target->id]);
+
+        Livewire::actingAs($uDir)->test(KelolaDisiplin::class)
+            ->call('pilihKaryawan', $target->id)
+            ->set('tanggalKejadian', now()->subDay()->toDateString())
+            ->set('uraian', 'Datang terlambat berulang.')
+            ->set('nomorSurat', '01.777/DIR/RSUN/VII/2026')
+            ->call('simpan');
+
+        $sanksi = SanksiDisiplin::where('karyawan_id', $target->id)->firstOrFail();
+        $this->assertSame(StatusSanksi::Diterbitkan, $sanksi->status);
+        $this->assertNotNull($sanksi->tanggal_terbit);
+        $this->assertNotEmpty($sanksi->surat_path);
+        Notification::assertSentTo($target->fresh()->user, SanksiDiterbitkan::class);
+    }
+
+    public function test_hrd_buat_langsung_masuk_inbox_direktur(): void
+    {
+        Notification::fake();
+        Storage::fake('local');
+        [$direktur, $uDir, $target] = $this->seedDirekturHrdTarget();
+
+        $hrdKar = Karyawan::factory()->create();
+        $uHrd = User::factory()->create(['karyawan_id' => $hrdKar->id]);
+        $uHrd->assignRole(Role::Hrd->value);
+
+        Livewire::actingAs($uHrd)->test(KelolaDisiplin::class)
+            ->call('pilihKaryawan', $target->id)
+            ->set('tanggalKejadian', now()->subDay()->toDateString())
+            ->set('uraian', 'Melanggar SOP.')
+            ->set('nomorSurat', '01.778/HRD/RSUN/VII/2026')
+            ->call('simpan');
+
+        $sanksi = SanksiDisiplin::where('karyawan_id', $target->id)->firstOrFail();
+        $this->assertSame(StatusSanksi::Diajukan, $sanksi->status);
+        $this->assertSame(PeranApproval::Direktur, $sanksi->tahapAktif()->peran);
+        $this->assertSame($direktur->id, $sanksi->tahapAktif()->approver_id);
+        Notification::assertSentTo($direktur->user, SanksiPerluPersetujuan::class);
+    }
+
+    public function test_nomor_wajib_unik(): void
+    {
+        Storage::fake('local');
+        [$direktur, $uDir, $target] = $this->seedDirekturHrdTarget();
+        SanksiDisiplin::factory()->create(['nomor_surat' => '01.999/DIR/RSUN/VII/2026']);
+
+        Livewire::actingAs($uDir)->test(KelolaDisiplin::class)
+            ->call('pilihKaryawan', $target->id)
+            ->set('tanggalKejadian', now()->subDay()->toDateString())
+            ->set('uraian', 'x')
+            ->set('nomorSurat', '01.999/DIR/RSUN/VII/2026')
+            ->call('simpan')
+            ->assertHasErrors(['nomorSurat']);
     }
 }

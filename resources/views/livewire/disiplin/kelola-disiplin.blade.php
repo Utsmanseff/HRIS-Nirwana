@@ -78,7 +78,17 @@
                     <textarea wire:model="uraian" rows="3" class="input @error('uraian') input-error @enderror"></textarea>
                     @error('uraian') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
                 </div>
-                {{-- Tombol simpan ditambah di Task 3 --}}
+                <div class="flex gap-2">
+                    <button wire:click="simpan" class="btn btn-primary btn-sm">Buat Sanksi</button>
+                    <button wire:click="tutupForm" class="btn btn-ghost btn-sm">Batal</button>
+                </div>
+                <p class="text-xs text-neutral-400">
+                    @if (auth()->user()->hasRole(\App\Enums\Role::Direktur->value))
+                        Sebagai Direktur, sanksi langsung terbit &amp; surat dibuat.
+                    @else
+                        Sanksi diteruskan ke Direktur untuk diterbitkan.
+                    @endif
+                </p>
             @endif
         </div>
     @endif
