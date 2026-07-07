@@ -126,6 +126,7 @@ class UsulDisiplin extends Component
             'sanksiAktif' => $this->karyawanId ? EskalasiSanksi::sanksiAktif(Karyawan::find($this->karyawanId)) : collect(),
             'saran' => $this->karyawanId ? EskalasiSanksi::sarankan(Karyawan::find($this->karyawanId)) : null,
             'tingkatOpsi' => TingkatSanksi::cases(),
+            'rantai' => RantaiSanksi::susun($pengusul),
         ]);
     }
 }

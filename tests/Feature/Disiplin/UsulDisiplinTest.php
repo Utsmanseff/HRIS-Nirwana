@@ -210,4 +210,15 @@ class UsulDisiplinTest extends TestCase
             ->call('simpan')
             ->assertHasErrors('karyawanId');
     }
+
+    public function test_form_tampil_preview_alur_kabid_hrd(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $h['staff']->id)
+            ->assertSee('Alur Persetujuan')
+            ->assertSeeInOrder(['Kabid', 'Hrd']);
+    }
 }

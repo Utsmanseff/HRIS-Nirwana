@@ -119,6 +119,22 @@
                 </div>
             </section>
 
+            @if ($rantai->isNotEmpty())
+                <div class="card !bg-transparent border-dashed">
+                    <div class="card-pad !py-3">
+                        <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Alur Persetujuan</div>
+                        <div class="flex items-center gap-1.5 text-[11px] font-semibold flex-wrap">
+                            <span class="text-neutral-500">Kamu</span>
+                            @foreach ($rantai as $s)
+                                <svg width="14" class="text-neutral-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                                <span class="{{ $loop->last ? 'text-brand-600' : 'text-neutral-600' }}">{{ ucfirst($s['peran']->value) }}</span>
+                            @endforeach
+                        </div>
+                        <p class="text-[11px] text-neutral-400 mt-2">Berjenjang berurutan. Ditolak di tahap mana pun = batal, usul ulang.</p>
+                    </div>
+                </div>
+            @endif
+
             <div class="flex gap-2.5">
                 <button type="button" wire:click="batalKaryawan" class="btn btn-secondary">Batal</button>
                 <button type="submit" class="btn btn-primary flex-1" wire:loading.attr="disabled">Kirim Usulan</button>
