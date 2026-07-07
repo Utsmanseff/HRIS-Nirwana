@@ -78,6 +78,10 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/disiplin/kelola', \App\Livewire\Disiplin\KelolaDisiplin::class)
         ->middleware('can:buat-sanksi')->name('disiplin.kelola');
     Route::get('/disiplin/saya', \App\Livewire\Disiplin\SanksiSaya::class)->name('disiplin.saya');
+    Route::get('/disiplin/laporan', \App\Livewire\Disiplin\LaporanDisiplin::class)
+        ->middleware('can:kelola-disiplin')->name('disiplin.laporan');
+    Route::get('/disiplin/laporan/sanksi', [\App\Http\Controllers\Disiplin\LaporanDisiplinController::class, 'sanksi'])
+        ->middleware('can:kelola-disiplin')->name('disiplin.laporan.sanksi');
     Route::get('/disiplin/{sanksi}/surat', [\App\Http\Controllers\Disiplin\SuratSanksiController::class, 'lihat'])
         ->name('disiplin.surat');
 
