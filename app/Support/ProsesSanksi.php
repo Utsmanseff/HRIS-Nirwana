@@ -78,12 +78,10 @@ class ProsesSanksi
         $sanksi->update(['nomor_surat' => $nomor]);
     }
 
-    /**
-     * Terbitkan sanksi (tahap final HRD). Butuh nomor surat manual (unik). Set tanggal + generate surat + notif karyawan.
-     */
-    public static function terbit(ApprovalSanksi $step, User $aktor, string $nomor, ?string $catatan = null): void
+    /** Terbitkan sanksi (tahap final = Direktur). Nomor: pakai yang diisi HRD; kalau kosong wajib $nomor. */
+    public static function terbit(ApprovalSanksi $step, User $aktor, ?string $nomor = null, ?string $catatan = null, ?int $tingkatBaru = null): void
     {
-        DB::transaction(function () use ($step, $aktor, $nomor, $catatan) {
+        DB::transaction(function () use ($step, $aktor, $nomor, $catatan, $tingkatBaru) {
             $sanksi = SanksiDisiplin::whereKey($step->sanksi_id)->lockForUpdate()->firstOrFail();
             self::pastikanTahapAktif($sanksi, $step);
             self::pastikanWewenang($step, $aktor);
@@ -92,12 +90,10 @@ class ProsesSanksi
                 throw new ProsesSanksiException('Masih ada tahap sebelum penerbitan.');
             }
 
-            $nomor = trim($nomor);
-            if ($nomor === '') {
-                throw new ProsesSanksiException('Nomor surat wajib diisi.');
-            }
-            if (SanksiDisiplin::where('nomor_surat', $nomor)->where('id', '!=', $sanksi->id)->exists()) {
-                throw new ProsesSanksiException('Nomor surat sudah dipakai.');
+            $catatan = self::terapkanTingkat($sanksi, $tingkatBaru, $catatan);
+
+            if (trim((string) $sanksi->nomor_surat) === '') {
+                self::setNomor($sanksi, $nomor);
             }
 
             $step->update([
@@ -109,7 +105,6 @@ class ProsesSanksi
             $terbit = Carbon::today();
             $sanksi->update([
                 'status' => StatusSanksi::Diterbitkan,
-                'nomor_surat' => $nomor,
                 'tanggal_terbit' => $terbit,
                 'berlaku_sampai' => $terbit->copy()->addMonths(6),
                 'diterbitkan_oleh' => $aktor->id,
