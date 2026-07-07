@@ -123,6 +123,7 @@
                         @unless ($final)
                             <button class="btn btn-primary w-full" wire:click="setujui">Setujui &amp; Teruskan</button>
                         @endunless
+                        <button class="btn btn-secondary text-danger-600 w-full" wire:click="tolak">Tolak Usulan</button>
                     @endif
                 </div>
             </div>

@@ -88,6 +88,28 @@ class PersetujuanDisiplin extends Component
         $this->tutup();
     }
 
+    public function tolak(): void
+    {
+        $this->validate(['catatan' => ['required', 'string', 'max:1000']], [
+            'catatan.required' => 'Catatan alasan wajib diisi saat menolak.',
+        ]);
+        $step = $this->stepAktifUntukSaya();
+        if (! $step) {
+            $this->tutup();
+
+            return;
+        }
+        try {
+            ProsesSanksi::tolak($step, auth()->user(), $this->catatan);
+            session()->flash('disiplin_ok', 'Usulan ditolak.');
+        } catch (ProsesSanksiException $e) {
+            $this->addError('catatan', $e->getMessage());
+
+            return;
+        }
+        $this->tutup();
+    }
+
     /** Sanksi yang tahap aktifnya = karyawan login. */
     protected function perluAksi(): Collection
     {

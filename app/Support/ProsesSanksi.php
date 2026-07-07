@@ -7,6 +7,7 @@ use App\Enums\StatusSanksi;
 use App\Models\ApprovalSanksi;
 use App\Models\SanksiDisiplin;
 use App\Models\User;
+use App\Notifications\SanksiDitolak;
 use App\Notifications\SanksiPerluPersetujuan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,27 @@ class ProsesSanksi
             ]);
             $sanksi->update(['status' => StatusSanksi::Diproses]);
             $berikut->approver->user?->notify(new SanksiPerluPersetujuan($sanksi));
+        });
+    }
+
+    /** Tolak tahap aktif → sanksi Ditolak (batal total). Catatan wajib. Notif pengusul. */
+    public static function tolak(ApprovalSanksi $step, User $aktor, string $catatan): void
+    {
+        DB::transaction(function () use ($step, $aktor, $catatan) {
+            $sanksi = SanksiDisiplin::whereKey($step->sanksi_id)->lockForUpdate()->firstOrFail();
+            self::pastikanTahapAktif($sanksi, $step);
+            self::pastikanWewenang($step, $aktor);
+
+            $step->update([
+                'status' => StatusApproval::Tolak,
+                'catatan' => $catatan,
+                'acted_at' => Carbon::now(),
+            ]);
+            $sanksi->update([
+                'status' => StatusSanksi::Ditolak,
+                'alasan_tolak' => $catatan,
+            ]);
+            $sanksi->pengusul->user?->notify(new SanksiDitolak($sanksi, $catatan));
         });
     }
 
