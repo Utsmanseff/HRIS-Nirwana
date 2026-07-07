@@ -136,6 +136,9 @@
                             @if ($s->status === \App\Enums\StatusSanksi::Diterbitkan && $s->surat_path)
                                 <a href="{{ route('disiplin.surat', $s) }}" target="_blank" class="btn btn-secondary btn-sm">Surat</a>
                             @endif
+                            @if ($bisaCabut && $s->status === \App\Enums\StatusSanksi::Diterbitkan)
+                                <button wire:click="mulaiCabut({{ $s->id }})" class="btn btn-ghost btn-sm" style="color:var(--danger-600)">Cabut</button>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -144,4 +147,22 @@
             </tbody>
         </table>
     </div>
+
+    @if ($cabutId)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="card card-pad w-full max-w-md space-y-3">
+                <div class="card-title">Cabut Sanksi</div>
+                <p class="text-sm text-neutral-500">Sanksi akan berstatus Dicabut dan keluar dari eskalasi. Tindakan ini tercatat.</p>
+                <div>
+                    <label class="field-label">Alasan Pencabutan *</label>
+                    <textarea wire:model="alasanCabut" rows="3" class="input @error('alasanCabut') input-error @enderror"></textarea>
+                    @error('alasanCabut') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button wire:click="batalCabut" class="btn btn-ghost btn-sm">Batal</button>
+                    <button wire:click="konfirmasiCabut" class="btn btn-primary btn-sm" style="background:var(--danger-600)">Cabut Sanksi</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

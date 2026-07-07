@@ -44,6 +44,10 @@ class KelolaDisiplin extends Component
 
     public string $nomorSurat = '';
 
+    public ?int $cabutId = null;
+
+    public string $alasanCabut = '';
+
     public function mount(): void
     {
         abort_unless(Gate::allows('buat-sanksi'), 403);
@@ -129,6 +133,46 @@ class KelolaDisiplin extends Component
         $this->tutupForm();
 
         return null;
+    }
+
+    public function mulaiCabut(int $id): void
+    {
+        $this->cabutId = $id;
+        $this->alasanCabut = '';
+        $this->resetErrorBag();
+    }
+
+    public function batalCabut(): void
+    {
+        $this->reset(['cabutId', 'alasanCabut']);
+    }
+
+    public function konfirmasiCabut(): void
+    {
+        // Hanya HRD boleh mencabut.
+        if (! auth()->user()->can('kelola-disiplin')) {
+            $this->addError('alasanCabut', 'Hanya HRD yang dapat mencabut sanksi.');
+
+            return;
+        }
+        $this->validate(['alasanCabut' => ['required', 'string', 'max:1000']], [
+            'alasanCabut.required' => 'Alasan pencabutan wajib diisi.',
+        ]);
+        $sanksi = SanksiDisiplin::find($this->cabutId);
+        if (! $sanksi) {
+            $this->cabutId = null;
+
+            return;
+        }
+        try {
+            ProsesSanksi::cabut($sanksi, auth()->user(), $this->alasanCabut);
+            session()->flash('disiplin_ok', 'Sanksi dicabut.');
+        } catch (ProsesSanksiException $e) {
+            $this->addError('alasanCabut', $e->getMessage());
+
+            return;
+        }
+        $this->reset(['cabutId', 'alasanCabut']);
     }
 
     protected function daftar()

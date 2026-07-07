@@ -9,6 +9,7 @@ use App\Enums\TingkatSanksi;
 use App\Models\ApprovalSanksi;
 use App\Models\SanksiDisiplin;
 use App\Models\User;
+use App\Notifications\SanksiDicabut;
 use App\Notifications\SanksiDiterbitkan;
 use App\Notifications\SanksiDitolak;
 use App\Notifications\SanksiPerluPersetujuan;
@@ -134,6 +135,31 @@ class ProsesSanksi
                 'alasan_tolak' => $catatan,
             ]);
             $sanksi->pengusul->user?->notify(new SanksiDitolak($sanksi, $catatan));
+        });
+    }
+
+    /** Cabut sanksi yang sudah diterbitkan (HRD). Alasan wajib. Notif karyawan. Dicabut auto keluar dari eskalasi. */
+    public static function cabut(SanksiDisiplin $sanksi, User $aktor, string $alasan): void
+    {
+        $alasan = trim($alasan);
+        if ($alasan === '') {
+            throw new ProsesSanksiException('Alasan pencabutan wajib diisi.');
+        }
+
+        DB::transaction(function () use ($sanksi, $aktor, $alasan) {
+            $s = SanksiDisiplin::whereKey($sanksi->id)->lockForUpdate()->firstOrFail();
+            if ($s->status !== StatusSanksi::Diterbitkan) {
+                throw new ProsesSanksiException('Hanya sanksi yang sudah diterbitkan yang bisa dicabut.');
+            }
+
+            $s->update([
+                'status' => StatusSanksi::Dicabut,
+                'dicabut_oleh' => $aktor->id,
+                'alasan_cabut' => $alasan,
+                'dicabut_pada' => Carbon::now(),
+            ]);
+
+            $s->karyawan->user?->notify(new SanksiDicabut($s, $alasan));
         });
     }
 

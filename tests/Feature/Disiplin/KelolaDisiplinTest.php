@@ -171,4 +171,34 @@ class KelolaDisiplinTest extends TestCase
             ->call('simpan')
             ->assertHasErrors(['nomorSurat']);
     }
+
+    public function test_hrd_cabut_dari_kelola(): void
+    {
+        Notification::fake();
+        $user = $this->hrd();
+        $target = Karyawan::factory()->create();
+        User::factory()->create(['karyawan_id' => $target->id]);
+        $sanksi = SanksiDisiplin::factory()->diterbitkan()->create(['karyawan_id' => $target->id]);
+
+        Livewire::actingAs($user)->test(KelolaDisiplin::class)
+            ->call('mulaiCabut', $sanksi->id)
+            ->set('alasanCabut', 'Salah sasaran.')
+            ->call('konfirmasiCabut');
+
+        $this->assertSame(StatusSanksi::Dicabut, $sanksi->refresh()->status);
+    }
+
+    public function test_direktur_tak_bisa_cabut(): void
+    {
+        [$direktur, $uDir, $target] = $this->seedDirekturHrdTarget();
+        $sanksi = SanksiDisiplin::factory()->diterbitkan()->create(['karyawan_id' => $target->id]);
+
+        Livewire::actingAs($uDir)->test(KelolaDisiplin::class)
+            ->call('mulaiCabut', $sanksi->id)
+            ->set('alasanCabut', 'coba cabut')
+            ->call('konfirmasiCabut')
+            ->assertHasErrors('alasanCabut');
+
+        $this->assertSame(StatusSanksi::Diterbitkan, $sanksi->refresh()->status);
+    }
 }
