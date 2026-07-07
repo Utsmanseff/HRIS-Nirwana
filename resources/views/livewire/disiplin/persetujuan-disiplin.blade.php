@@ -113,7 +113,17 @@
                         </div>
                     </div>
 
-                    {{-- Aksi (form) diisi Task 2/3/5 --}}
+                    @php $final = $tahapAktif && ! $tinjauan->approval->where('urutan', '>', $tahapAktif->urutan)->where('status', 'menunggu')->count(); @endphp
+                    @if ($tahapAktif && $tahapAktif->approver_id === auth()->user()->karyawan_id)
+                        <div>
+                            <label class="field-label">Catatan <span class="text-neutral-400 font-normal">(wajib bila menolak)</span></label>
+                            <textarea wire:model="catatan" class="textarea" rows="2" placeholder="Catatan…"></textarea>
+                            @error('catatan') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
+                        </div>
+                        @unless ($final)
+                            <button class="btn btn-primary w-full" wire:click="setujui">Setujui &amp; Teruskan</button>
+                        @endunless
+                    @endif
                 </div>
             </div>
         </div>

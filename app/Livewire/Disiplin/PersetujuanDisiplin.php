@@ -5,7 +5,10 @@ namespace App\Livewire\Disiplin;
 use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusSanksi;
+use App\Models\ApprovalSanksi;
 use App\Models\SanksiDisiplin;
+use App\Support\ProsesSanksi;
+use App\Support\ProsesSanksiException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -53,6 +56,36 @@ class PersetujuanDisiplin extends Component
     protected function bolehSemua(): bool
     {
         return auth()->user()->hasRole(Role::Hrd->value);
+    }
+
+    protected function stepAktifUntukSaya(): ?ApprovalSanksi
+    {
+        if (! $this->tinjauId) {
+            return null;
+        }
+        $s = SanksiDisiplin::with('approval')->find($this->tinjauId);
+        $step = $s?->tahapAktif();
+
+        return $step && $step->approver_id === auth()->user()->karyawan_id ? $step : null;
+    }
+
+    public function setujui(): void
+    {
+        $step = $this->stepAktifUntukSaya();
+        if (! $step) {
+            $this->tutup();
+
+            return;
+        }
+        try {
+            ProsesSanksi::setujui($step, auth()->user(), $this->catatan ?: null);
+            session()->flash('disiplin_ok', 'Usulan disetujui, diteruskan ke tahap berikut.');
+        } catch (ProsesSanksiException $e) {
+            $this->addError('catatan', $e->getMessage());
+
+            return;
+        }
+        $this->tutup();
     }
 
     /** Sanksi yang tahap aktifnya = karyawan login. */

@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Support;
+
+use App\Enums\StatusApproval;
+use App\Enums\StatusSanksi;
+use App\Models\ApprovalSanksi;
+use App\Models\SanksiDisiplin;
+use App\Models\User;
+use App\Notifications\SanksiPerluPersetujuan;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class ProsesSanksi
+{
+    /** Setujui tahap antara (bukan final). Maju ke tahap berikut + notif. Final → pakai terbit(). */
+    public static function setujui(ApprovalSanksi $step, User $aktor, ?string $catatan = null): void
+    {
+        DB::transaction(function () use ($step, $aktor, $catatan) {
+            $sanksi = SanksiDisiplin::whereKey($step->sanksi_id)->lockForUpdate()->firstOrFail();
+            self::pastikanTahapAktif($sanksi, $step);
+            self::pastikanWewenang($step, $aktor);
+
+            $berikut = self::tahapBerikut($sanksi, $step);
+            if (! $berikut) {
+                throw new ProsesSanksiException('Tahap final (HRD): gunakan Terbitkan (butuh nomor surat).');
+            }
+
+            $step->update([
+                'status' => StatusApproval::Setuju,
+                'catatan' => $catatan,
+                'acted_at' => Carbon::now(),
+            ]);
+            $sanksi->update(['status' => StatusSanksi::Diproses]);
+            $berikut->approver->user?->notify(new SanksiPerluPersetujuan($sanksi));
+        });
+    }
+
+    protected static function tahapBerikut(SanksiDisiplin $sanksi, ApprovalSanksi $step): ?ApprovalSanksi
+    {
+        return $sanksi->approval()
+            ->where('status', StatusApproval::Menunggu)
+            ->where('urutan', '>', $step->urutan)
+            ->orderBy('urutan')
+            ->first();
+    }
+
+    protected static function pastikanTahapAktif(SanksiDisiplin $sanksi, ApprovalSanksi $step): void
+    {
+        $aktif = $sanksi->tahapAktif();
+        if (! $aktif || $aktif->id !== $step->id) {
+            throw new ProsesSanksiException('Tahap ini bukan tahap aktif.');
+        }
+    }
+
+    protected static function pastikanWewenang(ApprovalSanksi $step, User $aktor): void
+    {
+        if ($step->approver_id !== $aktor->karyawan_id) {
+            throw new ProsesSanksiException('Anda bukan approver tahap ini.');
+        }
+    }
+}
