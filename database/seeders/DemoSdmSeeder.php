@@ -28,9 +28,9 @@ class DemoSdmSeeder extends Seeder
 
         // ── Pimpinan tiap tingkat ──────────────────────────────────────────
         $direktur = $this->pimpinan($direktorat, 'Direktur', 4, 'Dr. Direktur Utama', 'DIR-0001', tetap: true);
-        $this->pimpinan($penunjang, 'Kepala Bidang Penunjang', 3, 'Kabid Penunjang', 'KBD-0001', tetap: true);
+        $kabidPenunjang = $this->pimpinan($penunjang, 'Kepala Bidang Penunjang', 3, 'Kabid Penunjang', 'KBD-0001', tetap: true);
         $this->pimpinan($keperawatan, 'Kepala Bidang Keperawatan', 3, 'Kabid Keperawatan', 'KBD-0002', tetap: true);
-        $this->pimpinan($farmasi, 'Koordinator Farmasi', 2, 'Koor Farmasi', 'KOR-0001', tetap: true);
+        $koorFarmasi = $this->pimpinan($farmasi, 'Koordinator Farmasi', 2, 'Koor Farmasi', 'KOR-0001', tetap: true);
         $this->pimpinan($igd, 'Koordinator IGD', 2, 'Koor IGD', 'KOR-0002', tetap: true);
 
         // ── Admin Sistem = Koordinator IT + akun bootstrap ─────────────────
@@ -56,6 +56,19 @@ class DemoSdmSeeder extends Seeder
             'email' => $hrdKar->email,
             'password' => Hash::make('password'),
         ])->assignRole(Role::Hrd->value);
+
+        // ── Akun login pengusul/approver disiplin (rantai [Koor→Kabid→HRD]) ──
+        // Tanpa spatie role: gate usul-disiplin/approve-disiplin lewat punyaBawahan derived.
+        $koorFarmasi->user()->create([
+            'name' => $koorFarmasi->nama_lengkap,
+            'email' => $koorFarmasi->email,
+            'password' => Hash::make('password'),
+        ]);
+        $kabidPenunjang->user()->create([
+            'name' => $kabidPenunjang->nama_lengkap,
+            'email' => $kabidPenunjang->email,
+            'password' => Hash::make('password'),
+        ]);
 
         // ── Staff PKWT (sebagian mendekati/melewati akhir kontrak) ─────────
         $unitStaff = [$farmasi, $it, $igd];
