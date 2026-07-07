@@ -1,6 +1,12 @@
 <div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
-    <div class="flex items-center justify-between gap-2">
-        <h1 class="text-xl font-bold">Usul Sanksi</h1>
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl grid place-items-center bg-brand-50 text-brand-600 shrink-0">
+            <x-icon name="gavel" :size="20" />
+        </div>
+        <div>
+            <h1 class="text-xl font-bold">Usul Sanksi</h1>
+            <p class="text-sm text-neutral-400">Ajukan sanksi disipliner untuk bawahan Anda.</p>
+        </div>
     </div>
 
     @if (session('disiplin_ok'))
@@ -70,12 +76,12 @@
                         @if (! $loop->first)
                             <svg width="11" class="text-neutral-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
                         @endif
-                        <span class="flex-1 text-center text-[.65rem] font-bold px-1 py-1.5 rounded border whitespace-nowrap
-                            @class([
-                                'bg-danger-50 border-danger-100 text-danger-700' => $done,
-                                'bg-brand-50 border-brand-500 text-brand-700 ring-1 ring-brand-500' => $next && ! $done,
-                                'bg-[var(--bg-surface)] border-[var(--border)] text-neutral-400' => ! $done && ! $next,
-                            ])">{{ $t->label() }}</span>
+                        <span @class([
+                            'flex-1 text-center text-[.65rem] font-bold px-1 py-1.5 rounded border whitespace-nowrap' => true,
+                            'bg-danger-50 border-danger-100 text-danger-700' => $done,
+                            'bg-brand-50 border-brand-500 text-brand-700 ring-1 ring-brand-500' => $next && ! $done,
+                            'bg-[var(--bg-surface)] border-[var(--border)] text-neutral-400' => ! $done && ! $next,
+                        ])>{{ $t->label() }}</span>
                     @endforeach
                 </div>
             </div>
@@ -143,28 +149,51 @@
     @endif
 
     {{-- Daftar usulan yang saya buat --}}
-    <section class="card">
-        <div class="card-header"><div class="card-title">Usulan Saya</div></div>
-        <div class="card-pad">
+    <div>
+        <div class="flex items-center justify-between mb-2.5">
+            <div class="text-sm font-semibold">Usulan Saya</div>
+            @if ($usulan->isNotEmpty())
+                <span class="text-xs text-neutral-400 tnum">{{ $usulan->count() }} usulan</span>
+            @endif
+        </div>
+        <div class="space-y-2.5">
             @forelse ($usulan as $s)
-                <div class="flex items-start justify-between gap-3 py-3 border-b border-[var(--border)] last:border-0">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="badge badge-warning">{{ $s->tingkat->label() }}</span>
-                            <span class="text-sm font-semibold truncate">{{ $s->karyawan->nama_lengkap }}</span>
+                @php
+                    $stKelas = $s->status->pending()
+                        ? 'badge-warning'
+                        : ($s->status->value === 'diterbitkan' ? 'badge-success' : 'badge-danger');
+                @endphp
+                <div class="card card-pad !p-3.5 {{ $s->status->value === 'ditolak' ? 'opacity-90' : '' }}">
+                    <div class="flex items-start justify-between gap-3 {{ $s->status->pending() && $s->approval->isNotEmpty() ? 'mb-2' : '' }}">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-warning">{{ $s->tingkat->label() }}</span>
+                                <span class="text-sm font-bold truncate">{{ $s->karyawan->nama_lengkap }}</span>
+                            </div>
+                            <div class="text-xs text-neutral-400 mt-1 truncate">{{ $s->uraian }}</div>
+                            <div class="text-[11px] text-neutral-400 mt-0.5 tnum">Kejadian {{ $s->tanggal_kejadian->format('d M Y') }}</div>
                         </div>
-                        <div class="text-xs text-neutral-400 mt-1 truncate">{{ $s->uraian }}</div>
+                        <span class="badge {{ $stKelas }} shrink-0"><span class="dot"></span>{{ $s->status->label() }}</span>
                     </div>
-                    <span class="badge shrink-0
-                        @class([
-                            'badge-neutral' => $s->status->pending(),
-                            'badge-success' => $s->status->value === 'diterbitkan',
-                            'badge-danger' => in_array($s->status->value, ['ditolak', 'dicabut'], true),
-                        ])">{{ $s->status->label() }}</span>
+                    @if ($s->status->pending() && $s->approval->isNotEmpty())
+                        <div class="flex items-center gap-1.5 pt-2 border-t border-neutral-100">
+                            @foreach ($s->approval as $a)
+                                @php
+                                    $st = $a->status->value;
+                                    $warna = $st === 'setuju' ? 'text-success-600' : ($st === 'tolak' ? 'text-danger-600' : ($loop->first || $s->approval[$loop->index - 1]->status->value === 'setuju' ? 'text-warning-600' : 'text-neutral-400'));
+                                    $bg = $st === 'setuju' ? 'bg-success-500 text-white' : ($st === 'tolak' ? 'bg-danger-500 text-white' : 'bg-neutral-200');
+                                @endphp
+                                @if (! $loop->first)<div class="flex-1 h-px bg-neutral-200"></div>@endif
+                                <div class="flex items-center gap-1 text-[11px] font-semibold {{ $warna }}">
+                                    <span class="w-4 h-4 rounded-full grid place-items-center text-[8px] {{ $bg }}">{{ $st === 'setuju' ? '✓' : ($st === 'tolak' ? '✕' : '●') }}</span>{{ ucfirst($a->peran->value) }}
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @empty
-                <div class="text-sm text-neutral-400 py-6 text-center">Belum ada usulan sanksi.</div>
+                <div class="card card-pad text-sm text-neutral-400 text-center py-6">Belum ada usulan sanksi.</div>
             @endforelse
         </div>
-    </section>
+    </div>
 </div>
