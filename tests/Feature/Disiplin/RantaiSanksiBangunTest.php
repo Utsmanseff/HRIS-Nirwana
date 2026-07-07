@@ -30,8 +30,10 @@ class RantaiSanksiBangunTest extends TestCase
         $dir = OrgUnit::create(['nama' => 'Direktorat', 'tipe' => OrgUnitTipe::Direktur->value]);
         $bidang = OrgUnit::create(['nama' => 'Penunjang', 'tipe' => OrgUnitTipe::Bidang->value, 'parent_id' => $dir->id]);
         $unit = OrgUnit::create(['nama' => 'Farmasi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $bidang->id]);
+        $direktur = Karyawan::factory()->pimpinanUnit($dir, 4)->create();
         $kabid = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        User::factory()->create(['karyawan_id' => $direktur->id])->assignRole(Role::Direktur->value);
         $hrd = Karyawan::factory()->create();
         $u = User::factory()->create(['karyawan_id' => $hrd->id]);
         $u->assignRole(Role::Hrd->value);
@@ -45,16 +47,18 @@ class RantaiSanksiBangunTest extends TestCase
         RantaiSanksi::bangunUntuk($sanksi);
 
         $baris = $sanksi->approval()->get();
-        $this->assertSame([$kabid->id, $hrd->id], $baris->pluck('approver_id')->all());
-        $this->assertSame([1, 2], $baris->pluck('urutan')->all());
+        $this->assertSame([$kabid->id, $hrd->id, $direktur->id], $baris->pluck('approver_id')->all());
+        $this->assertSame([1, 2, 3], $baris->pluck('urutan')->all());
         $this->assertTrue($baris->every(fn ($b) => $b->status === StatusApproval::Menunggu));
-        $this->assertSame(PeranApproval::Hrd, $baris->last()->peran);
+        $this->assertSame(PeranApproval::Direktur, $baris->last()->peran);
     }
 
     public function test_bangun_idempoten_ganti_baris_lama(): void
     {
         $unit = OrgUnit::create(['nama' => 'Mandiri', 'tipe' => OrgUnitTipe::Unit->value]);
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
+        $direktur = Karyawan::factory()->create();
+        User::factory()->create(['karyawan_id' => $direktur->id])->assignRole(Role::Direktur->value);
         $hrd = Karyawan::factory()->create();
         $u = User::factory()->create(['karyawan_id' => $hrd->id]);
         $u->assignRole(Role::Hrd->value);
@@ -63,7 +67,7 @@ class RantaiSanksiBangunTest extends TestCase
         RantaiSanksi::bangunUntuk($sanksi);
         RantaiSanksi::bangunUntuk($sanksi);
 
-        // koor→HRD (koor tak punya kabid induk) = 1 baris, tak dobel.
-        $this->assertSame(1, $sanksi->approval()->count());
+        // koor→HRD→Direktur (koor tak punya kabid induk) = 2 baris, tak dobel.
+        $this->assertSame(2, $sanksi->approval()->count());
     }
 }
