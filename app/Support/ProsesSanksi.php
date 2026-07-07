@@ -7,6 +7,7 @@ use App\Enums\StatusSanksi;
 use App\Models\ApprovalSanksi;
 use App\Models\SanksiDisiplin;
 use App\Models\User;
+use App\Notifications\SanksiDiterbitkan;
 use App\Notifications\SanksiDitolak;
 use App\Notifications\SanksiPerluPersetujuan;
 use Illuminate\Support\Carbon;
@@ -34,6 +35,49 @@ class ProsesSanksi
             ]);
             $sanksi->update(['status' => StatusSanksi::Diproses]);
             $berikut->approver->user?->notify(new SanksiPerluPersetujuan($sanksi));
+        });
+    }
+
+    /**
+     * Terbitkan sanksi (tahap final HRD). Butuh nomor surat manual (unik). Set tanggal + generate surat + notif karyawan.
+     */
+    public static function terbit(ApprovalSanksi $step, User $aktor, string $nomor, ?string $catatan = null): void
+    {
+        DB::transaction(function () use ($step, $aktor, $nomor, $catatan) {
+            $sanksi = SanksiDisiplin::whereKey($step->sanksi_id)->lockForUpdate()->firstOrFail();
+            self::pastikanTahapAktif($sanksi, $step);
+            self::pastikanWewenang($step, $aktor);
+
+            if (self::tahapBerikut($sanksi, $step)) {
+                throw new ProsesSanksiException('Masih ada tahap sebelum penerbitan.');
+            }
+
+            $nomor = trim($nomor);
+            if ($nomor === '') {
+                throw new ProsesSanksiException('Nomor surat wajib diisi.');
+            }
+            if (SanksiDisiplin::where('nomor_surat', $nomor)->where('id', '!=', $sanksi->id)->exists()) {
+                throw new ProsesSanksiException('Nomor surat sudah dipakai.');
+            }
+
+            $step->update([
+                'status' => StatusApproval::Setuju,
+                'catatan' => $catatan,
+                'acted_at' => Carbon::now(),
+            ]);
+
+            $terbit = Carbon::today();
+            $sanksi->update([
+                'status' => StatusSanksi::Diterbitkan,
+                'nomor_surat' => $nomor,
+                'tanggal_terbit' => $terbit,
+                'berlaku_sampai' => $terbit->copy()->addMonths(6),
+                'diterbitkan_oleh' => $aktor->id,
+            ]);
+
+            $sanksi->update(['surat_path' => SuratSanksi::generate($sanksi->fresh())]);
+
+            $sanksi->karyawan->user?->notify(new SanksiDiterbitkan($sanksi));
         });
     }
 

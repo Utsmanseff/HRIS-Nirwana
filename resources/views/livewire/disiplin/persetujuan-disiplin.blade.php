@@ -120,9 +120,17 @@
                             <textarea wire:model="catatan" class="textarea" rows="2" placeholder="Catatan…"></textarea>
                             @error('catatan') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
                         </div>
-                        @unless ($final)
+                        @if ($final)
+                            <div>
+                                <label class="field-label">Nomor Surat <span class="text-danger-500">*</span></label>
+                                <input type="text" wire:model="nomorSurat" class="input tnum" placeholder="mis. 01.246/HRD/RSUN/VII/2026">
+                                <div class="field-hint">Nomor manual sesuai penomoran RSU. Setelah terbit, surat PDF dibuat &amp; karyawan dinotifikasi.</div>
+                                @error('nomorSurat') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
+                            </div>
+                            <button class="btn btn-primary w-full" wire:click="terbitkan">Terbitkan &amp; Buat Surat</button>
+                        @else
                             <button class="btn btn-primary w-full" wire:click="setujui">Setujui &amp; Teruskan</button>
-                        @endunless
+                        @endif
                         <button class="btn btn-secondary text-danger-600 w-full" wire:click="tolak">Tolak Usulan</button>
                     @endif
                 </div>

@@ -110,6 +110,28 @@ class PersetujuanDisiplin extends Component
         $this->tutup();
     }
 
+    public function terbitkan(): void
+    {
+        $this->validate(['nomorSurat' => ['required', 'string', 'max:100']], [
+            'nomorSurat.required' => 'Nomor surat wajib diisi.',
+        ]);
+        $step = $this->stepAktifUntukSaya();
+        if (! $step) {
+            $this->tutup();
+
+            return;
+        }
+        try {
+            ProsesSanksi::terbit($step, auth()->user(), $this->nomorSurat, $this->catatan ?: null);
+            session()->flash('disiplin_ok', 'Sanksi diterbitkan, surat dibuat, karyawan diberi tahu.');
+        } catch (ProsesSanksiException $e) {
+            $this->addError('nomorSurat', $e->getMessage());
+
+            return;
+        }
+        $this->tutup();
+    }
+
     /** Sanksi yang tahap aktifnya = karyawan login. */
     protected function perluAksi(): Collection
     {
