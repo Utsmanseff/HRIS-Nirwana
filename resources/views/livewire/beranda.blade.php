@@ -54,6 +54,15 @@
         </a>
     @endif
 
+    {{-- Kartu disiplin org-wide (HRD) --}}
+    @if(! empty($bisaKelolaDisiplin))
+        <a href="{{ route('disiplin.laporan') }}" class="card card-pad block hover:shadow-md transition">
+            <div class="field-label text-warning-700">Usulan Sanksi</div>
+            <div class="text-2xl font-bold tnum">{{ $disiplinPending }}</div>
+            <div class="text-xs text-neutral-500 mt-1">Menunggu · {{ $disiplinDiterbitkan }} diterbitkan · lihat laporan</div>
+        </a>
+    @endif
+
     {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}
     <div>
         <div class="text-[13px] font-bold text-neutral-700 mb-3">Menu</div>

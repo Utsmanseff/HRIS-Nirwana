@@ -51,6 +51,13 @@ class Beranda extends Component
             $data['cutiPending'] = RekapCuti::jumlahPendingOrgWide();
         }
 
+        // Kartu disiplin org-wide untuk HRD.
+        $data['bisaKelolaDisiplin'] = $user->can('kelola-disiplin');
+        if ($data['bisaKelolaDisiplin']) {
+            $data['disiplinPending'] = \App\Support\RekapDisiplin::jumlahPendingOrgWide();
+            $data['disiplinDiterbitkan'] = \App\Support\RekapDisiplin::jumlahDiterbitkanOrgWide();
+        }
+
         return view('livewire.beranda', $data);
     }
 }
