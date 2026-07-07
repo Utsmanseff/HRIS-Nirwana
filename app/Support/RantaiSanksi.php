@@ -5,8 +5,12 @@ namespace App\Support;
 use App\Enums\JabatanLevel;
 use App\Enums\PeranApproval;
 use App\Enums\Role;
+use App\Enums\StatusApproval;
+use App\Models\ApprovalSanksi;
 use App\Models\Karyawan;
+use App\Models\SanksiDisiplin;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class RantaiSanksi
 {
@@ -53,6 +57,25 @@ class RantaiSanksi
         }
 
         return self::beriUrutan($steps);
+    }
+
+    /** Tulis rantai approval untuk sebuah sanksi (mengganti baris lama bila ada). */
+    public static function bangunUntuk(SanksiDisiplin $sanksi): void
+    {
+        $steps = self::susun($sanksi->pengusul);
+
+        DB::transaction(function () use ($sanksi, $steps) {
+            ApprovalSanksi::where('sanksi_id', $sanksi->id)->delete();
+            foreach ($steps as $s) {
+                ApprovalSanksi::create([
+                    'sanksi_id' => $sanksi->id,
+                    'urutan' => $s['urutan'],
+                    'approver_id' => $s['approver']->id,
+                    'peran' => $s['peran'],
+                    'status' => StatusApproval::Menunggu,
+                ]);
+            }
+        });
     }
 
     /** Karyawan (aktif) pemegang sebuah role via akun user. HRD dijamin 1 orang. */
