@@ -57,6 +57,7 @@
     </table>
 </header>
 <footer>Dokumen resmi {{ config('instansi.nama_resmi') }}</footer>
+@php $tgl = fn ($d) => $d ? $d->locale('id')->translatedFormat('j F Y') : ''; @endphp
 
 {{-- ===== HALAMAN 1: Surat Peringatan/Teguran (ttd Direktur) ===== --}}
 <h1>Surat {{ $sanksi->tingkat->jenis() === 'sp' ? 'Peringatan' : 'Teguran' }} — {{ $sanksi->tingkat->label() }}</h1>
@@ -72,12 +73,12 @@
     <tr><td class="k">Unit</td><td class="s">:</td><td>{{ $sanksi->karyawan->orgUnit?->nama ?? '-' }}</td></tr>
 </table>
 
-<p><b>Perihal pelanggaran</b> (kejadian {{ $sanksi->tanggal_kejadian->locale('id')->translatedFormat('j F Y') }}):</p>
+<p><b>Perihal pelanggaran</b> (kejadian {{ $tgl($sanksi->tanggal_kejadian) }}):</p>
 <p>{{ $sanksi->uraian }}</p>
 
 <p>Surat ini berlaku selama <b>6 (enam) bulan</b>, terhitung sejak
-{{ optional($sanksi->tanggal_terbit)->locale('id')->translatedFormat('j F Y') }} sampai
-{{ optional($sanksi->berlaku_sampai)->locale('id')->translatedFormat('j F Y') }}. Karyawan diharapkan
+{{ $tgl($sanksi->tanggal_terbit) }} sampai
+{{ $tgl($sanksi->berlaku_sampai) }}. Karyawan diharapkan
 memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi tingkat berikutnya.</p>
 
 @if ($ttd['penerbit'])
@@ -86,7 +87,7 @@ memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi 
             <td>
                 <div>Mengetahui,</div>
                 <div class="role">{{ $ttd['penerbit']['jabatan'] ?? 'Direktur' }}</div>
-                <div>{{ optional($ttd['penerbit']['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
+                <div>{{ $tgl($ttd['penerbit']['tanggal']) }}</div>
                 <div class="space"></div>
                 <div class="nm">{{ $ttd['penerbit']['nama'] }}</div>
             </td>
@@ -111,7 +112,7 @@ memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi 
                 <td style="width: {{ intdiv(100, max(count($ttd['pengusulChain']), 1)) }}%">
                     <div>{{ $loop->first ? 'Hormat kami,' : 'Mengetahui,' }}</div>
                     <div class="role">{{ $p['jabatan'] ?? $p['peran'] }}</div>
-                    <div>{{ optional($p['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
+                    <div>{{ $tgl($p['tanggal']) }}</div>
                     <div class="space"></div>
                     <div class="nm">{{ $p['nama'] }}</div>
                 </td>
