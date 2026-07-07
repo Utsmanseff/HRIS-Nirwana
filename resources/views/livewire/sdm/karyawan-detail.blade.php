@@ -34,7 +34,7 @@
             </div>
         </div>
         <div class="px-4 sm:px-6 flex gap-1 border-t border-neutral-100 overflow-x-auto whitespace-nowrap">
-            @foreach (['profil' => 'Profil', 'kontrak' => 'Kontrak & Pengingat', 'dokumen' => 'Dokumen', 'akun' => 'Akun & Role'] as $id => $labelTab)
+            @foreach (['profil' => 'Profil', 'kontrak' => 'Kontrak & Pengingat', 'dokumen' => 'Dokumen', 'sanksi' => 'Sanksi', 'akun' => 'Akun & Role'] as $id => $labelTab)
                 <button wire:click="$set('tab', '{{ $id }}')" class="tab-btn shrink-0 {{ $tab === $id ? 'on' : '' }}">{{ $labelTab }}</button>
             @endforeach
         </div>
@@ -256,6 +256,32 @@
                     </div>
                 @endif
             </div>
+        </div>
+    @endif
+
+    {{-- TAB: Sanksi --}}
+    @if ($tab === 'sanksi')
+        <div class="card card-pad space-y-3">
+            <div class="card-title">Riwayat Sanksi</div>
+            @forelse ($karyawan->sanksiDisiplin as $s)
+                <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-100 px-3 py-2.5">
+                    <div>
+                        <div class="font-semibold">{{ $s->tingkat->label() }}
+                            <span class="badge badge-neutral ml-1">{{ $s->status->label() }}</span>
+                        </div>
+                        <div class="text-xs text-neutral-400">
+                            Diusulkan {{ $s->pengusul->nama_lengkap }}
+                            @if ($s->nomor_surat) · <span class="font-mono">{{ $s->nomor_surat }}</span> @endif
+                        </div>
+                        <div class="text-sm text-neutral-500 mt-0.5">{{ $s->uraian }}</div>
+                    </div>
+                    @if ($s->status === \App\Enums\StatusSanksi::Diterbitkan && $s->surat_path)
+                        <a href="{{ route('disiplin.surat', $s) }}" target="_blank" class="btn btn-secondary btn-sm">Lihat Surat</a>
+                    @endif
+                </div>
+            @empty
+                <p class="text-sm text-neutral-400">Belum ada catatan sanksi.</p>
+            @endforelse
         </div>
     @endif
 

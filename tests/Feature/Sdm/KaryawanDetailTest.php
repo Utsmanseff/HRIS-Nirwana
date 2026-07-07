@@ -4,9 +4,11 @@ namespace Tests\Feature\Sdm;
 
 use App\Enums\Permission;
 use App\Enums\Role;
+use App\Enums\TingkatSanksi;
 use App\Models\Dokumen;
 use App\Models\Karyawan;
 use App\Models\Kontrak;
+use App\Models\SanksiDisiplin;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,6 +86,18 @@ class KaryawanDetailTest extends TestCase
             ->assertOk()
             ->assertSee('Ijazah')
             ->assertSee('1.2 MB');
+    }
+
+    public function test_tab_sanksi_menampilkan_riwayat(): void
+    {
+        $kar = Karyawan::factory()->create();
+        $sanksi = SanksiDisiplin::factory()->diterbitkan(TingkatSanksi::Sp1)->create(['karyawan_id' => $kar->id]);
+
+        $this->actingAs($this->userSdm())->get('/sdm/karyawan/'.$kar->id.'?tab=sanksi')
+            ->assertOk()
+            ->assertSee('Riwayat Sanksi')
+            ->assertSee('SP 1')
+            ->assertSee($sanksi->nomor_surat);
     }
 
     public function test_tab_akun_menampilkan_role_bila_tertaut(): void
