@@ -4,6 +4,7 @@ namespace Tests\Feature\Disiplin;
 
 use App\Enums\OrgUnitTipe;
 use App\Enums\Role;
+use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
 use App\Livewire\Disiplin\UsulDisiplin;
 use App\Models\Karyawan;
@@ -138,5 +139,75 @@ class UsulDisiplinTest extends TestCase
         Livewire::test(UsulDisiplin::class)
             ->call('pilihKaryawan', $h['staff']->id)
             ->assertSet('tingkat', '1');
+    }
+
+    public function test_simpan_membuat_usulan_diajukan_rantai_dan_notif_approver_pertama(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+        $kabidUser = User::factory()->create(['karyawan_id' => $h['kabid']->id]);
+        $staff = $h['staff'];
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $staff->id)
+            ->set('uraian', 'Mangkir tiga hari tanpa kabar.')
+            ->set('tanggalKejadian', now()->subDay()->toDateString())
+            ->set('tingkat', '3')
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('disiplin'));
+
+        $sanksi = \App\Models\SanksiDisiplin::firstOrFail();
+        $this->assertSame($staff->id, $sanksi->karyawan_id);
+        $this->assertSame($h['koor']->id, $sanksi->pengusul_id);
+        $this->assertSame(StatusSanksi::Diajukan, $sanksi->status);
+        $this->assertSame(TingkatSanksi::Teguran3, $sanksi->tingkat);
+
+        $this->assertSame([$h['kabid']->id, $h['hrdKar']->id], $sanksi->approval()->pluck('approver_id')->all());
+        \Illuminate\Support\Facades\Notification::assertSentTo($kabidUser, \App\Notifications\SanksiPerluPersetujuan::class);
+    }
+
+    public function test_simpan_validasi_wajib(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $h['staff']->id)
+            ->set('uraian', '')
+            ->set('tanggalKejadian', '')
+            ->call('simpan')
+            ->assertHasErrors(['uraian', 'tanggalKejadian']);
+    }
+
+    public function test_simpan_tolak_tanggal_masa_depan(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $h['staff']->id)
+            ->set('uraian', 'Uji tanggal.')
+            ->set('tanggalKejadian', now()->addWeek()->toDateString())
+            ->set('tingkat', '1')
+            ->call('simpan')
+            ->assertHasErrors('tanggalKejadian');
+    }
+
+    public function test_simpan_tolak_karyawan_bukan_bawahan(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+        $unitLain = OrgUnit::create(['nama' => 'Gizi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $h['bidang']->id]);
+        $luar = Karyawan::factory()->staffUnit($unitLain)->create();
+
+        Livewire::test(UsulDisiplin::class)
+            ->set('karyawanId', $luar->id)
+            ->set('uraian', 'Coba curang.')
+            ->set('tanggalKejadian', now()->subDay()->toDateString())
+            ->set('tingkat', '1')
+            ->call('simpan')
+            ->assertHasErrors('karyawanId');
     }
 }

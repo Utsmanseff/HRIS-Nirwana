@@ -3,10 +3,15 @@
 namespace App\Livewire\Disiplin;
 
 use App\Enums\StatusKaryawan;
+use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
+use App\Models\SanksiDisiplin;
+use App\Notifications\SanksiPerluPersetujuan;
 use App\Support\EskalasiSanksi;
+use App\Support\RantaiSanksi;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -65,6 +70,43 @@ class UsulDisiplin extends Component
     public function batalKaryawan(): void
     {
         $this->reset(['karyawanId', 'cari', 'tingkat']);
+    }
+
+    public function simpan()
+    {
+        $this->validate([
+            'karyawanId' => ['required', 'integer'],
+            'uraian' => ['required', 'string', 'max:2000'],
+            'tanggalKejadian' => ['required', 'date', 'before_or_equal:today'],
+            'tingkat' => ['required', 'integer', 'in:1,2,3,4,5,6'],
+        ]);
+
+        if (! $this->bawahanQuery()->whereKey($this->karyawanId)->exists()) {
+            $this->addError('karyawanId', 'Karyawan bukan bawahan Anda.');
+
+            return null;
+        }
+
+        $pengusul = $this->pengusul();
+        $tingkat = TingkatSanksi::from((int) $this->tingkat);
+
+        DB::transaction(function () use ($pengusul, $tingkat) {
+            $sanksi = SanksiDisiplin::create([
+                'karyawan_id' => $this->karyawanId,
+                'pengusul_id' => $pengusul->id,
+                'tingkat' => $tingkat,
+                'uraian' => $this->uraian,
+                'tanggal_kejadian' => $this->tanggalKejadian,
+                'status' => StatusSanksi::Diajukan,
+            ]);
+
+            RantaiSanksi::bangunUntuk($sanksi);
+            $sanksi->tahapAktif()?->approver->user?->notify(new SanksiPerluPersetujuan($sanksi));
+        });
+
+        session()->flash('disiplin_ok', 'Usulan sanksi terkirim.');
+
+        return $this->redirectRoute('disiplin');
     }
 
     public function render()
