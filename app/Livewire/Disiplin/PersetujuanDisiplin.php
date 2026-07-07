@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Disiplin;
 
+use App\Enums\PeranApproval;
 use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusSanksi;
@@ -33,6 +34,8 @@ class PersetujuanDisiplin extends Component
 
     public string $nomorSurat = '';
 
+    public ?int $tingkatBaru = null;
+
     public function mount(): void
     {
         abort_unless(Gate::allows('approve-disiplin'), 403);
@@ -43,6 +46,7 @@ class PersetujuanDisiplin extends Component
         $this->tinjauId = $id;
         $this->catatan = '';
         $this->nomorSurat = '';
+        $this->tingkatBaru = SanksiDisiplin::find($id)?->tingkat?->value;
         $this->resetErrorBag();
     }
 
@@ -51,6 +55,7 @@ class PersetujuanDisiplin extends Component
         $this->tinjauId = null;
         $this->catatan = '';
         $this->nomorSurat = '';
+        $this->tingkatBaru = null;
     }
 
     protected function bolehSemua(): bool
@@ -77,11 +82,22 @@ class PersetujuanDisiplin extends Component
 
             return;
         }
+        if ($step->peran === PeranApproval::Hrd) {
+            $this->validate(['nomorSurat' => ['required', 'string', 'max:100']], [
+                'nomorSurat.required' => 'Nomor surat wajib diisi di tahap HRD.',
+            ]);
+        }
         try {
-            ProsesSanksi::setujui($step, auth()->user(), $this->catatan ?: null);
+            ProsesSanksi::setujui(
+                $step,
+                auth()->user(),
+                $this->catatan ?: null,
+                $this->tingkatBaru,
+                $step->peran === PeranApproval::Hrd ? $this->nomorSurat : null,
+            );
             session()->flash('disiplin_ok', 'Usulan disetujui, diteruskan ke tahap berikut.');
         } catch (ProsesSanksiException $e) {
-            $this->addError('catatan', $e->getMessage());
+            $this->addError($step->peran === PeranApproval::Hrd ? 'nomorSurat' : 'catatan', $e->getMessage());
 
             return;
         }
@@ -112,17 +128,20 @@ class PersetujuanDisiplin extends Component
 
     public function terbitkan(): void
     {
-        $this->validate(['nomorSurat' => ['required', 'string', 'max:100']], [
-            'nomorSurat.required' => 'Nomor surat wajib diisi.',
-        ]);
         $step = $this->stepAktifUntukSaya();
         if (! $step) {
             $this->tutup();
 
             return;
         }
+        $sanksi = SanksiDisiplin::find($this->tinjauId);
+        if (trim((string) $sanksi?->nomor_surat) === '') {
+            $this->validate(['nomorSurat' => ['required', 'string', 'max:100']], [
+                'nomorSurat.required' => 'Nomor surat wajib diisi.',
+            ]);
+        }
         try {
-            ProsesSanksi::terbit($step, auth()->user(), $this->nomorSurat, $this->catatan ?: null);
+            ProsesSanksi::terbit($step, auth()->user(), $this->nomorSurat ?: null, $this->catatan ?: null, $this->tingkatBaru);
             session()->flash('disiplin_ok', 'Sanksi diterbitkan, surat dibuat, karyawan diberi tahu.');
         } catch (ProsesSanksiException $e) {
             $this->addError('nomorSurat', $e->getMessage());

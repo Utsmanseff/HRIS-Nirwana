@@ -117,20 +117,40 @@
                         <a href="{{ route('disiplin.surat', $tinjauan) }}" target="_blank" class="btn btn-secondary w-full">Lihat Surat (PDF)</a>
                     @endif
 
-                    @php $final = $tahapAktif && ! $tinjauan->approval->where('urutan', '>', $tahapAktif->urutan)->where('status', 'menunggu')->count(); @endphp
+                    @php
+                        $final = $tahapAktif && ! $tinjauan->approval->where('urutan', '>', $tahapAktif->urutan)->where('status', 'menunggu')->count();
+                        $tahapHrd = $tahapAktif && $tahapAktif->peran->value === 'hrd';
+                        $nomorSudahAda = trim((string) $tinjauan->nomor_surat) !== '';
+                    @endphp
                     @if ($tahapAktif && $tahapAktif->approver_id === auth()->user()->karyawan_id)
+                        <div>
+                            <label class="field-label">Tingkat Sanksi</label>
+                            <select wire:model="tingkatBaru" class="select">
+                                @foreach (\App\Enums\TingkatSanksi::cases() as $t)
+                                    <option value="{{ $t->value }}">{{ $t->label() }}</option>
+                                @endforeach
+                            </select>
+                            <div class="field-hint">Bisa ditinjau/dinaikkan sebelum menyetujui.</div>
+                        </div>
                         <div>
                             <label class="field-label">Catatan <span class="text-neutral-400 font-normal">(wajib bila menolak)</span></label>
                             <textarea wire:model="catatan" class="textarea" rows="2" placeholder="Catatan…"></textarea>
                             @error('catatan') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
                         </div>
-                        @if ($final)
+
+                        @if ($tahapHrd || ($final && ! $nomorSudahAda))
                             <div>
                                 <label class="field-label">Nomor Surat <span class="text-danger-500">*</span></label>
                                 <input type="text" wire:model="nomorSurat" class="input tnum" placeholder="mis. 01.246/HRD/RSUN/VII/2026">
-                                <div class="field-hint">Nomor manual sesuai penomoran RSU. Setelah terbit, surat PDF dibuat &amp; karyawan dinotifikasi.</div>
+                                <div class="field-hint">Nomor manual sesuai penomoran RSU.</div>
                                 @error('nomorSurat') <div class="text-xs text-danger-600 mt-1">{{ $message }}</div> @enderror
                             </div>
+                        @endif
+
+                        @if ($final)
+                            @if ($nomorSudahAda)
+                                <div class="text-sm text-neutral-500">Nomor surat: <span class="tnum font-semibold">{{ $tinjauan->nomor_surat }}</span></div>
+                            @endif
                             <button class="btn btn-primary w-full" wire:click="terbitkan">Terbitkan &amp; Buat Surat</button>
                         @else
                             <button class="btn btn-primary w-full" wire:click="setujui">Setujui &amp; Teruskan</button>

@@ -33,15 +33,18 @@ class PersetujuanDisiplinTest extends TestCase
         $bidang = OrgUnit::create(['nama' => 'Penunjang', 'tipe' => OrgUnitTipe::Bidang->value, 'parent_id' => $dir->id]);
         $unit = OrgUnit::create(['nama' => 'Farmasi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $bidang->id]);
 
+        $direktur = Karyawan::factory()->pimpinanUnit($dir, 4)->create();
         $kabid = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
         $staff = Karyawan::factory()->staffUnit($unit)->create();
+        $direkturUser = User::factory()->create(['karyawan_id' => $direktur->id]);
+        $direkturUser->assignRole(Role::Direktur->value);
 
         $hrdKar = Karyawan::factory()->create();
         $hrdUser = User::factory()->create(['karyawan_id' => $hrdKar->id]);
         $hrdUser->assignRole(Role::Hrd->value);
 
-        return compact('dir', 'bidang', 'unit', 'kabid', 'koor', 'staff', 'hrdKar', 'hrdUser');
+        return compact('dir', 'bidang', 'unit', 'direktur', 'direkturUser', 'kabid', 'koor', 'staff', 'hrdKar', 'hrdUser');
     }
 
     protected function loginKaryawan(Karyawan $kar): User
@@ -105,5 +108,57 @@ class PersetujuanDisiplinTest extends TestCase
         Livewire::test(PersetujuanDisiplin::class)
             ->set('tab', 'semua')
             ->assertSee('Mangkir tanpa kabar.');
+    }
+
+    public function test_hrd_setujui_dengan_nomor_maju_ke_direktur(): void
+    {
+        $h = $this->hierarki();
+        $sanksi = $this->usulan($h);
+        // Kabid acc dulu (via service) agar tahap aktif = HRD.
+        \App\Support\ProsesSanksi::setujui($sanksi->tahapAktif(), User::factory()->create(['karyawan_id' => $h['kabid']->id]));
+        $this->actingAs($h['hrdUser']);
+
+        Livewire::test(PersetujuanDisiplin::class)
+            ->call('tinjau', $sanksi->id)
+            ->set('nomorSurat', '01.500/HRD/RSUN/VII/2026')
+            ->call('setujui')
+            ->assertHasNoErrors();
+
+        $sanksi->refresh();
+        $this->assertSame('01.500/HRD/RSUN/VII/2026', $sanksi->nomor_surat);
+        $this->assertSame($h['direktur']->id, $sanksi->tahapAktif()->approver_id);
+    }
+
+    public function test_hrd_setujui_tanpa_nomor_error(): void
+    {
+        $h = $this->hierarki();
+        $sanksi = $this->usulan($h);
+        \App\Support\ProsesSanksi::setujui($sanksi->tahapAktif(), User::factory()->create(['karyawan_id' => $h['kabid']->id]));
+        $this->actingAs($h['hrdUser']);
+
+        Livewire::test(PersetujuanDisiplin::class)
+            ->call('tinjau', $sanksi->id)
+            ->call('setujui')
+            ->assertHasErrors('nomorSurat');
+    }
+
+    public function test_direktur_override_tingkat_dan_terbit(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $h = $this->hierarki();
+        $sanksi = $this->usulan($h);
+        \App\Support\ProsesSanksi::setujui($sanksi->tahapAktif(), User::factory()->create(['karyawan_id' => $h['kabid']->id]));
+        \App\Support\ProsesSanksi::setujui($sanksi->fresh()->tahapAktif(), $h['hrdUser'], null, null, '01.600/HRD/RSUN/VII/2026');
+        $this->actingAs($h['direkturUser']);
+
+        Livewire::test(PersetujuanDisiplin::class)
+            ->call('tinjau', $sanksi->id)
+            ->set('tingkatBaru', TingkatSanksi::Sp1->value)
+            ->call('terbitkan')
+            ->assertHasNoErrors();
+
+        $sanksi->refresh();
+        $this->assertSame(StatusSanksi::Diterbitkan, $sanksi->status);
+        $this->assertSame(TingkatSanksi::Sp1, $sanksi->tingkat);
     }
 }
