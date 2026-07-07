@@ -17,10 +17,10 @@ class NavMenuDisiplinTest extends TestCase
         $this->assertSame('gavel', $item['icon']);
     }
 
-    public function test_href_placeholder_saat_route_belum_terdaftar(): void
+    public function test_href_mengarah_ke_disciplin(): void
     {
         $item = collect(NavMenu::semua())->firstWhere('id', 'disiplin');
 
-        $this->assertSame('#', NavMenu::href($item));
+        $this->assertStringContainsString('/disiplin', NavMenu::href($item));
     }
 }
