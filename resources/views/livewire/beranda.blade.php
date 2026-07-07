@@ -36,6 +36,15 @@
         @endif
     @endif
 
+    {{-- Kartu sanksi aktif (karyawan) — muncul saat ada yang aktif --}}
+    @if (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
+        <a href="{{ route('disiplin.saya') }}" class="card card-pad block hover:shadow-md transition" style="border-color:var(--warning-200)">
+            <div class="field-label text-warning-700">Sanksi Aktif</div>
+            <div class="text-2xl font-bold tnum text-warning-700">{{ $sanksiAktif }}</div>
+            <div class="text-xs text-neutral-500 mt-1">Lihat detail sanksi saya</div>
+        </a>
+    @endif
+
     {{-- Kartu pending cuti org-wide (HRD) --}}
     @if(! empty($bisaKelolaCuti))
         <a href="{{ route('cuti.laporan') }}" class="card card-pad block hover:shadow-md transition">

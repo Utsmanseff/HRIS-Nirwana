@@ -42,6 +42,9 @@ class Beranda extends Component
         $kar = $user->karyawan()->first();
         $data['saldo'] = $kar ? SaldoCuti::untuk($kar) : null;
 
+        // Kartu sanksi aktif untuk karyawan (muncul saat ada yang aktif).
+        $data['sanksiAktif'] = $kar ? \App\Support\EskalasiSanksi::sanksiAktif($kar)->count() : 0;
+
         // Kartu pending cuti org-wide untuk HRD.
         $data['bisaKelolaCuti'] = $user->can('kelola-cuti');
         if ($data['bisaKelolaCuti']) {
