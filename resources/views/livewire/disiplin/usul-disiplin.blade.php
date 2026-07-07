@@ -9,6 +9,39 @@
         </div>
     @endif
 
+    {{-- Form usul --}}
+    <section class="card rise">
+        <div class="card-header"><div class="card-title">Karyawan</div></div>
+        <div class="card-pad">
+            @if ($karyawanTerpilih)
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-3">
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold truncate">{{ $karyawanTerpilih->nama_lengkap }}</div>
+                        <div class="text-xs text-neutral-400 tnum">{{ $karyawanTerpilih->nip }}</div>
+                    </div>
+                    <button type="button" wire:click="batalKaryawan" class="text-xs font-semibold text-brand-600">Ganti</button>
+                </div>
+            @else
+                <label class="field-label">Cari bawahan (nama / NIP)</label>
+                <input type="text" wire:model.live.debounce.300ms="cari" class="input" placeholder="Ketik nama atau NIP…" autocomplete="off">
+                @if ($hasilCari->isNotEmpty())
+                    <div class="mt-2 rounded-lg border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden">
+                        @foreach ($hasilCari as $b)
+                            <button type="button" wire:click="pilihKaryawan({{ $b->id }})"
+                                class="w-full text-left px-3 py-2.5 hover:bg-brand-50 transition flex items-center justify-between gap-2">
+                                <span class="text-sm font-medium truncate">{{ $b->nama_lengkap }}</span>
+                                <span class="text-xs text-neutral-400 tnum shrink-0">{{ $b->nip }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                @elseif (trim($cari) !== '')
+                    <div class="text-xs text-neutral-400 mt-2">Tak ada bawahan cocok.</div>
+                @endif
+            @endif
+            @error('karyawanId') <div class="text-danger-600 text-xs mt-2">{{ $message }}</div> @enderror
+        </div>
+    </section>
+
     {{-- Daftar usulan yang saya buat --}}
     <section class="card">
         <div class="card-header"><div class="card-title">Usulan Saya</div></div>

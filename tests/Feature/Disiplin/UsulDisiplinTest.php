@@ -73,4 +73,45 @@ class UsulDisiplinTest extends TestCase
 
         Livewire::test(UsulDisiplin::class)->assertForbidden();
     }
+
+    public function test_cari_hanya_menemukan_bawahan_dalam_unit(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+
+        $unitLain = OrgUnit::create(['nama' => 'Gizi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $h['bidang']->id]);
+        $luar = Karyawan::factory()->staffUnit($unitLain)->create(['nama_lengkap' => 'Orang Luar']);
+        $staff = $h['staff'];
+        $staff->update(['nama_lengkap' => 'Budi Bawahan']);
+
+        Livewire::test(UsulDisiplin::class)
+            ->set('cari', 'Budi')
+            ->assertSee('Budi Bawahan')
+            ->set('cari', 'Orang Luar')
+            ->assertDontSee('Orang Luar');
+    }
+
+    public function test_pilih_bawahan_set_karyawan_terpilih(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+        $staff = $h['staff'];
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $staff->id)
+            ->assertSet('karyawanId', $staff->id)
+            ->assertSet('cari', '');
+    }
+
+    public function test_pilih_non_bawahan_diabaikan(): void
+    {
+        $h = $this->hierarki();
+        $this->loginKaryawan($h['koor']);
+        $unitLain = OrgUnit::create(['nama' => 'Gizi', 'tipe' => OrgUnitTipe::Unit->value, 'parent_id' => $h['bidang']->id]);
+        $luar = Karyawan::factory()->staffUnit($unitLain)->create();
+
+        Livewire::test(UsulDisiplin::class)
+            ->call('pilihKaryawan', $luar->id)
+            ->assertSet('karyawanId', null);
+    }
 }
