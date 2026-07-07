@@ -27,6 +27,7 @@ class NavMenu
             ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => null,             'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
             ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
             ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => 'disiplin',       'can' => 'usul-disiplin', 'group' => 'Operasional'],
+            ['id' => 'disiplin-persetujuan', 'label' => 'Persetujuan Sanksi', 'icon' => 'check-circle', 'route' => 'disiplin.persetujuan', 'can' => 'approve-disiplin', 'group' => 'Operasional'],
             ['id' => 'karyawan', 'label' => 'Karyawan',       'icon' => 'users',    'route' => 'sdm.karyawan',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],
