@@ -15,45 +15,56 @@ use Illuminate\Support\Facades\DB;
 class RantaiSanksi
 {
     /**
-     * Susun rantai approver sanksi dari PENGUSUL naik ke atas, HRD terakhir (yang terbit).
-     * Direktur tak pernah jadi approver. HRD pengusul → self (terbit langsung).
+     * Susun rantai approver dari PENGUSUL naik: ...→HRD→Direktur (final).
+     * Direktur/HRD pengusul → rantai pendek (Direktur self-terbit; HRD→[Direktur]).
      *
      * @return Collection<int, array{urutan:int, approver:Karyawan, peran:PeranApproval}>
      */
     public static function susun(Karyawan $pengusul): Collection
     {
-        // HRD buat-langsung → dirinya sendiri tahap final.
-        if ($pengusul->user?->hasRole(Role::Hrd->value)) {
+        $lvl = $pengusul->jabatan?->level?->value ?? 0;
+
+        // Direktur buat-langsung → dirinya sendiri tahap final (terbit langsung).
+        if ($lvl >= JabatanLevel::Direktur->value) {
             return self::beriUrutan(collect([
-                ['approver' => $pengusul, 'peran' => PeranApproval::Hrd],
+                ['approver' => $pengusul, 'peran' => PeranApproval::Direktur],
             ]));
         }
 
         $steps = collect();
 
-        // Pengusul di bawah Kabid (koordinator) → naik sampai dapat Kabid (inklusif).
-        if (($pengusul->jabatan?->level?->value ?? 0) < JabatanLevel::Kabid->value) {
-            $current = $pengusul->atasanDerived();
-            while ($current) {
-                $lvl = $current->jabatan?->level?->value ?? 0;
-                if ($lvl >= JabatanLevel::Direktur->value) {
-                    break; // Direktur tak jadi approver
+        // HRD buat-langsung → tanpa approver unit; langsung ke Direktur.
+        if (! $pengusul->user?->hasRole(Role::Hrd->value)) {
+            // Pengusul di bawah Kabid → naik sampai Kabid (inklusif).
+            if ($lvl < JabatanLevel::Kabid->value) {
+                $current = $pengusul->atasanDerived();
+                while ($current) {
+                    $clvl = $current->jabatan?->level?->value ?? 0;
+                    if ($clvl >= JabatanLevel::Direktur->value) {
+                        break; // Direktur tak jadi approver via jalur unit
+                    }
+                    $steps->push([
+                        'approver' => $current,
+                        'peran' => $clvl >= JabatanLevel::Kabid->value ? PeranApproval::Kabid : PeranApproval::Koordinator,
+                    ]);
+                    if ($clvl >= JabatanLevel::Kabid->value) {
+                        break;
+                    }
+                    $current = $current->atasanDerived();
                 }
-                $steps->push([
-                    'approver' => $current,
-                    'peran' => $lvl >= JabatanLevel::Kabid->value ? PeranApproval::Kabid : PeranApproval::Koordinator,
-                ]);
-                if ($lvl >= JabatanLevel::Kabid->value) {
-                    break;
-                }
-                $current = $current->atasanDerived();
+            }
+
+            // Append HRD (antara).
+            $hrd = self::pemegangRole(Role::Hrd);
+            if ($hrd && ! $steps->contains(fn ($s) => $s['approver']->id === $hrd->id)) {
+                $steps->push(['approver' => $hrd, 'peran' => PeranApproval::Hrd]);
             }
         }
 
-        // Append HRD final.
-        $hrd = self::pemegangRole(Role::Hrd);
-        if ($hrd && ! $steps->contains(fn ($s) => $s['approver']->id === $hrd->id)) {
-            $steps->push(['approver' => $hrd, 'peran' => PeranApproval::Hrd]);
+        // Append Direktur final.
+        $direktur = self::pemegangRole(Role::Direktur);
+        if ($direktur && ! $steps->contains(fn ($s) => $s['approver']->id === $direktur->id)) {
+            $steps->push(['approver' => $direktur, 'peran' => PeranApproval::Direktur]);
         }
 
         return self::beriUrutan($steps);
