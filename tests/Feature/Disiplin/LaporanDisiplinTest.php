@@ -52,4 +52,25 @@ class LaporanDisiplinTest extends TestCase
 
         Livewire::actingAs($user)->test(LaporanDisiplin::class)->assertForbidden();
     }
+
+    public function test_ekspor_xlsx(): void
+    {
+        $user = $this->hrd();
+        Karyawan::factory()->has(SanksiDisiplin::factory()->count(1), 'sanksiDisiplin')->create();
+
+        $this->actingAs($user)
+            ->get(route('disiplin.laporan.sanksi', ['format' => 'xlsx']))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    public function test_ekspor_pdf(): void
+    {
+        $user = $this->hrd();
+        Karyawan::factory()->has(SanksiDisiplin::factory()->count(1), 'sanksiDisiplin')->create();
+
+        $res = $this->actingAs($user)->get(route('disiplin.laporan.sanksi', ['format' => 'pdf']));
+        $res->assertOk();
+        $this->assertStringContainsString('application/pdf', $res->headers->get('content-type'));
+    }
 }
