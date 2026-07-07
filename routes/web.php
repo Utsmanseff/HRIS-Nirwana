@@ -16,6 +16,7 @@ use App\Livewire\Sdm\KaryawanDetail;
 use App\Livewire\Sdm\KaryawanForm;
 use App\Livewire\Sdm\KaryawanIndex;
 use App\Livewire\Sdm\OrgStruktur;
+use App\Livewire\Disiplin\UsulDisiplin;
 use App\Livewire\Sistem\PenggunaKelola;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,9 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:kelola-cuti')->name('cuti.laporan.saldo');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
+
+    Route::get('/disiplin', UsulDisiplin::class)
+        ->middleware('can:usul-disiplin')->name('disiplin');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
         Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');
