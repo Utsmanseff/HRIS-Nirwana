@@ -31,5 +31,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('kelola-jadwal-divisi', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2);
         Gate::define('kelola-cuti', fn ($user) => $user->hasRole(Role::Hrd->value));
         Gate::define('kelola-disiplin', fn ($user) => $user->hasRole(Role::Hrd->value));
+        Gate::define('approve-disiplin', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
     }
 }
