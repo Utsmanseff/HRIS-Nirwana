@@ -26,7 +26,6 @@ class SuratSanksiPenandatanganTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    /** Direktorat > Bidang > Unit + kepala tiap tingkat + HRD (role). */
     protected function hierarki(): array
     {
         $dir = OrgUnit::create(['nama' => 'Direktorat', 'tipe' => OrgUnitTipe::Direktur->value]);
@@ -37,6 +36,7 @@ class SuratSanksiPenandatanganTest extends TestCase
         $kabid = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         $koor = Karyawan::factory()->pimpinanUnit($unit, 2)->create();
         $staff = Karyawan::factory()->staffUnit($unit)->create();
+        User::factory()->create(['karyawan_id' => $direktur->id])->assignRole(Role::Direktur->value);
 
         $hrd = Karyawan::factory()->pimpinanUnit($bidang, 3)->create();
         User::factory()->create(['karyawan_id' => $hrd->id])->assignRole(Role::Hrd->value);
@@ -54,42 +54,46 @@ class SuratSanksiPenandatanganTest extends TestCase
         return $s;
     }
 
-    public function test_pengusul_koordinator_tiga_ttd(): void
+    public function test_pengusul_koordinator_hal2_koor_plus_kabid_penerbit_direktur(): void
     {
         $h = $this->hierarki();
         $ttd = SuratSanksi::penandatangan($this->sanksiDari($h['koor'], $h['staff']));
 
-        $this->assertCount(3, $ttd);
-        $this->assertSame(['Pengusul', 'Kabid', 'HRD'], array_column($ttd, 'peran'));
-        $this->assertSame($h['koor']->nama_lengkap, $ttd[0]['nama']);
+        $this->assertTrue($ttd['pakaiHal2']);
+        $this->assertSame(['Pengusul', 'Kabid'], array_column($ttd['pengusulChain'], 'peran'));
+        $this->assertSame($h['koor']->nama_lengkap, $ttd['pengusulChain'][0]['nama']);
+        $this->assertSame('Direktur', $ttd['penerbit']['peran']);
+        $this->assertSame($h['direktur']->nama_lengkap, $ttd['penerbit']['nama']);
     }
 
-    public function test_pengusul_kabid_dua_ttd(): void
+    public function test_pengusul_kabid_hal2_kabid_saja(): void
     {
         $h = $this->hierarki();
         $ttd = SuratSanksi::penandatangan($this->sanksiDari($h['kabid'], $h['staff']));
 
-        $this->assertCount(2, $ttd);
-        $this->assertSame(['Pengusul', 'HRD'], array_column($ttd, 'peran'));
+        $this->assertTrue($ttd['pakaiHal2']);
+        $this->assertSame(['Pengusul'], array_column($ttd['pengusulChain'], 'peran'));
+        $this->assertSame($h['kabid']->nama_lengkap, $ttd['pengusulChain'][0]['nama']);
+        $this->assertSame('Direktur', $ttd['penerbit']['peran']);
     }
 
-    public function test_pengusul_hrd_satu_ttd(): void
+    public function test_pengusul_hrd_tanpa_hal2(): void
     {
         $h = $this->hierarki();
         $ttd = SuratSanksi::penandatangan($this->sanksiDari($h['hrd'], $h['staff']));
 
-        $this->assertCount(1, $ttd);
-        $this->assertSame(['HRD'], array_column($ttd, 'peran'));
-        $this->assertSame($h['hrd']->nama_lengkap, $ttd[0]['nama']);
+        $this->assertFalse($ttd['pakaiHal2']);
+        $this->assertSame([], $ttd['pengusulChain']);
+        $this->assertSame('Direktur', $ttd['penerbit']['peran']);
     }
 
-    public function test_pengusul_direktur_satu_ttd(): void
+    public function test_pengusul_direktur_tanpa_hal2(): void
     {
         $h = $this->hierarki();
         $ttd = SuratSanksi::penandatangan($this->sanksiDari($h['direktur'], $h['staff']));
 
-        $this->assertCount(1, $ttd);
-        $this->assertSame(['Direktur'], array_column($ttd, 'peran'));
-        $this->assertSame($h['direktur']->nama_lengkap, $ttd[0]['nama']);
+        $this->assertFalse($ttd['pakaiHal2']);
+        $this->assertSame([], $ttd['pengusulChain']);
+        $this->assertSame($h['direktur']->nama_lengkap, $ttd['penerbit']['nama']);
     }
 }
