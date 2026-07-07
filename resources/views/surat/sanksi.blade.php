@@ -10,8 +10,13 @@
     header td { vertical-align: middle; border: none; padding: 0; }
     header .logo img { height: 46px; }
     header .identitas { text-align: center; }
-    header .identitas .nama { font-size: 15px; font-weight: bold; color: #14532d; }
+    header .identitas .nama { font-size: 15px; font-weight: bold; color: #14532d; margin-bottom: 2px; }
     header .identitas div { font-size: 9.5px; color: #555; line-height: 1.35; }
+    header .akreditasi { text-align: right; }
+    header .akreditasi .placeholder {
+        display: inline-block; width: 52px; height: 52px; line-height: 52px;
+        border: 1px dashed #aab5ae; border-radius: 50%; font-size: 7px; color: #99a3a0; text-align: center;
+    }
     footer { position: fixed; bottom: -45px; left: 0; right: 0; font-size: 9px; color: #777; text-align: center; }
     h1 { font-size: 13px; text-align: center; margin: 0; text-transform: uppercase; letter-spacing: .5px; }
     .nomor { text-align: center; font-size: 11px; margin: 2px 0 18px; }
@@ -31,12 +36,19 @@
 <header>
     <table>
         <tr>
-            <td class="logo" width="150"><img src="{{ public_path(config('instansi.logo')) }}" alt="{{ config('instansi.nama') }}"></td>
+            <td class="logo" width="140"><img src="{{ public_path(config('instansi.logo')) }}" alt="{{ config('instansi.nama') }}"></td>
             <td class="identitas">
                 <div class="nama">{{ config('instansi.nama_resmi') }}</div>
                 <div>{{ config('instansi.alamat') }}</div>
                 <div>{{ config('instansi.telp') }}</div>
                 <div>{{ config('instansi.email_web') }}</div>
+            </td>
+            <td class="akreditasi" width="70">
+                @if (config('instansi.logo_akreditasi'))
+                    <img src="{{ public_path(config('instansi.logo_akreditasi')) }}" style="height:52px" alt="Akreditasi">
+                @else
+                    <span class="placeholder">Logo<br>Akreditasi</span>
+                @endif
             </td>
         </tr>
     </table>
@@ -66,13 +78,13 @@ memperbaiki diri; pelanggaran berulang dalam masa berlaku dapat berujung sanksi 
 
 <table class="ttd">
     <tr>
-        @foreach ($sanksi->approval as $a)
-            <td>
-                <div class="role">{{ ucfirst($a->peran->value) }}</div>
-                <div>{{ optional($a->acted_at)->locale('id')->translatedFormat('j F Y') }}</div>
+        @foreach ($penandatangan as $p)
+            <td style="width: {{ intdiv(100, max(count($penandatangan), 1)) }}%">
+                <div class="role">{{ $p['peran'] }}</div>
+                <div>{{ optional($p['tanggal'])->locale('id')->translatedFormat('j F Y') }}</div>
                 <div class="space"></div>
-                <div class="nm">{{ $a->approver->nama_lengkap }}</div>
-                <div>{{ $a->approver->jabatan?->nama }}</div>
+                <div class="nm">{{ $p['nama'] }}</div>
+                <div>{{ $p['jabatan'] }}</div>
             </td>
         @endforeach
     </tr>
