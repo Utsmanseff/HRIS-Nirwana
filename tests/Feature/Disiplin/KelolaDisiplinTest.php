@@ -61,4 +61,29 @@ class KelolaDisiplinTest extends TestCase
             ->assertSee($terbit->karyawan->nama_lengkap)
             ->assertDontSee($tolak->karyawan->nama_lengkap);
     }
+
+    public function test_pilih_karyawan_set_tingkat_saran(): void
+    {
+        $user = $this->hrd();
+        $target = Karyawan::factory()->create();
+        // Sanksi aktif Teguran1 → saran berikutnya Teguran2.
+        SanksiDisiplin::factory()->diterbitkan(TingkatSanksi::Teguran1)
+            ->create(['karyawan_id' => $target->id]);
+
+        Livewire::actingAs($user)->test(KelolaDisiplin::class)
+            ->call('pilihKaryawan', $target->id)
+            ->assertSet('karyawanId', $target->id)
+            ->assertSet('tingkat', (string) TingkatSanksi::Teguran2->value);
+    }
+
+    public function test_cari_karyawan_org_wide(): void
+    {
+        $user = $this->hrd();
+        Karyawan::factory()->create(['nama_lengkap' => 'Zulfikar Rahman']);
+
+        Livewire::actingAs($user)->test(KelolaDisiplin::class)
+            ->set('showForm', true)
+            ->set('cariKaryawan', 'Zulfikar')
+            ->assertSee('Zulfikar Rahman');
+    }
 }
