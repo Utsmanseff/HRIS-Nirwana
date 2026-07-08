@@ -58,6 +58,13 @@ class Beranda extends Component
             $data['disiplinDiterbitkan'] = \App\Support\RekapDisiplin::jumlahDiterbitkanOrgWide();
         }
 
+        // Kartu inventaris untuk tim teknis.
+        $data['bisaInventaris'] = $user->can('kelola-inventaris');
+        if ($data['bisaInventaris']) {
+            $timNilai = array_map(fn ($t) => $t->value, $user->timTeknis());
+            $data['asetJatuhTempo'] = \App\Support\RekapInventaris::jumlahJatuhTempo($timNilai);
+        }
+
         return view('livewire.beranda', $data);
     }
 }

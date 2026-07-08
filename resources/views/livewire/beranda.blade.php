@@ -63,6 +63,14 @@
         </a>
     @endif
 
+    @if(! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
+        <a href="{{ route('inventaris') }}" class="card card-pad block hover:shadow-md transition">
+            <div class="field-label text-warning-700">Aset Perlu Pemeliharaan</div>
+            <div class="text-2xl font-bold tnum">{{ $asetJatuhTempo }}</div>
+            <div class="text-xs text-neutral-500 mt-1">Jatuh tempo H-14 · lihat inventaris</div>
+        </a>
+    @endif
+
     {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}
     <div>
         <div class="text-[13px] font-bold text-neutral-700 mb-3">Menu</div>
