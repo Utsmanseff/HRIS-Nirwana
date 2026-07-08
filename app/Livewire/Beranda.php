@@ -65,6 +65,15 @@ class Beranda extends Component
             $data['asetJatuhTempo'] = \App\Support\RekapInventaris::jumlahJatuhTempo($timNilai);
         }
 
+        // Kartu tiket untuk tim teknis / karyawan.
+        $data['bisaKerjakanTiket'] = $user->can('kerjakan-tiket');
+        if ($data['bisaKerjakanTiket']) {
+            $timNilai = array_map(fn ($t) => $t->value, $user->timTeknis());
+            $data['tiketAntrian'] = \App\Support\RekapTiket::jumlahAntrian($timNilai);
+            $data['tiketTimLabel'] = implode('/', array_map(fn ($t) => $t->label(), $user->timTeknis()));
+        }
+        $data['tiketSaya'] = $kar ? \App\Support\RekapTiket::jumlahTiketSaya($kar->id) : 0;
+
         return view('livewire.beranda', $data);
     }
 }

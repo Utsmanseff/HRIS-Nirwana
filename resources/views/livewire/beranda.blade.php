@@ -41,7 +41,9 @@
         $adaKartuRingkas = (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
             || ! empty($bisaKelolaCuti)
             || ! empty($bisaKelolaDisiplin)
-            || (! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'));
+            || (! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
+            || (! empty($bisaKerjakanTiket) && \Illuminate\Support\Facades\Route::has('tiket'))
+            || (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'));
     @endphp
     @if ($adaKartuRingkas)
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -77,6 +79,24 @@
                     <div class="field-label text-warning-700">Aset Perlu Pemeliharaan</div>
                     <div class="text-2xl font-bold tnum">{{ $asetJatuhTempo }}</div>
                     <div class="text-xs text-neutral-500 mt-1">Jatuh tempo H-14 · lihat inventaris</div>
+                </a>
+            @endif
+
+            {{-- Kartu antrian tiket (tim teknis) --}}
+            @if (! empty($bisaKerjakanTiket) && \Illuminate\Support\Facades\Route::has('tiket'))
+                <a href="{{ route('tiket') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Antrian {{ $tiketTimLabel }}</div>
+                    <div class="text-2xl font-bold tnum">{{ $tiketAntrian }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Tiket baru & diproses · lihat antrian</div>
+                </a>
+            @endif
+
+            {{-- Kartu tiket saya (karyawan non-tim) --}}
+            @if (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'))
+                <a href="{{ route('tiket') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Tiket Saya</div>
+                    <div class="text-2xl font-bold tnum">{{ $tiketSaya }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Tiket aktif yang Anda lapor · lihat</div>
                 </a>
             @endif
         </div>

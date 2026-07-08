@@ -106,6 +106,10 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     // (route() memvalidasi class invokable, jadi daftarkan saat komponennya sudah ada).
     Route::get('/tiket', \App\Livewire\Tiket\TiketIndex::class)->name('tiket');
     Route::get('/tiket/buat', \App\Livewire\Tiket\TiketForm::class)->name('tiket.buat');
+    Route::get('/tiket/laporan', \App\Livewire\Tiket\LaporanTiket::class)
+        ->middleware('can:kerjakan-tiket')->name('tiket.laporan');
+    Route::get('/tiket/laporan/daftar', [\App\Http\Controllers\Tiket\LaporanTiketController::class, 'daftar'])
+        ->middleware('can:kerjakan-tiket')->name('tiket.laporan.daftar');
     Route::get('/tiket/lampiran/{lampiran}', [\App\Http\Controllers\Tiket\LampiranTiketController::class, 'lihat'])
         ->name('tiket.lampiran');
     // Route literal di atas HARUS sebelum '{tiket}'.

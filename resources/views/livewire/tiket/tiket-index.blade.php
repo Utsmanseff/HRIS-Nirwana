@@ -6,9 +6,14 @@
                 {{ $adalahTim ? 'Antrean bersama tim — semua anggota tim bisa mengerjakan (tanpa assign PIC).' : 'Tiket yang Anda laporkan.' }}
             </p>
         </div>
-        @if (\Illuminate\Support\Facades\Route::has('tiket.buat'))
-            <a href="{{ route('tiket.buat') }}" class="btn btn-primary">+ {{ $adalahTim ? 'Catat Tiket' : 'Buat Tiket' }}</a>
-        @endif
+        <div class="flex gap-2">
+            @if ($adalahTim && \Illuminate\Support\Facades\Route::has('tiket.laporan'))
+                <a href="{{ route('tiket.laporan') }}" class="btn btn-ghost">Laporan</a>
+            @endif
+            @if (\Illuminate\Support\Facades\Route::has('tiket.buat'))
+                <a href="{{ route('tiket.buat') }}" class="btn btn-primary">+ {{ $adalahTim ? 'Catat Tiket' : 'Buat Tiket' }}</a>
+            @endif
+        </div>
     </div>
 
     <div class="card">
