@@ -160,9 +160,10 @@ class TiketForm extends Component
             return $tiket->fresh();
         });
 
-        // Notif TiketBaru bila masih di antrian (diisi Task 9).
+        // Notif TiketBaru bila masih di antrian (bukan langsung-selesai internal).
         if (in_array($tiket->status, StatusTiket::aktif(), true)) {
-            // Diisi Task 9: Notification::send(tim, new TiketBaru($tiket)).
+            $penerima = \App\Models\User::permission($tiket->tim->permission())->get();
+            \Illuminate\Support\Facades\Notification::send($penerima, new \App\Notifications\TiketBaru($tiket));
         }
 
         session()->flash('ok', "Tiket {$tiket->nomor} dibuat.");

@@ -88,9 +88,12 @@ class ProsesTiket
         }
     }
 
-    /** Placeholder notif — diisi di Task 9 (TiketSelesai → pelapor). */
+    /** Notif TiketSelesai ke akun pelapor (bila ada). */
     private static function notifSelesai(Tiket $tiket): void
     {
-        // Diisi Task 9.
+        $user = $tiket->pelapor?->user;
+        if ($user) {
+            $user->notify(new \App\Notifications\TiketSelesai($tiket));
+        }
     }
 }
