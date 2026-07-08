@@ -61,9 +61,11 @@ class User extends Authenticatable
             return \App\Enums\TimTeknis::cases();
         }
 
+        $permissionDimiliki = $this->getAllPermissions()->pluck('name');
+
         return array_values(array_filter(
             \App\Enums\TimTeknis::cases(),
-            fn (\App\Enums\TimTeknis $t) => $this->hasPermissionTo($t->permission()),
+            fn (\App\Enums\TimTeknis $t) => $permissionDimiliki->contains($t->permission()),
         ));
     }
 }

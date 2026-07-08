@@ -101,4 +101,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::middleware('permission:kelola-rbac')->group(function () {
         Route::get('/sistem/pengguna', PenggunaKelola::class)->name('sistem.pengguna');
     });
+
+    Route::middleware('can:kelola-inventaris')->group(function () {
+        Route::get('/inventaris', \App\Livewire\Inventaris\InventarisIndex::class)->name('inventaris');
+    });
 });
