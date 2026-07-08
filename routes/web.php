@@ -105,5 +105,6 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::middleware('can:kelola-inventaris')->group(function () {
         Route::get('/inventaris', \App\Livewire\Inventaris\InventarisIndex::class)->name('inventaris');
         Route::get('/inventaris/kategori', \App\Livewire\Inventaris\KategoriInventaris::class)->name('inventaris.kategori');
+        Route::get('/inventaris/tambah', \App\Livewire\Inventaris\AsetForm::class)->name('inventaris.tambah');
     });
 });
