@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Pengingat kontrak & SIP → notifikasi HRD, sekali sehari.
 Schedule::command('sdm:kirim-pengingat')->dailyAt('07:00')->withoutOverlapping();
+
+// Pengingat pemeliharaan aset (H-14) → notifikasi tim pemilik, sekali sehari.
+Schedule::command('inventaris:kirim-pengingat')->dailyAt('07:05')->withoutOverlapping();
