@@ -50,6 +50,22 @@ class TiketIndexTest extends TestCase
             ->assertDontSee('Selesai B');
     }
 
+    public function test_default_aktif_sembunyikan_selesai_semua_tampilkan(): void
+    {
+        Tiket::factory()->tim(TimTeknis::It)->status(StatusTiket::Baru)->create(['judul' => 'Aktif A']);
+        Tiket::factory()->tim(TimTeknis::It)->status(StatusTiket::Selesai)->create(['judul' => 'Kelar B']);
+
+        // Default 'aktif' → selesai tersembunyi.
+        Livewire::actingAs($this->userTim(Role::It))
+            ->test(TiketIndex::class)
+            ->assertSee('Aktif A')
+            ->assertDontSee('Kelar B')
+            // 'Semua Status' (status='') → selesai muncul.
+            ->set('status', '')
+            ->assertSee('Aktif A')
+            ->assertSee('Kelar B');
+    }
+
     public function test_karyawan_biasa_lihat_tiket_saya(): void
     {
         $this->seed(RoleSeeder::class);

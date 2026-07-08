@@ -23,6 +23,7 @@
                 <input class="input" wire:model.live.debounce.300ms="q" placeholder="Cari nomor / judul…">
             </div>
             <select class="select w-auto" wire:model.live="status">
+                <option value="aktif">Tiket Aktif</option>
                 <option value="">Semua Status</option>
                 @foreach ($statusOpsi as $s)<option value="{{ $s->value }}">{{ $s->label() }}</option>@endforeach
             </select>

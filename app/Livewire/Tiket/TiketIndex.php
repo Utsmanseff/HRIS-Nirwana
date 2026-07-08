@@ -21,14 +21,13 @@ class TiketIndex extends Component
 
     #[Url]
     public string $q = '';
+    /** '' = semua status (termasuk selesai/batal); 'aktif' = baru+diproses; selain itu = status spesifik. */
     #[Url]
-    public string $status = '';
+    public string $status = 'aktif';
     #[Url]
     public string $prioritas = '';
     #[Url]
     public string $jenis = '';
-    #[Url]
-    public bool $hanyaAktif = true;
 
     public function mount(): void
     {
@@ -60,11 +59,12 @@ class TiketIndex extends Component
                 ->where('nomor', 'like', "%{$this->q}%")
                 ->orWhere('judul', 'like', "%{$this->q}%"));
         }
-        if ($this->status !== '') {
-            $q->where('status', $this->status);
-        } elseif ($this->hanyaAktif) {
+        if ($this->status === 'aktif') {
             $q->whereIn('status', array_map(fn ($s) => $s->value, StatusTiket::aktif()));
+        } elseif ($this->status !== '') {
+            $q->where('status', $this->status);
         }
+        // status === '' → semua status (tanpa filter)
         if ($this->prioritas !== '') {
             $q->where('prioritas', $this->prioritas);
         }
