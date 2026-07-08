@@ -48,9 +48,28 @@
         </dl>
     </div>
 
-    {{-- Riwayat Perbaikan (derived tiket, diaktifkan 4B) --}}
-    <div x-show="tab === 'riwayat'" class="card p-6 text-center text-sm text-neutral-400" x-cloak>
-        Riwayat perbaikan otomatis muncul dari tiket terkait aset ini (menyusul modul Tiket).
+    {{-- Riwayat Perbaikan (derived dari tiket inventaris_id) --}}
+    <div x-show="tab === 'riwayat'" class="card" x-cloak>
+        @if ($riwayatTiket->isEmpty())
+            <p class="card-pad text-sm text-neutral-400 text-center">Belum ada tiket untuk aset ini.</p>
+        @else
+            <div class="divide-y divide-neutral-100">
+                @foreach ($riwayatTiket as $t)
+                    <a href="{{ \Illuminate\Support\Facades\Route::has('tiket.detail') ? route('tiket.detail', $t) : '#' }}"
+                       class="flex items-start justify-between gap-3 p-4 hover:bg-neutral-50 transition">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-mono text-xs text-neutral-400">{{ $t->nomor }}</span>
+                                <span class="badge {{ $t->jenis === \App\Enums\JenisTiket::Pemeliharaan ? 'badge-info' : 'badge-neutral' }} text-[10px]">{{ $t->jenis->label() }}</span>
+                            </div>
+                            <div class="text-sm font-semibold mt-1 truncate">{{ $t->judul }}</div>
+                            <div class="text-xs text-neutral-400 mt-0.5">{{ $t->waktu_lapor->translatedFormat('j M Y') }}@if($t->penyelesai) · oleh {{ $t->penyelesai->name }}@endif</div>
+                        </div>
+                        <span class="badge {{ $t->status->badge() }} shrink-0"><span class="dot"></span>{{ $t->status->label() }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     {{-- Jadwal Pemeliharaan --}}
