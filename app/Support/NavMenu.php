@@ -25,7 +25,7 @@ class NavMenu
             ['id' => 'kelola-cuti', 'label' => 'Kelola Cuti', 'icon' => 'sliders', 'route' => 'cuti.kelola', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
             ['id' => 'laporan-cuti', 'label' => 'Laporan Cuti', 'icon' => 'chart', 'route' => 'cuti.laporan', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
             ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => null,             'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
-            ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => null,             'can' => null, 'group' => 'Operasional'],
+            ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => 'tiket',          'can' => null, 'group' => 'Operasional'],
             ['id' => 'inventaris', 'label' => 'Inventaris',   'icon' => 'box',      'route' => 'inventaris',     'can' => 'kelola-inventaris', 'group' => 'Operasional'],
             ['id' => 'disiplin', 'label' => 'Disiplin',       'icon' => 'gavel',    'route' => 'disiplin',       'can' => 'usul-disiplin', 'group' => 'Operasional'],
             ['id' => 'disiplin-persetujuan', 'label' => 'Persetujuan Sanksi', 'icon' => 'check-circle', 'route' => 'disiplin.persetujuan', 'can' => 'approve-disiplin', 'group' => 'Operasional'],

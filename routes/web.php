@@ -102,6 +102,10 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sistem/pengguna', PenggunaKelola::class)->name('sistem.pengguna');
     });
 
+    // Tiket: /tiket visible semua (self-service universal). Route lain didaftar per-task
+    // (route() memvalidasi class invokable, jadi daftarkan saat komponennya sudah ada).
+    Route::get('/tiket', \App\Livewire\Tiket\TiketIndex::class)->name('tiket');
+
     Route::middleware('can:kelola-inventaris')->group(function () {
         Route::get('/inventaris', \App\Livewire\Inventaris\InventarisIndex::class)->name('inventaris');
         Route::get('/inventaris/kategori', \App\Livewire\Inventaris\KategoriInventaris::class)->name('inventaris.kategori');
