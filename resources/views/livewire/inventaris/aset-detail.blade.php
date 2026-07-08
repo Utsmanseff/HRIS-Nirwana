@@ -27,7 +27,7 @@
 
     {{-- Tab bar --}}
     <div class="flex gap-1 overflow-x-auto border-b border-neutral-100">
-        @foreach (['info' => 'Info', 'riwayat' => 'Riwayat Perbaikan', 'jadwal' => 'Jadwal', 'mutasi' => 'Mutasi'] as $key => $label)
+        @foreach (['info' => 'Info', 'riwayat' => 'Riwayat Perbaikan', 'jadwal' => 'Jadwal', 'mutasi' => 'Mutasi', 'lampiran' => 'Lampiran'] as $key => $label)
             <button type="button" @click="tab = '{{ $key }}'"
                 :class="tab === '{{ $key }}' ? 'tab-btn on' : 'tab-btn'"
                 class="whitespace-nowrap shrink-0">{{ $label }}</button>
@@ -135,6 +135,66 @@
             @empty
                 <div class="p-6 text-center text-neutral-400 text-sm">Belum ada mutasi.</div>
             @endforelse
+        </div>
+    </div>
+
+    {{-- Lampiran --}}
+    <div x-show="tab === 'lampiran'" class="grid gap-4 md:grid-cols-3" x-cloak>
+        <div class="card p-4 space-y-3 h-fit">
+            <h2 class="font-semibold text-sm">Tambah Lampiran</h2>
+            <div>
+                <label class="text-xs font-semibold text-neutral-500">Tipe</label>
+                <select wire:model="lampiranTipe" class="select">
+                    <option value="sertifikat">Sertifikat</option>
+                    <option value="faktur">Faktur</option>
+                    <option value="manual">Manual</option>
+                    <option value="garansi">Garansi</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-neutral-500">Berkas (gambar/PDF, maks 8MB)</label>
+                <input type="file" wire:model="berkas" accept=".jpg,.jpeg,.png,.webp,.pdf" class="input">
+                <div wire:loading wire:target="berkas" class="text-xs text-neutral-400 mt-1">Mengunggah…</div>
+                @error('berkas') <span class="text-xs" style="color:var(--danger-500)">{{ $message }}</span> @enderror
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500">Tanggal</label>
+                    <input type="date" wire:model="lampiranTanggal" class="input">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500">Berlaku s/d</label>
+                    <input type="date" wire:model="lampiranBerlakuSampai" class="input">
+                </div>
+            </div>
+            <button wire:click="simpanLampiran" wire:loading.attr="disabled" class="btn btn-primary btn-sm">Simpan</button>
+        </div>
+
+        <div class="md:col-span-2">
+            @if ($aset->lampiran->isEmpty())
+                <div class="card p-6 text-center text-neutral-400 text-sm">Belum ada lampiran.</div>
+            @else
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    @foreach ($aset->lampiran as $l)
+                        <div class="card p-2 space-y-2">
+                            <a href="{{ route('inventaris.lampiran', $l) }}" target="_blank" class="block">
+                                @if ($l->mime === 'image/webp')
+                                    <img src="{{ route('inventaris.lampiran', $l) }}" alt="{{ $l->tipe }}" class="w-full h-24 object-cover rounded-lg bg-neutral-100">
+                                @else
+                                    <div class="w-full h-24 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs font-semibold">PDF</div>
+                                @endif
+                            </a>
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-xs font-semibold capitalize">{{ $l->tipe }}</span>
+                                <button wire:click="hapusLampiran({{ $l->id }})" wire:confirm="Hapus lampiran ini?" class="btn btn-ghost btn-sm" style="color:var(--danger-500)">×</button>
+                            </div>
+                            @if ($l->berlaku_sampai)
+                                <div class="text-[11px] text-neutral-400">Berlaku s/d {{ $l->berlaku_sampai->format('d M Y') }}</div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </div>

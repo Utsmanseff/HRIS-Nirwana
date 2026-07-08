@@ -106,6 +106,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/inventaris', \App\Livewire\Inventaris\InventarisIndex::class)->name('inventaris');
         Route::get('/inventaris/kategori', \App\Livewire\Inventaris\KategoriInventaris::class)->name('inventaris.kategori');
         Route::get('/inventaris/tambah', \App\Livewire\Inventaris\AsetForm::class)->name('inventaris.tambah');
+        Route::get('/inventaris/lampiran/{lampiran}', [\App\Http\Controllers\Inventaris\LampiranAsetController::class, 'lihat'])->name('inventaris.lampiran');
         // Route literal di atas HARUS sebelum '{aset}' agar tak ditelan route-model-binding.
         Route::get('/inventaris/{aset}', \App\Livewire\Inventaris\AsetDetail::class)->name('inventaris.detail');
         Route::get('/inventaris/{aset}/ubah', \App\Livewire\Inventaris\AsetForm::class)->name('inventaris.ubah');

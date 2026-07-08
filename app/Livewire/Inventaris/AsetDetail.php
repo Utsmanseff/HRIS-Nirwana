@@ -4,17 +4,24 @@ namespace App\Livewire\Inventaris;
 
 use App\Models\Aset;
 use App\Models\JadwalPemeliharaan;
+use App\Models\LampiranAset;
 use App\Models\MutasiAset;
 use App\Models\OrgUnit;
+use App\Support\KompresGambar;
 use App\Support\NavMenu;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app')]
 class AsetDetail extends Component
 {
+    use WithFileUploads;
+
     public Aset $aset;
 
     #[Url]
@@ -28,6 +35,12 @@ class AsetDetail extends Component
     public ?int $editJadwalId = null;
     public string $jNama = '';
     public ?int $jInterval = null;
+
+    // Form lampiran
+    public string $lampiranTipe = 'faktur';
+    public ?string $lampiranTanggal = null;
+    public ?string $lampiranBerlakuSampai = null;
+    public $berkas = null;
 
     public function mount(Aset $aset): void
     {
@@ -101,6 +114,50 @@ class AsetDetail extends Component
     public function hapusJadwal(int $id): void
     {
         $this->aset->jadwalPemeliharaan()->where('id', $id)->delete();
+    }
+
+    public function simpanLampiran(): void
+    {
+        $this->validate([
+            'lampiranTipe' => ['required', 'string', 'max:50'],
+            'berkas' => ['required', 'file', 'max:8192', 'mimes:jpg,jpeg,png,webp,pdf'],
+            'lampiranTanggal' => ['nullable', 'date'],
+            'lampiranBerlakuSampai' => ['nullable', 'date'],
+        ]);
+
+        $isPdf = strtolower($this->berkas->getClientOriginalExtension()) === 'pdf'
+            || $this->berkas->getMimeType() === 'application/pdf';
+        $dir = 'aset/'.$this->aset->id;
+
+        if ($isPdf) {
+            $path = $this->berkas->store($dir, 'local');
+            $mime = 'application/pdf';
+        } else {
+            // Kompres agresif: webp q70 + downscale sisi terpanjang 1600px.
+            $webp = KompresGambar::keWebp(file_get_contents($this->berkas->getRealPath()), 70, 1600);
+            $path = $dir.'/'.Str::uuid().'.webp';
+            Storage::disk('local')->put($path, $webp);
+            $mime = 'image/webp';
+        }
+
+        LampiranAset::create([
+            'aset_id' => $this->aset->id,
+            'tipe' => $this->lampiranTipe,
+            'path' => $path,
+            'mime' => $mime,
+            'tanggal' => $this->lampiranTanggal ?: null,
+            'berlaku_sampai' => $this->lampiranBerlakuSampai ?: null,
+        ]);
+
+        $this->reset('berkas', 'lampiranTanggal', 'lampiranBerlakuSampai');
+        $this->aset->refresh();
+    }
+
+    public function hapusLampiran(int $id): void
+    {
+        $l = $this->aset->lampiran()->findOrFail($id);
+        Storage::disk('local')->delete($l->path);
+        $l->delete();
     }
 
     public function render()
