@@ -36,39 +36,70 @@
         @endif
     @endif
 
-    {{-- Kartu sanksi aktif (karyawan) — muncul saat ada yang aktif --}}
-    @if (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
-        <a href="{{ route('disiplin.saya') }}" class="card card-pad block hover:shadow-md transition" style="border-color:var(--warning-200)">
-            <div class="field-label text-warning-700">Sanksi Aktif</div>
-            <div class="text-2xl font-bold tnum text-warning-700">{{ $sanksiAktif }}</div>
-            <div class="text-xs text-neutral-500 mt-1">Lihat detail sanksi saya</div>
-        </a>
-    @endif
+    {{-- Kartu ringkas per-modul (grid responsif — jangan full-width tumpuk) --}}
+    @php
+        $adaKartuRingkas = (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
+            || ! empty($bisaKelolaCuti)
+            || ! empty($bisaKelolaDisiplin)
+            || (! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
+            || (! empty($bisaKerjakanTiket) && \Illuminate\Support\Facades\Route::has('tiket'))
+            || (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'));
+    @endphp
+    @if ($adaKartuRingkas)
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {{-- Kartu sanksi aktif (karyawan) — muncul saat ada yang aktif --}}
+            @if (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
+                <a href="{{ route('disiplin.saya') }}" class="card card-pad block hover:shadow-md transition" style="border-color:var(--warning-200)">
+                    <div class="field-label text-warning-700">Sanksi Aktif</div>
+                    <div class="text-2xl font-bold tnum text-warning-700">{{ $sanksiAktif }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Lihat detail sanksi saya</div>
+                </a>
+            @endif
 
-    {{-- Kartu pending cuti org-wide (HRD) --}}
-    @if(! empty($bisaKelolaCuti))
-        <a href="{{ route('cuti.laporan') }}" class="card card-pad block hover:shadow-md transition">
-            <div class="field-label text-warning-700">Pending Cuti</div>
-            <div class="text-2xl font-bold tnum">{{ $cutiPending }}</div>
-            <div class="text-xs text-neutral-500 mt-1">Menunggu persetujuan · lihat laporan</div>
-        </a>
-    @endif
+            {{-- Kartu pending cuti org-wide (HRD) --}}
+            @if(! empty($bisaKelolaCuti))
+                <a href="{{ route('cuti.laporan') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Pending Cuti</div>
+                    <div class="text-2xl font-bold tnum">{{ $cutiPending }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Menunggu persetujuan · lihat laporan</div>
+                </a>
+            @endif
 
-    {{-- Kartu disiplin org-wide (HRD) --}}
-    @if(! empty($bisaKelolaDisiplin))
-        <a href="{{ route('disiplin.laporan') }}" class="card card-pad block hover:shadow-md transition">
-            <div class="field-label text-warning-700">Usulan Sanksi</div>
-            <div class="text-2xl font-bold tnum">{{ $disiplinPending }}</div>
-            <div class="text-xs text-neutral-500 mt-1">Menunggu · {{ $disiplinDiterbitkan }} diterbitkan · lihat laporan</div>
-        </a>
-    @endif
+            {{-- Kartu disiplin org-wide (HRD) --}}
+            @if(! empty($bisaKelolaDisiplin))
+                <a href="{{ route('disiplin.laporan') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Usulan Sanksi</div>
+                    <div class="text-2xl font-bold tnum">{{ $disiplinPending }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Menunggu · {{ $disiplinDiterbitkan }} diterbitkan · lihat laporan</div>
+                </a>
+            @endif
 
-    @if(! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
-        <a href="{{ route('inventaris') }}" class="card card-pad block hover:shadow-md transition">
-            <div class="field-label text-warning-700">Aset Perlu Pemeliharaan</div>
-            <div class="text-2xl font-bold tnum">{{ $asetJatuhTempo }}</div>
-            <div class="text-xs text-neutral-500 mt-1">Jatuh tempo H-14 · lihat inventaris</div>
-        </a>
+            @if(! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
+                <a href="{{ route('inventaris') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Aset Perlu Pemeliharaan</div>
+                    <div class="text-2xl font-bold tnum">{{ $asetJatuhTempo }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Jatuh tempo H-14 · lihat inventaris</div>
+                </a>
+            @endif
+
+            {{-- Kartu antrian tiket (tim teknis) --}}
+            @if (! empty($bisaKerjakanTiket) && \Illuminate\Support\Facades\Route::has('tiket'))
+                <a href="{{ route('tiket') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Antrian {{ $tiketTimLabel }}</div>
+                    <div class="text-2xl font-bold tnum">{{ $tiketAntrian }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Tiket baru & diproses · lihat antrian</div>
+                </a>
+            @endif
+
+            {{-- Kartu tiket saya (karyawan non-tim) --}}
+            @if (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'))
+                <a href="{{ route('tiket') }}" class="card card-pad block hover:shadow-md transition">
+                    <div class="field-label text-warning-700">Tiket Saya</div>
+                    <div class="text-2xl font-bold tnum">{{ $tiketSaya }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">Tiket aktif yang Anda lapor · lihat</div>
+                </a>
+            @endif
+        </div>
     @endif
 
     {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}

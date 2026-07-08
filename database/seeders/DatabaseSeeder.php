@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             JenisCutiSeeder::class,
             DemoSdmSeeder::class,
             DemoInventarisSeeder::class, // setelah DemoSdmSeeder: butuh org_unit
+            DemoTiketSeeder::class, // butuh aset (DemoInventaris) + user/karyawan
         ]);
     }
 }

@@ -168,9 +168,15 @@ class AsetDetail extends Component
             'jadwalPemeliharaan', 'lampiran',
         ]);
 
+        $riwayat = \App\Models\Tiket::where('inventaris_id', $this->aset->id)
+            ->with('penyelesai')
+            ->orderByDesc('waktu_lapor')
+            ->get();
+
         return view('livewire.inventaris.aset-detail', [
             'unitList' => OrgUnit::orderBy('nama')->get(),
             'menu' => NavMenu::untuk(auth()->user()),
+            'riwayatTiket' => $riwayat,
         ]);
     }
 }

@@ -102,6 +102,19 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sistem/pengguna', PenggunaKelola::class)->name('sistem.pengguna');
     });
 
+    // Tiket: /tiket visible semua (self-service universal). Route lain didaftar per-task
+    // (route() memvalidasi class invokable, jadi daftarkan saat komponennya sudah ada).
+    Route::get('/tiket', \App\Livewire\Tiket\TiketIndex::class)->name('tiket');
+    Route::get('/tiket/buat', \App\Livewire\Tiket\TiketForm::class)->name('tiket.buat');
+    Route::get('/tiket/laporan', \App\Livewire\Tiket\LaporanTiket::class)
+        ->middleware('can:kerjakan-tiket')->name('tiket.laporan');
+    Route::get('/tiket/laporan/daftar', [\App\Http\Controllers\Tiket\LaporanTiketController::class, 'daftar'])
+        ->middleware('can:kerjakan-tiket')->name('tiket.laporan.daftar');
+    Route::get('/tiket/lampiran/{lampiran}', [\App\Http\Controllers\Tiket\LampiranTiketController::class, 'lihat'])
+        ->name('tiket.lampiran');
+    // Route literal di atas HARUS sebelum '{tiket}'.
+    Route::get('/tiket/{tiket}', \App\Livewire\Tiket\TiketDetail::class)->name('tiket.detail');
+
     Route::middleware('can:kelola-inventaris')->group(function () {
         Route::get('/inventaris', \App\Livewire\Inventaris\InventarisIndex::class)->name('inventaris');
         Route::get('/inventaris/kategori', \App\Livewire\Inventaris\KategoriInventaris::class)->name('inventaris.kategori');
