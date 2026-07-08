@@ -42,17 +42,40 @@
                 </div>
             </div>
 
+            {{-- Aset tertaut / taut aset (tim) --}}
             @if ($tiket->aset)
                 <div class="card">
                     <div class="card-header"><div class="card-title">Aset Tertaut</div>
-                        <a href="{{ route('inventaris.detail', $tiket->aset) }}" class="btn btn-ghost btn-sm">Buka aset</a>
+                        <div class="flex gap-1.5">
+                            <a href="{{ route('inventaris.detail', $tiket->aset) }}" class="btn btn-ghost btn-sm">Buka aset</a>
+                            @if ($anggotaTim && in_array($tiket->status, \App\Enums\StatusTiket::aktif(), true))
+                                <button class="btn btn-ghost btn-sm text-danger-600" wire:click="lepasAsetTaut" wire:confirm="Lepas taut aset dari tiket ini?">Lepas</button>
+                            @endif
+                        </div>
                     </div>
-                    <div class="card-pad text-sm">
-                        <span class="font-semibold">{{ $tiket->aset->nama }}</span>
-                        <span class="font-mono text-xs text-neutral-400">{{ $tiket->aset->kode }}</span>
-                        <div class="text-xs text-neutral-400 mt-0.5">Status aset: {{ $tiket->aset->status->label() }}</div>
+                    <a href="{{ route('inventaris.detail', $tiket->aset) }}" class="card-pad flex items-center gap-3 hover:bg-neutral-50 transition">
+                        <span class="w-11 h-11 rounded-lg bg-brand-50 text-brand-600 grid place-items-center"><x-icon name="box" :size="20" /></span>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-sm">{{ $tiket->aset->nama }} <span class="font-mono text-xs text-neutral-400">{{ $tiket->aset->kode }}</span></div>
+                            <div class="text-xs text-neutral-400">Lokasi: {{ $tiket->aset->orgUnit?->nama ?? '—' }} · Status: {{ $tiket->aset->status->label() }}</div>
+                        </div>
+                    </a>
+                    <div class="px-5 pb-4 text-xs text-neutral-400">Riwayat perbaikan aset muncul otomatis dari tiket ini (tanpa input ganda).</div>
+                </div>
+            @elseif ($anggotaTim && in_array($tiket->status, \App\Enums\StatusTiket::aktif(), true))
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Tautkan Aset</div></div>
+                    <div class="card-pad space-y-2">
+                        <p class="text-xs text-neutral-400">Tiket ini belum terkait aset. Cari aset Tim {{ $tiket->tim->label() }} untuk menautkan (status aset ikut tersinkron).</p>
+                        <input class="input" wire:model.live.debounce.300ms="cariAset" placeholder="Cari kode / nama aset…">
+                        @if (count($asetOpsi))
+                            <div class="border border-neutral-200 rounded-lg divide-y divide-neutral-100">
+                                @foreach ($asetOpsi as $a)
+                                    <button type="button" wire:click="tautAset({{ $a['id'] }})" class="block w-full text-left px-3 py-2 text-sm hover:bg-neutral-50">{{ $a['label'] }}</button>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
-                    <div class="px-5 pb-4 text-xs text-neutral-400">Tim tiket mengikuti tim pemilik aset (tanpa input ganda).</div>
                 </div>
             @endif
 
@@ -102,7 +125,28 @@
                 <div class="card-header"><div class="card-title">Status</div></div>
                 <div class="card-pad space-y-4 text-sm">
                     <div class="flex justify-between"><span class="text-neutral-400">Lapor</span><span class="tnum">{{ $tiket->waktu_lapor->translatedFormat('j M, H:i') }}</span></div>
-                    <div class="flex justify-between"><span class="text-neutral-400">Respon</span><span class="tnum">{{ $tiket->waktu_respon?->translatedFormat('j M, H:i') ?? '—' }}</span></div>
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-neutral-400">Respon</span>
+                            <span class="flex items-center gap-2">
+                                <span class="tnum">{{ $tiket->waktu_respon?->translatedFormat('j M, H:i') ?? '—' }}</span>
+                                @if ($anggotaTim && $tiket->waktu_respon && ! $editRespon)
+                                    <button class="text-xs text-brand-600 hover:underline" wire:click="mulaiEditRespon">koreksi</button>
+                                @endif
+                            </span>
+                        </div>
+                        @if ($editRespon)
+                            <div class="mt-2 space-y-2">
+                                <input type="datetime-local" class="input" wire:model="waktuResponInput">
+                                @error('waktuResponInput')<p class="text-xs text-danger-600">{{ $message }}</p>@enderror
+                                <div class="flex gap-2">
+                                    <button class="btn btn-primary btn-sm" wire:click="simpanWaktuRespon">Simpan</button>
+                                    <button class="btn btn-secondary btn-sm" wire:click="batalEditRespon">Batal</button>
+                                </div>
+                                <p class="text-[11px] text-neutral-400">Untuk koreksi bila tiket dikerjakan lebih awal (lupa klik proses).</p>
+                            </div>
+                        @endif
+                    </div>
                     <div class="flex justify-between"><span class="text-neutral-400">Selesai</span><span class="tnum">{{ $tiket->waktu_selesai?->translatedFormat('j M, H:i') ?? '—' }}</span></div>
                     <div class="pt-3 border-t border-neutral-100 text-[11px] text-neutral-400">Tanpa reopen — bila masalah kambuh, buat tiket baru.</div>
                 </div>
