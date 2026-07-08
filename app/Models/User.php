@@ -48,4 +48,22 @@ class User extends Authenticatable
     {
         return $this->nonaktif_pada === null;
     }
+
+    /**
+     * Tim teknis yang boleh diakses user (dari permission).
+     * Admin Sistem → semua tim.
+     *
+     * @return list<\App\Enums\TimTeknis>
+     */
+    public function timTeknis(): array
+    {
+        if ($this->hasRole(\App\Enums\Role::AdminSistem->value)) {
+            return \App\Enums\TimTeknis::cases();
+        }
+
+        return array_values(array_filter(
+            \App\Enums\TimTeknis::cases(),
+            fn (\App\Enums\TimTeknis $t) => $this->hasPermissionTo($t->permission()),
+        ));
+    }
 }
