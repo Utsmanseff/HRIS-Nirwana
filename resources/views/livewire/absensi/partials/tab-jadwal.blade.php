@@ -45,7 +45,7 @@
                 </thead>
                 <tbody>
                     @foreach($kelolaan as $k)
-                        <tr>
+                        <tr wire:key="jrow-{{ $tahun }}-{{ $bulan }}-{{ $k->id }}">
                             <td class="nm"><div class="font-semibold leading-tight">{{ $k->nama_lengkap }}</div><div class="text-[11px] text-neutral-400">{{ $k->jabatan?->nama }}</div></td>
                             @for($d = 1; $d <= $jumlahHari; $d++)
                                 @php($kode = strtoupper((string)($petaJadwal[$k->id][$d] ?? '')))
@@ -53,6 +53,7 @@
                                 @php($we = \Illuminate\Support\Carbon::create($tahun, $bulan, $d)->isWeekend())
                                 <td @class(['we' => $we && ! $warna]) @style(['background:'.$warna.'26' => $warna])>
                                     <input class="cell-input" maxlength="5"
+                                        wire:key="jad-{{ $tahun }}-{{ $bulan }}-{{ $k->id }}-{{ $d }}"
                                         value="{{ $petaJadwal[$k->id][$d] ?? '' }}"
                                         @style(['color:'.$warna => $warna])
                                         wire:change="setSel({{ $k->id }}, {{ $d }}, $event.target.value)">

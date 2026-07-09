@@ -58,13 +58,13 @@
                 <tbody>
                     @php($kol = $tplMode === 'mingguan' ? 7 : $tplPanjang)
                     @foreach($kelolaan as $k)
-                        <tr>
+                        <tr wire:key="trow-{{ $tplMode }}-{{ $k->id }}">
                             <td class="nm"><div class="font-semibold leading-tight">{{ $k->nama_lengkap }}</div><div class="text-[11px] text-neutral-400">{{ $k->jabatan?->nama }}</div></td>
                             @for($p = 0; $p < $kol; $p++)
                                 @php($kode = strtoupper(trim((string)($polaGrid[$k->id][$p] ?? ''))))
                                 @php($warna = $warnaKode[$kode] ?? null)
                                 <td @style(['background:'.$warna.'26' => $warna])>
-                                    <input class="cell-input" wire:model="polaGrid.{{ $k->id }}.{{ $p }}" maxlength="5" @style(['color:'.$warna => $warna]) placeholder="·">
+                                    <input class="cell-input" wire:key="tpl-{{ $tplMode }}-{{ $k->id }}-{{ $p }}" wire:model="polaGrid.{{ $k->id }}.{{ $p }}" maxlength="5" @style(['color:'.$warna => $warna]) placeholder="·">
                                 </td>
                             @endfor
                         </tr>
