@@ -103,6 +103,34 @@ class Karyawan extends Model
             ->exists();
     }
 
+    /**
+     * Unit yang dipimpin karyawan ini (dia kepala unit derived). Kosong bila bukan kepala.
+     *
+     * @return \Illuminate\Support\Collection<int,\App\Models\OrgUnit>
+     */
+    public function unitDipimpin(): \Illuminate\Support\Collection
+    {
+        if (($this->jabatan?->level?->value ?? 0) < 2) {
+            return collect();
+        }
+
+        return OrgUnit::with('karyawan.jabatan')->get()
+            ->filter(fn (OrgUnit $u) => optional($u->kepala())->id === $this->id)
+            ->values();
+    }
+
+    /** Query karyawan aktif di unit-unit yang dipimpin + seluruh turunannya (termasuk diri sendiri). */
+    public function karyawanKelolaan()
+    {
+        $unitIds = $this->unitDipimpin()
+            ->flatMap(fn (OrgUnit $u) => OrgUnit::denganTurunan($u->id))
+            ->unique()->values()->all();
+
+        return static::query()
+            ->whereIn('org_unit_id', $unitIds ?: [-1])
+            ->where('status', StatusKaryawan::Aktif->value);
+    }
+
     public function kontrak(): HasMany
     {
         return $this->hasMany(Kontrak::class);

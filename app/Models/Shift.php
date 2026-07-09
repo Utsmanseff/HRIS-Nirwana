@@ -34,4 +34,10 @@ class Shift extends Model
     {
         return $q->where('aktif', true);
     }
+
+    /** Shift milik unit-unit tertentu. */
+    public function scopeUntukUnit($q, array $unitIds)
+    {
+        return $q->whereIn('org_unit_id', $unitIds);
+    }
 }
