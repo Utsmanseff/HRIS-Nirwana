@@ -92,4 +92,68 @@ class JadwalKelolaTest extends TestCase
             ->call('simpanShift')
             ->assertHasErrors('sKode');
     }
+
+    private function staffDi(OrgUnit $unit): Karyawan
+    {
+        $jab = Jabatan::factory()->create(['org_unit_id' => $unit->id, 'level' => 1]);
+
+        return Karyawan::factory()->create(['org_unit_id' => $unit->id, 'jabatan_id' => $jab->id]);
+    }
+
+    public function test_simpan_template_pola_rotasi_dari_grid_kode(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('tplMode', 'rotasi')
+            ->set('tplJangkar', '2026-07-01')
+            ->set('tplPanjang', 2)
+            ->set("polaGrid.{$staff->id}.0", 'P')
+            ->set("polaGrid.{$staff->id}.1", 'L')
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('template_jadwal', ['org_unit_id' => $unit->id, 'tanggal_jangkar' => '2026-07-01 00:00:00', 'mode' => 'rotasi']);
+        $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+        $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 1, 'shift_id' => null]);
+    }
+
+    public function test_kode_tak_dikenal_ditolak(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('tplMode', 'rotasi')
+            ->set('tplJangkar', '2026-07-01')->set('tplPanjang', 1)
+            ->set("polaGrid.{$staff->id}.0", 'XX')
+            ->call('simpanTemplate')
+            ->assertHasErrors('polaGrid');
+    }
+
+    public function test_simpan_template_mingguan_kunci_7_slot(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('tplMode', 'mingguan')
+            ->set("polaGrid.{$staff->id}.0", 'P')   // Senin
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('template_jadwal', ['org_unit_id' => $unit->id, 'mode' => 'mingguan']);
+        $this->assertSame(7, \App\Models\PolaJadwal::where('karyawan_id', $staff->id)->count());
+        $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+        $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 6, 'shift_id' => null]);
+    }
 }

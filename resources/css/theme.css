@@ -222,6 +222,17 @@ a.btn-primary, a.btn-danger { color:#fff; }
 .tab-btn{ padding:.65rem 1rem; font-size:.875rem; font-weight:600; color:var(--text-muted); border-bottom:2px solid transparent; cursor:pointer; background:none; }
 .tab-btn.on{ color:var(--brand-600); border-color:var(--brand-500); }
 
+/* Grid jadwal/shift (baris=karyawan, kolom=tanggal/posisi/hari) */
+.grid-wrap{ overflow-x:auto; }
+table.sched{ border-collapse:separate; border-spacing:0; font-size:.8rem; }
+.sched th,.sched td{ border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:0; }
+.sched .nm{ position:sticky; left:0; z-index:2; background:var(--bg-surface); min-width:170px; padding:.5rem .75rem; text-align:left; box-shadow:1px 0 0 var(--border); }
+.sched thead th{ background:var(--neutral-50); padding:.4rem .2rem; min-width:38px; font-weight:700; color:var(--text-muted); position:sticky; top:0; z-index:1; }
+.sched thead th.nm{ z-index:3; }
+.cell-input{ width:44px; height:36px; text-align:center; text-transform:uppercase; font-weight:700; font-size:.72rem;
+  border:none; background:var(--bg-surface); color:var(--text); }
+.cell-input:focus{ outline:2px solid var(--brand-400); outline-offset:-2px; }
+
 /* Responsive table → cards on mobile.
    Mark cells: data-label="…" (key), data-primary (header cell, no label),
    data-hide-m (hidden on mobile). */
