@@ -308,6 +308,10 @@ class JadwalKelola extends Component
             'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
             'petaJadwal' => $this->petaJadwalBulan(),
             'namaBulan' => Carbon::create($this->tahun, $this->bulan, 1)->translatedFormat('F Y'),
+            'warnaKode' => $this->unitId
+                ? Shift::where('org_unit_id', $this->unitId)->pluck('warna', 'kode')
+                    ->mapWithKeys(fn ($w, $k) => [strtoupper($k) => $w])->all()
+                : [],
         ]);
     }
 }

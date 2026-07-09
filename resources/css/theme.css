@@ -229,9 +229,13 @@ table.sched{ border-collapse:separate; border-spacing:0; font-size:.8rem; }
 .sched .nm{ position:sticky; left:0; z-index:2; background:var(--bg-surface); min-width:170px; padding:.5rem .75rem; text-align:left; box-shadow:1px 0 0 var(--border); }
 .sched thead th{ background:var(--neutral-50); padding:.4rem .2rem; min-width:38px; font-weight:700; color:var(--text-muted); position:sticky; top:0; z-index:1; }
 .sched thead th.nm{ z-index:3; }
-.cell-input{ width:44px; height:36px; text-align:center; text-transform:uppercase; font-weight:700; font-size:.72rem;
-  border:none; background:var(--bg-surface); color:var(--text); }
-.cell-input:focus{ outline:2px solid var(--brand-400); outline-offset:-2px; }
+.sched tbody tr:hover .nm{ background:var(--neutral-50); }
+.sched td.we{ background:var(--neutral-50); }
+.cell-input{ width:44px; height:38px; text-align:center; text-transform:uppercase; font-weight:700; font-size:.72rem;
+  border:none; background:transparent; color:inherit; transition:background .1s; }
+.cell-input::placeholder{ color:var(--text-subtle); font-weight:400; }
+.cell-input:hover{ box-shadow:inset 0 0 0 2px var(--brand-400); }
+.cell-input:focus{ outline:none; box-shadow:inset 0 0 0 2px var(--brand-500); }
 
 /* Responsive table → cards on mobile.
    Mark cells: data-label="…" (key), data-primary (header cell, no label),
