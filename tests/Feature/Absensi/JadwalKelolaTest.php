@@ -50,4 +50,46 @@ class JadwalKelolaTest extends TestCase
             ->call('gantiTab', 'jadwal')
             ->assertSet('tab', 'jadwal');
     }
+
+    public function test_tambah_shift_untuk_unit(): void
+    {
+        $user = $this->koordinator();
+        $unitId = $user->karyawan->unitDipimpin()->first()->id;
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('sNama', 'Pagi')->set('sKode', 'P')->set('sWarna', '#16A34A')
+            ->set('sMulai', '07:00')->set('sSelesai', '14:00')->set('sToleransi', 15)
+            ->call('simpanShift')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('shift', ['org_unit_id' => $unitId, 'kode' => 'P', 'nama' => 'Pagi']);
+    }
+
+    public function test_edit_shift(): void
+    {
+        $user = $this->koordinator();
+        $unitId = $user->karyawan->unitDipimpin()->first()->id;
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unitId, 'kode' => 'P', 'toleransi_telat' => 10]);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('editShift', $shift->id)
+            ->assertSet('sToleransi', 10)
+            ->set('sToleransi', 20)
+            ->call('simpanShift');
+
+        $this->assertDatabaseHas('shift', ['id' => $shift->id, 'toleransi_telat' => 20]);
+    }
+
+    public function test_kode_shift_unik_per_unit(): void
+    {
+        $user = $this->koordinator();
+        $unitId = $user->karyawan->unitDipimpin()->first()->id;
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unitId, 'kode' => 'P']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('sNama', 'Pagi 2')->set('sKode', 'P')->set('sWarna', '#111111')
+            ->set('sMulai', '08:00')->set('sSelesai', '15:00')->set('sToleransi', 10)
+            ->call('simpanShift')
+            ->assertHasErrors('sKode');
+    }
 }
