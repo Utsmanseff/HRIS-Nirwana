@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ModeTemplate;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ class TemplateJadwal extends Model
 
     protected function casts(): array
     {
-        return ['tanggal_jangkar' => 'date'];
+        return ['tanggal_jangkar' => 'date', 'mode' => ModeTemplate::class];
     }
 
     public function orgUnit(): BelongsTo

@@ -85,6 +85,9 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/disiplin/{sanksi}/surat', [\App\Http\Controllers\Disiplin\SuratSanksiController::class, 'lihat'])
         ->name('disiplin.surat');
 
+    Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)
+        ->middleware('can:kelola-jadwal')->name('absensi.jadwal');
+
     Route::middleware('permission:kelola-sdm')->group(function () {
         Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');
         // '/tambah' harus SEBELUM '{karyawan}' agar tak ditelan route-model-binding.
