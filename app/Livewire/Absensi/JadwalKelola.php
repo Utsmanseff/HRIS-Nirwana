@@ -3,10 +3,13 @@
 namespace App\Livewire\Absensi;
 
 use App\Enums\ModeTemplate;
+use App\Models\Jadwal;
 use App\Models\OrgUnit;
 use App\Models\PolaJadwal;
 use App\Models\Shift;
 use App\Models\TemplateJadwal;
+use App\Support\TerapkanPola;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -39,10 +42,16 @@ class JadwalKelola extends Component
     /** polaGrid[karyawan_id][posisi] = kode (string, '' / 'L' = libur). */
     public array $polaGrid = [];
 
+    // ── Tab Jadwal Bulanan ───────────────────────────────────
+    public ?int $tahun = null;
+    public ?int $bulan = null;
+
     public function mount(): void
     {
         $unit = $this->unitDipimpin()->first();
         $this->unitId ??= $unit?->id;
+        $this->tahun ??= now()->year;
+        $this->bulan ??= now()->month;
     }
 
     /** Unit-unit yang dipimpin user (untuk selektor). */
@@ -212,6 +221,79 @@ class JadwalKelola extends Component
         session()->flash('sukses', 'Template pola disimpan.');
     }
 
+    // ── Tab Jadwal Bulanan ───────────────────────────────────
+    public function bulanSebelumnya(): void
+    {
+        $t = Carbon::create($this->tahun, $this->bulan, 1)->subMonth();
+        $this->tahun = $t->year;
+        $this->bulan = $t->month;
+    }
+
+    public function bulanBerikutnya(): void
+    {
+        $t = Carbon::create($this->tahun, $this->bulan, 1)->addMonth();
+        $this->tahun = $t->year;
+        $this->bulan = $t->month;
+    }
+
+    public function setSel(int $karyawanId, int $hari, string $kode): void
+    {
+        abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
+        abort_unless(auth()->user()->karyawan->karyawanKelolaan()->whereKey($karyawanId)->exists(), 403);
+
+        $tanggal = Carbon::create($this->tahun, $this->bulan, $hari)->toDateString();
+
+        if ($this->kodeLibur($kode)) {
+            Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)->delete();
+
+            return;
+        }
+
+        $shiftId = $this->shiftIdByKode()[strtoupper(trim($kode))] ?? null;
+        if (! $shiftId) {
+            $this->addError('jadwal', "Kode \"{$kode}\" tidak dikenal.");
+
+            return;
+        }
+
+        // whereDate agar cocok kolom date 'Y-m-d 00:00:00'.
+        $row = Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)->first();
+        if ($row) {
+            $row->update(['shift_id' => $shiftId, 'dibuat_oleh' => auth()->id()]);
+        } else {
+            Jadwal::create(['karyawan_id' => $karyawanId, 'tanggal' => $tanggal, 'shift_id' => $shiftId, 'dibuat_oleh' => auth()->id()]);
+        }
+    }
+
+    public function terapkanPola(): void
+    {
+        abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
+        $jumlah = TerapkanPola::generate($this->unitTerpilih(), $this->tahun, $this->bulan, auth()->id(), timpa: true);
+        session()->flash('sukses', "Pola diterapkan: {$jumlah} jadwal.");
+    }
+
+    /** petaJadwal[karyawan_id][hari] = kode shift (untuk isi grid). */
+    protected function petaJadwalBulan(): array
+    {
+        if (! $this->unitId) {
+            return [];
+        }
+        $kelolaanIds = auth()->user()->karyawan->karyawanKelolaan()->pluck('id')->all();
+        $awal = Carbon::create($this->tahun, $this->bulan, 1)->toDateString();
+        $akhir = Carbon::create($this->tahun, $this->bulan, 1)->endOfMonth()->toDateString();
+
+        $peta = [];
+        Jadwal::whereIn('karyawan_id', $kelolaanIds)
+            ->whereBetween('tanggal', [$awal, $akhir])
+            ->with('shift:id,kode')
+            ->get()
+            ->each(function (Jadwal $j) use (&$peta) {
+                $peta[$j->karyawan_id][(int) $j->tanggal->format('j')] = $j->shift?->kode;
+            });
+
+        return $peta;
+    }
+
     public function render()
     {
         return view('livewire.absensi.jadwal-kelola', [
@@ -223,6 +305,9 @@ class JadwalKelola extends Component
             'kelolaan' => $this->unitId
                 ? auth()->user()->karyawan->karyawanKelolaan()->with('jabatan')->orderBy('nama_lengkap')->get()
                 : collect(),
+            'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
+            'petaJadwal' => $this->petaJadwalBulan(),
+            'namaBulan' => Carbon::create($this->tahun, $this->bulan, 1)->translatedFormat('F Y'),
         ]);
     }
 }

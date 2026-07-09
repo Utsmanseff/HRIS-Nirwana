@@ -156,4 +156,39 @@ class JadwalKelolaTest extends TestCase
         $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
         $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 6, 'shift_id' => null]);
     }
+
+    public function test_set_sel_jadwal_membuat_dan_menghapus(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $c = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'jadwal')
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 5, 'P');
+
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-05 00:00:00', 'shift_id' => $shift->id]);
+
+        $c->call('setSel', $staff->id, 5, '');   // kosongkan → hapus
+        $this->assertDatabaseMissing('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-05 00:00:00']);
+    }
+
+    public function test_terapkan_pola_mengisi_bulan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $tpl = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'jadwal')->set('tahun', 2026)->set('bulan', 7)
+            ->call('terapkanPola');
+
+        $this->assertSame(31, \App\Models\Jadwal::where('karyawan_id', $staff->id)->count()); // siklus [P] len1 → tiap hari
+    }
 }
