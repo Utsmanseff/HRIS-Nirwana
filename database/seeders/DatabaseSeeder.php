@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,   // harus duluan: DemoSdmSeeder pakai assignRole
             JenisCutiSeeder::class,
             DemoSdmSeeder::class,
+            DemoAbsensiSeeder::class, // setelah DemoSdmSeeder: butuh org_unit + karyawan
             DemoInventarisSeeder::class, // setelah DemoSdmSeeder: butuh org_unit
             DemoTiketSeeder::class, // butuh aset (DemoInventaris) + user/karyawan
         ]);
