@@ -13,3 +13,6 @@ Schedule::command('sdm:kirim-pengingat')->dailyAt('07:00')->withoutOverlapping()
 
 // Pengingat pemeliharaan aset (H-14) → notifikasi tim pemilik, sekali sehari.
 Schedule::command('inventaris:kirim-pengingat')->dailyAt('07:05')->withoutOverlapping();
+
+// Auto-bentuk jadwal (non-destruktif) bulan berjalan + 2 depan dari template pola.
+Schedule::command('absensi:bentuk-jadwal')->dailyAt('07:10')->withoutOverlapping();
