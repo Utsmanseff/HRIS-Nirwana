@@ -63,7 +63,7 @@
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
                 <svg width="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
             </span>
-            <input wire:model.live.debounce.400ms="cari" class="input pl-9 w-full" placeholder="Cari nama / NIP…">
+            <input wire:model.live.debounce.400ms="cari" class="input w-full" style="padding-left:2.35rem" placeholder="Cari nama / NIP…">
         </div>
         <select wire:model.live="unit" class="select w-auto">
             <option value="">Semua Unit</option>
