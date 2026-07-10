@@ -70,10 +70,6 @@
     @error('lat')  <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
     @error('akurasi') <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
 
-    <p class="text-[11px] text-neutral-400 text-center leading-relaxed mb-4">
-        Foto disimpan sebagai bukti (WebP). Deteksi wajah hanya memastikan <b>ada wajah</b> (bukan pengenalan). Lokasi dicek terhadap radius kantor.
-    </p>
-
     {{-- Peta lokasi (sekunder — di bawah tombol) --}}
     <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Peta Lokasi</div>
     <div x-ref="peta" class="w-full h-40 rounded-lg overflow-hidden mb-1 bg-neutral-100"></div>

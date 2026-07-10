@@ -129,7 +129,11 @@ document.addEventListener('alpine:init', () => {
                 const c = document.createElement('canvas');
                 c.width = v.videoWidth || 480;
                 c.height = v.videoHeight || 600;
-                c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+                const ctx = c.getContext('2d');
+                // Un-mirror: kamera depan kirim frame ter-mirror → balik horizontal agar foto natural.
+                ctx.translate(c.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(v, 0, 0, c.width, c.height);
                 c.toBlob((b) => resolve(b), 'image/webp', 0.85);
             });
         },

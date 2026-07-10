@@ -9,12 +9,9 @@ export function buatPeta(el, cfg) {
         .setView([cfg.officeLat, cfg.officeLong], 17);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(peta);
 
-    // Kantor: lingkaran radius (hijau) + dot pusat hijau.
+    // Kantor: lingkaran radius (hijau) saja.
     L.circle([cfg.officeLat, cfg.officeLong], {
         radius: cfg.radius, color: '#16A34A', fillColor: '#16A34A', fillOpacity: 0.12, weight: 1.5,
-    }).addTo(peta);
-    L.circleMarker([cfg.officeLat, cfg.officeLong], {
-        radius: 6, color: '#fff', weight: 2, fillColor: '#16A34A', fillOpacity: 1,
     }).addTo(peta);
 
     let titik = null; // dot biru posisi user
