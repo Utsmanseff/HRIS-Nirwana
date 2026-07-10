@@ -85,6 +85,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/disiplin/{sanksi}/surat', [\App\Http\Controllers\Disiplin\SuratSanksiController::class, 'lihat'])
         ->name('disiplin.surat');
 
+    Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
+        ->middleware('can:absen')->name('absensi');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)
         ->middleware('can:kelola-jadwal')->name('absensi.jadwal');
 
