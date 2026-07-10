@@ -14,6 +14,12 @@
             <x-icon name="bell" :size="20" />
             <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background:var(--danger-500)"></span>
         </button>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" aria-label="Keluar" title="Keluar" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white">
+                <x-icon name="logout" :size="20" />
+            </button>
+        </form>
     @else
         @if ($back)
             <a href="{{ $back }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100 -ml-1.5" aria-label="kembali">
@@ -24,5 +30,11 @@
         <div class="flex-1"></div>
         <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100" />
         {{ $slot }}
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" aria-label="Keluar" title="Keluar" class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100">
+                <x-icon name="logout" :size="20" />
+            </button>
+        </form>
     @endif
 </header>

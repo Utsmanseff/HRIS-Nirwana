@@ -65,15 +65,23 @@
     </nav>
 
     <div class="p-3 border-t border-white/10">
-        <a href="{{ route('profil') }}" title="Profil Saya" class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
-            <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
-                {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
-            </span>
-            <div class="leading-tight flex-1 min-w-0 sb-label">
-                <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
-                <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
-            </div>
-            <svg width="16" class="text-brand-200/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
-        </a>
+        <div class="flex items-center gap-1">
+            <a href="{{ route('profil') }}" title="Profil Saya" class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition flex-1 min-w-0">
+                <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
+                    {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
+                </span>
+                <div class="leading-tight flex-1 min-w-0 sb-label">
+                    <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
+                    <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
+                </div>
+            </a>
+            <form method="POST" action="{{ route('logout') }}" class="sb-label shrink-0">
+                @csrf
+                <button type="submit" title="Keluar" aria-label="Keluar"
+                        class="w-9 h-9 grid place-items-center rounded-lg text-brand-200/70 hover:text-white hover:bg-white/5 transition">
+                    <x-icon name="logout" :size="18" />
+                </button>
+            </form>
+        </div>
     </div>
 </aside>
