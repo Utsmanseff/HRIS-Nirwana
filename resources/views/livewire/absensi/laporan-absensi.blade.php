@@ -4,9 +4,11 @@
             <h1 class="text-2xl font-extrabold tracking-tight">Laporan Absensi</h1>
             <p class="text-neutral-500 text-sm mt-1">Rekap kehadiran, keterlambatan, dan anomali.</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('absensi.laporan.unduh', array_merge($query, ['format' => 'xlsx'])) }}" class="btn btn-secondary">Ekspor Excel</a>
             <a href="{{ route('absensi.laporan.unduh', array_merge($query, ['format' => 'pdf'])) }}" class="btn btn-secondary">Ekspor PDF</a>
+            <a href="{{ route('absensi.laporan.unduh', array_merge($query, ['mode' => 'per-unit', 'format' => 'xlsx'])) }}" class="btn btn-secondary" title="Semua unit, sheet terpisah per unit, urut nama">Excel per Unit</a>
+            <a href="{{ route('absensi.laporan.unduh', array_merge($query, ['mode' => 'per-unit', 'format' => 'pdf'])) }}" class="btn btn-secondary" title="Semua unit, halaman terpisah per unit, urut nama">PDF per Unit</a>
         </div>
     </div>
 

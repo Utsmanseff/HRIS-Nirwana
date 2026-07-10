@@ -46,6 +46,26 @@ class RekapAbsensi
     }
 
     /**
+     * Kelompokkan baris per unit (semua unit; abaikan filter unit), tiap kelompok terurut nama karyawan.
+     * Kelompok terurut nama unit.
+     *
+     * @param  array<string,mixed>  $f
+     * @return Collection<int,array{unit:\App\Models\OrgUnit,baris:Collection}>
+     */
+    public static function perUnit(array $f): Collection
+    {
+        $rows = self::ambil(array_merge($f, ['unit' => null]));
+
+        return $rows->groupBy(fn (Absensi $a) => $a->karyawan->org_unit_id)
+            ->map(fn (Collection $grup) => [
+                'unit' => $grup->first()->karyawan->orgUnit,
+                'baris' => $grup->sortBy(fn (Absensi $a) => $a->karyawan->nama_lengkap)->values(),
+            ])
+            ->sortBy(fn (array $g) => $g['unit']?->nama)
+            ->values();
+    }
+
+    /**
      * Statistik ringkas untuk stat cards.
      *
      * @param  array<string,mixed>  $f

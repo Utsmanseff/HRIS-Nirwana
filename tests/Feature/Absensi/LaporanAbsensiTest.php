@@ -69,6 +69,43 @@ class LaporanAbsensiTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_ekspor_per_unit_xlsx_multi_sheet(): void
+    {
+        Excel::fake();
+        Carbon::setTestNow('2026-07-10 10:00:00');
+        $user = $this->hrd();
+        $unitA = \App\Models\OrgUnit::factory()->create(['nama' => 'Alfa']);
+        $unitB = \App\Models\OrgUnit::factory()->create(['nama' => 'Beta']);
+        foreach ([$unitA, $unitB] as $u) {
+            $k = Karyawan::factory()->create(['org_unit_id' => $u->id]);
+            Absensi::factory()->create(['karyawan_id' => $k->id, 'tanggal_kerja' => '2026-07-10']);
+        }
+
+        $this->actingAs($user)
+            ->get(route('absensi.laporan.unduh', ['mode' => 'per-unit', 'format' => 'xlsx', 'dari' => '2026-07-10', 'sampai' => '2026-07-10']))
+            ->assertOk();
+
+        Excel::assertDownloaded(
+            NamaFileLaporan::buat('laporan-absensi', ['2026-07-10', 'per-unit'], 'xlsx'),
+            fn (\App\Exports\AbsensiPerUnitExport $export) => count($export->sheets()) === 2,
+        );
+
+        Carbon::setTestNow();
+    }
+
+    public function test_ekspor_per_unit_pdf_terunduh(): void
+    {
+        $user = $this->hrd();
+        $u = \App\Models\OrgUnit::factory()->create(['nama' => 'Alfa']);
+        $k = Karyawan::factory()->create(['org_unit_id' => $u->id]);
+        Absensi::factory()->create(['karyawan_id' => $k->id, 'tanggal_kerja' => now()->toDateString()]);
+
+        $res = $this->actingAs($user)
+            ->get(route('absensi.laporan.unduh', ['mode' => 'per-unit', 'format' => 'pdf', 'dari' => now()->toDateString(), 'sampai' => now()->toDateString()]));
+        $res->assertOk();
+        $this->assertSame('application/pdf', $res->headers->get('content-type'));
+    }
+
     public function test_ekspor_pdf_terunduh(): void
     {
         $user = $this->hrd();

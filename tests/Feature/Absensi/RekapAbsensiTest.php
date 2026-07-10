@@ -49,6 +49,27 @@ class RekapAbsensiTest extends TestCase
         $this->assertSame('telat', $telat->first()->statusRekap());
     }
 
+    public function test_per_unit_kelompok_terurut_dan_isi_sort_nama(): void
+    {
+        $unitA = \App\Models\OrgUnit::factory()->create(['nama' => 'Alfa']);
+        $unitB = \App\Models\OrgUnit::factory()->create(['nama' => 'Beta']);
+        $hari = '2026-06-30';
+
+        $k1 = Karyawan::factory()->create(['org_unit_id' => $unitB->id, 'nama_lengkap' => 'Zulkifli']);
+        $k2 = Karyawan::factory()->create(['org_unit_id' => $unitA->id, 'nama_lengkap' => 'Budi']);
+        $k3 = Karyawan::factory()->create(['org_unit_id' => $unitA->id, 'nama_lengkap' => 'Andi']);
+        foreach ([$k1, $k2, $k3] as $k) {
+            Absensi::factory()->create(['karyawan_id' => $k->id, 'tanggal_kerja' => $hari]);
+        }
+
+        $grup = RekapAbsensi::perUnit(['dari' => $hari, 'sampai' => $hari]);
+
+        // Kelompok terurut nama unit: Alfa dulu, lalu Beta.
+        $this->assertSame(['Alfa', 'Beta'], $grup->map(fn ($g) => $g['unit']->nama)->all());
+        // Isi unit Alfa terurut nama karyawan: Andi, Budi.
+        $this->assertSame(['Andi', 'Budi'], $grup->first()['baris']->map(fn ($a) => $a->karyawan->nama_lengkap)->all());
+    }
+
     public function test_statistik_menghitung_hadir_telat_anomali(): void
     {
         $kar = Karyawan::factory()->create();
