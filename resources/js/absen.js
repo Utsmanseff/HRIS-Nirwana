@@ -3,6 +3,7 @@
 
 import { LokasiHaversine } from './absen-lokasi.js';
 import { mulaiDeteksiWajah } from './absen-wajah.js';
+import { buatPeta } from './absen-peta.js';
 
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('absenSwipe', (cfg) => ({
@@ -38,6 +39,16 @@ document.addEventListener('alpine:init', () => {
             this.$el.addEventListener('kamera-siap', async () => {
                 if (this._kameraGagal) return;
                 this._stopWajah = await mulaiDeteksiWajah(this.$refs.video, (ada) => { this.wajahAda = ada; });
+            });
+            // Peta Leaflet + marker posisi live.
+            this.$nextTick(() => {
+                this._peta = buatPeta(this.$refs.peta, {
+                    officeLat: this.officeLat, officeLong: this.officeLong, radius: this.radius,
+                });
+                this._peta.invalidate();
+            });
+            this.$el.addEventListener('lokasi-berubah', (e) => {
+                this._peta?.posisi(e.detail.lat, e.detail.long);
             });
         },
 
