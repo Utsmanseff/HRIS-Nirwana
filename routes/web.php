@@ -85,8 +85,18 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/disiplin/{sanksi}/surat', [\App\Http\Controllers\Disiplin\SuratSanksiController::class, 'lihat'])
         ->name('disiplin.surat');
 
+    Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
+        ->middleware('can:absen')->name('absensi');
+    Route::get('/absensi/foto/{absensi}/{sesi}', [\App\Http\Controllers\Absensi\LampiranController::class, 'lihat'])
+        ->whereIn('sesi', ['masuk', 'pulang'])->name('absensi.foto');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)
         ->middleware('can:kelola-jadwal')->name('absensi.jadwal');
+    Route::get('/absensi/pengaturan', \App\Livewire\Absensi\PengaturanAbsen::class)
+        ->middleware('can:kelola-pengaturan-absensi')->name('absensi.pengaturan');
+    Route::get('/absensi/laporan', \App\Livewire\Absensi\LaporanAbsensi::class)
+        ->middleware('can:lihat-rekap-absensi')->name('absensi.laporan');
+    Route::get('/absensi/laporan/unduh', [\App\Http\Controllers\Absensi\LaporanAbsensiController::class, 'unduh'])
+        ->middleware('can:lihat-rekap-absensi')->name('absensi.laporan.unduh');
 
     Route::middleware('permission:kelola-sdm')->group(function () {
         Route::get('/sdm/karyawan', KaryawanIndex::class)->name('sdm.karyawan');

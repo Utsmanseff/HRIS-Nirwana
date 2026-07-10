@@ -69,6 +69,14 @@ class Absensi extends Model
             : null;
     }
 
+    /** Label jam kerja "Xj Ym" (atau '-' bila sesi belum tutup). */
+    public function jamKerjaLabel(): string
+    {
+        $m = $this->totalMenit();
+
+        return $m ? intdiv($m, 60).'j '.($m % 60).'m' : '-';
+    }
+
     /** Anomali: sesi nyangkut (aktif & tanggal lampau) atau durasi tak wajar. */
     public function anomali(): bool
     {
@@ -82,5 +90,36 @@ class Absensi extends Model
     public function scopeAktif($q)
     {
         return $q->whereNull('jam_pulang');
+    }
+
+    /** Status rekap derived: anomali | telat | pulang_cepat | normal. */
+    public function statusRekap(): string
+    {
+        if ($this->anomali()) {
+            return 'anomali';
+        }
+        if ($this->telat_menit) {
+            return 'telat';
+        }
+        if ($this->pulang_cepat_menit) {
+            return 'pulang_cepat';
+        }
+
+        return 'normal';
+    }
+
+    /**
+     * Label + kelas badge untuk status rekap.
+     *
+     * @return array{0:string,1:string}
+     */
+    public function labelStatus(): array
+    {
+        return match ($this->statusRekap()) {
+            'anomali' => ['Anomali', 'badge-danger'],
+            'telat' => ['Telat'.($this->telat_menit ? ' '.$this->telat_menit.'m' : ''), 'badge-warning'],
+            'pulang_cepat' => ['Pulang cepat'.($this->pulang_cepat_menit ? ' '.$this->pulang_cepat_menit.'m' : ''), 'badge-warning'],
+            default => [$this->adaShift() ? 'Normal' : 'Tercatat', 'badge-success'],
+        };
     }
 }

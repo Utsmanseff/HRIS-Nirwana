@@ -1,5 +1,8 @@
 // Nirwana HRIS — app entry.
 
+import './absen.js';
+import './absen-pengaturan.js';
+
 // Register the service worker (PWA shell + web push).
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
