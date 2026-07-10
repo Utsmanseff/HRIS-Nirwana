@@ -43,10 +43,23 @@
             || ! empty($bisaKelolaDisiplin)
             || (! empty($bisaInventaris) && \Illuminate\Support\Facades\Route::has('inventaris'))
             || (! empty($bisaKerjakanTiket) && \Illuminate\Support\Facades\Route::has('tiket'))
-            || (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'));
+            || (empty($bisaKerjakanTiket) && ($tiketSaya ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('tiket'))
+            || (! empty($bisaAbsen) && \Illuminate\Support\Facades\Route::has('absensi'));
     @endphp
     @if ($adaKartuRingkas)
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {{-- Kartu absensi (semua karyawan) --}}
+            @if (! empty($bisaAbsen) && \Illuminate\Support\Facades\Route::has('absensi'))
+                <a href="{{ route('absensi') }}" class="card card-pad block hover:shadow-md transition"
+                   style="border-color:var(--brand-200)">
+                    <div class="field-label text-brand-700">Absensi Hari Ini</div>
+                    <div class="text-2xl font-bold tnum text-brand-700">{{ $absenAksi }}</div>
+                    <div class="text-xs text-neutral-500 mt-1">
+                        {{ ! empty($absenSesiAktif) ? 'Sesi masuk aktif · jangan lupa pulang' : 'Ketuk untuk absen masuk' }}
+                    </div>
+                </a>
+            @endif
+
             {{-- Kartu sanksi aktif (karyawan) — muncul saat ada yang aktif --}}
             @if (($sanksiAktif ?? 0) > 0 && \Illuminate\Support\Facades\Route::has('disiplin.saya'))
                 <a href="{{ route('disiplin.saya') }}" class="card card-pad block hover:shadow-md transition" style="border-color:var(--warning-200)">

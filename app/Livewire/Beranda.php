@@ -74,6 +74,14 @@ class Beranda extends Component
         }
         $data['tiketSaya'] = $kar ? \App\Support\RekapTiket::jumlahTiketSaya($kar->id) : 0;
 
+        // Kartu absensi untuk siapa pun yang punya karyawan.
+        $data['bisaAbsen'] = $kar !== null;
+        if ($kar) {
+            $sesi = \App\Support\ProsesAbsen::sesiAktif($kar);
+            $data['absenSesiAktif'] = $sesi !== null;
+            $data['absenAksi'] = $sesi ? 'Absen Pulang' : 'Absen Masuk';
+        }
+
         return view('livewire.beranda', $data);
     }
 }

@@ -153,4 +153,13 @@ class AbsenSwipeTest extends TestCase
         $this->assertNotNull($a->jam_pulang);
         $this->assertNotNull($a->foto_pulang_path);
     }
+
+    public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
+    {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Beranda::class)
+            ->assertSee('Absensi Hari Ini');
+    }
 }
