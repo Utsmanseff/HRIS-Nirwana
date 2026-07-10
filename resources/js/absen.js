@@ -1,0 +1,109 @@
+// Alpine component untuk halaman /absensi. Kamera + geolocation + gating + capture.
+// Deteksi wajah (MediaPipe) & peta (Leaflet) di-hook di Task 5/6 lewat properti reaktif di sini.
+
+import { LokasiHaversine } from './absen-lokasi.js';
+
+document.addEventListener('alpine:init', () => {
+    window.Alpine.data('absenSwipe', (cfg) => ({
+        // konfigurasi kantor (dari server)
+        officeLat: cfg.officeLat,
+        officeLong: cfg.officeLong,
+        radius: cfg.radius,
+        maxAkurasi: cfg.maxAkurasi,
+
+        // state reaktif
+        jam: '--:--',
+        wajahAda: false,       // diisi MediaPipe (Task 5); default false → gerbang UX
+        lat: null,
+        long: null,
+        akurasi: null,
+        dalamRadius: false,
+        lokasiTeks: 'Mencari lokasi…',
+        kameraSiap: false,
+        mengirim: false,
+        _kameraGagal: false,
+
+        get bolehAbsen() {
+            return this.wajahAda && this.dalamRadius && this.akurasi != null
+                && this.akurasi <= this.maxAkurasi && this.kameraSiap && !this.mengirim;
+        },
+
+        init() {
+            this.tickJam();
+            setInterval(() => this.tickJam(), 1000);
+            this.mulaiKamera();
+            this.mulaiLokasi();
+        },
+
+        tickJam() {
+            this.jam = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        },
+
+        async mulaiKamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                this.$refs.video.srcObject = stream;
+                await this.$refs.video.play();
+                this.kameraSiap = true;
+                this.$dispatch('kamera-siap'); // untuk MediaPipe loop (Task 5)
+            } catch (e) {
+                // Fallback: kamera gagal → tetap boleh absen (wajahAda dipaksa true agar tombol tak terkunci),
+                // tapi ambil() mengirim wajahAda=false → server catat wajah_verif=false.
+                this.kameraSiap = true;
+                this.wajahAda = true;
+                this._kameraGagal = true;
+                console.warn('Kamera gagal:', e);
+            }
+        },
+
+        mulaiLokasi() {
+            if (!('geolocation' in navigator)) { this.lokasiTeks = 'GPS tak tersedia'; return; }
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    this.lat = pos.coords.latitude;
+                    this.long = pos.coords.longitude;
+                    this.akurasi = pos.coords.accuracy;
+                    const jarak = LokasiHaversine(this.lat, this.long, this.officeLat, this.officeLong);
+                    this.dalamRadius = jarak <= this.radius;
+                    this.lokasiTeks = this.dalamRadius
+                        ? `Dalam radius · ${Math.round(jarak)}m`
+                        : `Di luar radius · ${Math.round(jarak)}m`;
+                    this.$dispatch('lokasi-berubah', { lat: this.lat, long: this.long }); // untuk Leaflet (Task 6)
+                },
+                (err) => { this.lokasiTeks = 'Izin lokasi ditolak'; console.warn(err); },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+            );
+        },
+
+        async ambil() {
+            if (!this.bolehAbsen) return;
+            this.mengirim = true;
+            try {
+                const blob = await this.tangkapFoto();
+                const wajah = this._kameraGagal ? false : this.wajahAda;
+                this.$wire.set('lat', this.lat, false);
+                this.$wire.set('long', this.long, false);
+                this.$wire.set('akurasi', this.akurasi, false);
+                this.$wire.set('wajahAda', wajah, false);
+                this.$wire.upload('foto', new File([blob], 'absen.webp', { type: 'image/webp' }),
+                    () => { this.$wire.simpan(); this.mengirim = false; },
+                    () => { this.mengirim = false; },
+                    () => {});
+            } catch (e) {
+                console.error(e);
+                this.mengirim = false;
+            }
+        },
+
+        tangkapFoto() {
+            return new Promise((resolve) => {
+                const v = this.$refs.video;
+                const c = document.createElement('canvas');
+                c.width = v.videoWidth || 480;
+                c.height = v.videoHeight || 600;
+                c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+                c.toBlob((b) => resolve(b), 'image/webp', 0.85);
+            });
+        },
+    }));
+});

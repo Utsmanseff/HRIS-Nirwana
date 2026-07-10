@@ -279,3 +279,12 @@ table.sched{ border-collapse:separate; border-spacing:0; font-size:.8rem; }
 /* Fade/stagger entrance */
 @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 .rise { animation:rise .5s cubic-bezier(.16,1,.3,1) both; }
+
+/* Absensi — viewfinder kamera */
+.viewfinder{ position:relative; aspect-ratio:4/5; border-radius:var(--r-lg); overflow:hidden;
+  background:radial-gradient(circle at 50% 35%, #2a3a37, #0d1413); }
+.viewfinder video{ transform:scaleX(-1); } /* mirror kamera depan */
+.face-guide{ position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:54%; aspect-ratio:3/4;
+  border:2.5px solid rgba(255,255,255,.55); border-radius:50%; box-shadow:0 0 0 9999px rgba(0,0,0,.12); pointer-events:none; }
+.chk{ display:flex; align-items:center; justify-content:center; gap:.5rem; font-size:.78rem; font-weight:600;
+  padding:.5rem .7rem; border-radius:var(--r-md); text-align:center; }
