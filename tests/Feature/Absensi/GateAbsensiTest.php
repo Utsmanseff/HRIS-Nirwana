@@ -38,13 +38,19 @@ class GateAbsensiTest extends TestCase
         $this->assertTrue($koor->can('kelola-jadwal'));
     }
 
-    public function test_lihat_rekap_untuk_hrd_atau_kepala(): void
+    public function test_lihat_rekap_hanya_hrd_staffhr_admin(): void
     {
-        $kar = Karyawan::factory()->create();
-        $hrd = User::factory()->create(['karyawan_id' => $kar->id]);
+        $hrd = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
         $hrd->assignRole(Role::Hrd->value);
 
+        $staffHr = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+        $staffHr->assignRole(Role::StaffHr->value);
+
+        $koor = $this->userLevel(2); // koordinator murni, tanpa role
+
         $this->assertTrue($hrd->can('lihat-rekap-absensi'));
+        $this->assertTrue($staffHr->can('lihat-rekap-absensi'));
+        $this->assertFalse($koor->can('lihat-rekap-absensi')); // koordinator TIDAK
     }
 
     private function userLevel(int $level): User

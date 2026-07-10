@@ -38,7 +38,8 @@ class AppServiceProvider extends ServiceProvider
         // Absensi.
         Gate::define('absen', fn ($user) => $user->karyawan !== null);
         Gate::define('kelola-jadwal', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2);
-        Gate::define('lihat-rekap-absensi', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
+        // Laporan absensi: HRD, Staff HR, dan Admin Sistem (via Gate::before). Koordinator TIDAK.
+        Gate::define('lihat-rekap-absensi', fn ($user) => $user->hasRole(Role::Hrd->value) || $user->hasRole(Role::StaffHr->value));
         Gate::define('kelola-pengaturan-absensi', fn ($user) => false); // Admin-only via Gate::before
     }
 }

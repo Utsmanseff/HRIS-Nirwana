@@ -17,7 +17,9 @@ class LingkupAbsensi
 {
     public static function bisaSemua(User $user): bool
     {
-        return $user->hasRole(Role::Hrd->value) || $user->hasRole(Role::AdminSistem->value);
+        return $user->hasRole(Role::Hrd->value)
+            || $user->hasRole(Role::StaffHr->value)
+            || $user->hasRole(Role::AdminSistem->value);
     }
 
     /** ID semua unit dalam subtree yang dipimpin koordinator (kosong bila tak memimpin). */
