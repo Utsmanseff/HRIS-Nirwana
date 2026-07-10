@@ -89,3 +89,15 @@
   html[data-sidebar="collapsed"] .sidebar:hover [data-sb-toggle],
   .app-shell.sb-collapsed .sidebar:hover [data-sb-toggle]{ display:inline-flex; }
 }
+
+/* Sidebar collapsible groups */
+[x-cloak]{ display:none !important; }
+.nv-group-btn{ display:flex; align-items:center; justify-content:space-between; width:100%; gap:.5rem;
+  background:none; border:0; cursor:pointer; }
+.nv-group-btn:hover{ color:rgba(255,255,255,.6); }
+.nv-chevron{ transition:transform .18s ease; flex:none; opacity:.5; }
+.nv-chevron-collapsed{ transform:rotate(-90deg); }
+
+/* Mode rail (72px, pinned) & flyout: abaikan collapse — semua ikon tetap tampil */
+.app-shell.sb-collapsed .sidebar .nv-group-items,
+html[data-sidebar="collapsed"] .sidebar .nv-group-items{ display:block !important; }

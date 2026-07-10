@@ -65,4 +65,23 @@ class NavMenuTest extends TestCase
         $this->assertSame(route('profil'), NavMenu::href($items['profil']));
         $this->assertSame(route('absensi'), NavMenu::href($items['absensi'])); // route terpasang (5-3)
     }
+
+    public function test_aktif_cocok_persis_dan_prefix_terpanjang(): void
+    {
+        // Persis
+        $this->assertSame('absensi', NavMenu::aktif('absensi'));
+        $this->assertSame('karyawan', NavMenu::aktif('sdm.karyawan'));
+        // Sub-route → sorot induk terpanjang
+        $this->assertSame('karyawan', NavMenu::aktif('sdm.karyawan.tambah'));
+        $this->assertSame('absensi-laporan', NavMenu::aktif('absensi.laporan'));
+        $this->assertSame('absensi-laporan', NavMenu::aktif('absensi.laporan.unduh'));
+        // 'absensi' induk tak boleh menang atas 'absensi.laporan'
+        $this->assertNotSame('absensi', NavMenu::aktif('absensi.laporan'));
+    }
+
+    public function test_aktif_tanpa_kecocokan_null(): void
+    {
+        $this->assertNull(NavMenu::aktif('rute.tidak.ada'));
+        $this->assertNull(NavMenu::aktif(null));
+    }
 }

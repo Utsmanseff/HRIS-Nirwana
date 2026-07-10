@@ -4,6 +4,8 @@ namespace App\Livewire\Sistem;
 
 use App\Enums\Permission;
 use App\Enums\Role;
+use App\Enums\StatusKaryawan;
+use App\Models\Karyawan;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -62,6 +64,12 @@ class PenggunaKelola extends Component
 
     public ?string $sandiSementara = null;
 
+    public bool $modeBuat = false;
+
+    public string $cariBaru = '';
+
+    public ?string $sandiBaru = null;
+
     public function bukaKelola(int $id): void
     {
         $user = User::findOrFail($id);
@@ -75,6 +83,80 @@ class PenggunaKelola extends Component
     {
         $this->reset(['kelolaId', 'rolePilihan', 'sandiSementara']);
         $this->resetErrorBag();
+    }
+
+    public function bukaBuat(): void
+    {
+        $this->modeBuat = true;
+        $this->reset(['cariBaru', 'sandiBaru']);
+        $this->resetErrorBag();
+    }
+
+    public function tutupBuat(): void
+    {
+        $this->reset(['modeBuat', 'cariBaru', 'sandiBaru']);
+        $this->resetErrorBag();
+    }
+
+    /** Karyawan aktif yang belum punya akun (kandidat dibuatkan akun). */
+    private function kandidatKaryawan()
+    {
+        if (mb_strlen(trim($this->cariBaru)) < 2) {
+            return collect();
+        }
+
+        $term = '%'.trim($this->cariBaru).'%';
+
+        return Karyawan::query()
+            ->where('status', StatusKaryawan::Aktif->value)
+            ->whereDoesntHave('user')
+            ->where(fn ($w) => $w->where('nama_lengkap', 'like', $term)->orWhere('nip', 'like', $term))
+            ->orderBy('nama_lengkap')
+            ->limit(10)
+            ->get();
+    }
+
+    public function buatAkun(int $karyawanId): void
+    {
+        $kar = Karyawan::query()
+            ->where('id', $karyawanId)
+            ->where('status', StatusKaryawan::Aktif->value)
+            ->whereDoesntHave('user')
+            ->first();
+
+        if (! $kar) {
+            $this->addError('buat', 'Karyawan tidak valid atau sudah punya akun.');
+
+            return;
+        }
+
+        $email = $kar->email;
+        if (! $email || User::where('email', $email)->exists()) {
+            $email = Str::of($kar->nip)->lower()->replaceMatches('/[^a-z0-9]+/', '-')->trim('-').'@nirwana.local';
+        }
+
+        $sandi = Str::password(12, symbols: false);
+
+        $user = User::create([
+            'karyawan_id' => $kar->id,
+            'name' => $kar->nama_lengkap,
+            'email' => $email,
+            'password' => $sandi, // cast 'hashed' meng-hash
+        ]);
+        $user->assignRole(Role::Karyawan->value);
+
+        $this->sandiBaru = $sandi;
+        $this->cariBaru = '';
+    }
+
+    public function hapus(): void
+    {
+        if (! $user = $this->targetKelola()) {
+            return;
+        }
+
+        $user->delete();
+        $this->reset(['kelolaId', 'rolePilihan', 'sandiSementara']);
     }
 
     /** Ambil user target aksi; tolak bila akun sendiri (anti terkunci sendiri). */
@@ -178,6 +260,7 @@ class PenggunaKelola extends Component
             'deskripsiRole' => self::DESKRIPSI_ROLE,
             'daftarPermission' => Permission::cases(),
             'labelPermission' => self::LABEL_PERMISSION,
+            'kandidat' => $this->modeBuat ? $this->kandidatKaryawan() : collect(),
         ]);
     }
 }

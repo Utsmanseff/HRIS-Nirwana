@@ -1,4 +1,8 @@
 @props(['title' => '', 'active' => '', 'breadcrumb' => [], 'brand' => false, 'back' => null])
+@php
+    // Active di-derive dari route saat ini bila tak dioper eksplisit (prop tetap bisa override).
+    $active = $active !== '' ? $active : (\App\Support\NavMenu::aktif(\Illuminate\Support\Facades\Route::currentRouteName()) ?? '');
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

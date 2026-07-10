@@ -29,6 +29,51 @@
             </select>
         </div>
 
+        <div class="flex justify-end">
+            <button wire:click="bukaBuat" class="btn btn-primary btn-sm">＋ Buat Akun</button>
+        </div>
+
+        @if ($modeBuat)
+            <div class="card card-pad space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="font-semibold text-sm">Buat Akun Login Manual</div>
+                    <button wire:click="tutupBuat" class="btn btn-ghost btn-sm">Tutup</button>
+                </div>
+                <p class="text-xs text-neutral-500">Untuk karyawan tanpa akun Google. Pilih karyawan aktif yang belum tertaut; akun dibuat dengan role Karyawan + sandi sementara.</p>
+
+                @error('buat') <p class="text-sm font-semibold" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+
+                @if ($sandiBaru)
+                    <div class="p-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm">
+                        Akun dibuat. Sandi sementara (catat sekarang, hanya tampil sekali):
+                        <div class="font-mono font-bold text-base mt-1">{{ $sandiBaru }}</div>
+                        <div class="text-xs text-neutral-400 mt-1">Login pakai NIP + sandi ini; sarankan ganti di halaman Profil.</div>
+                    </div>
+                @else
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"><x-icon name="search" :size="15" /></span>
+                        <input wire:model.live.debounce.300ms="cariBaru" class="input" style="padding-left:2.35rem"
+                               placeholder="Cari karyawan aktif (nama / NIP)…">
+                    </div>
+                    <div class="divide-y divide-neutral-100">
+                        @forelse ($kandidat as $k)
+                            <div class="flex items-center justify-between py-2">
+                                <div>
+                                    <div class="font-medium text-sm">{{ $k->nama_lengkap }}</div>
+                                    <div class="font-mono text-xs text-neutral-400">{{ $k->nip }}</div>
+                                </div>
+                                <button wire:click="buatAkun({{ $k->id }})" class="btn btn-secondary btn-sm">Buat Akun</button>
+                            </div>
+                        @empty
+                            <div class="py-3 text-center text-xs text-neutral-400">
+                                {{ mb_strlen(trim($cariBaru)) < 2 ? 'Ketik minimal 2 huruf untuk mencari.' : 'Tak ada karyawan aktif belum-tertaut yang cocok.' }}
+                            </div>
+                        @endforelse
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <div class="card overflow-x-auto">
             <table class="w-full text-sm min-w-[720px]">
                 <thead>
@@ -129,6 +174,12 @@
                                                     <p class="text-xs text-neutral-400 mt-1">Untuk kasus salah klaim / penyalahgunaan identitas.</p>
                                                 </div>
                                             @endif
+                                            <div class="pt-1 border-t border-neutral-100">
+                                                <button wire:click="hapus"
+                                                        wire:confirm="Hapus permanen akun {{ $u->name }}? Baris akun dihapus (karyawan tetap ada & bisa dibuatkan akun ulang). Tak bisa dibatalkan."
+                                                        class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Hapus Akun</button>
+                                                <p class="text-xs text-neutral-400 mt-1">Berbeda dari nonaktif (bisa diaktifkan lagi). Ini hapus permanen.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
