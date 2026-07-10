@@ -63,6 +63,6 @@ class NavMenuTest extends TestCase
         $items = collect(NavMenu::untuk($user))->keyBy('id');
 
         $this->assertSame(route('profil'), NavMenu::href($items['profil']));
-        $this->assertSame('#', NavMenu::href($items['absensi'])); // route null → placeholder
+        $this->assertSame(route('absensi'), NavMenu::href($items['absensi'])); // route terpasang (5-3)
     }
 }
