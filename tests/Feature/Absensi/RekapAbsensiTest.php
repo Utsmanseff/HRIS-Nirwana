@@ -81,4 +81,16 @@ class RekapAbsensiTest extends TestCase
         $this->assertSame(2, $stat['hadir']);
         $this->assertSame(1, $stat['telat']);
     }
+
+    public function test_statistik_menghitung_pulang_cepat(): void
+    {
+        $kar = Karyawan::factory()->create();
+        $hari = '2026-07-01';
+        Absensi::factory()->create(['karyawan_id' => $kar->id, 'tanggal_kerja' => $hari, 'pulang_cepat_menit' => 0]);
+        Absensi::factory()->create(['karyawan_id' => $kar->id, 'tanggal_kerja' => $hari, 'pulang_cepat_menit' => 20]);
+
+        $stat = RekapAbsensi::statistik(['dari' => $hari, 'sampai' => $hari]);
+
+        $this->assertSame(1, $stat['pulang_cepat']);
+    }
 }

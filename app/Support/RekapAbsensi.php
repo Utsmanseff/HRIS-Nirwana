@@ -15,7 +15,7 @@ class RekapAbsensi
     public static function query(array $f): Builder
     {
         return Absensi::query()
-            ->with(['karyawan.jabatan', 'karyawan.orgUnit'])
+            ->with(['karyawan.jabatan', 'karyawan.orgUnit', 'shift'])
             ->when(! empty($f['dari']), fn ($q) => $q->whereDate('tanggal_kerja', '>=', $f['dari']))
             ->when(! empty($f['sampai']), fn ($q) => $q->whereDate('tanggal_kerja', '<=', $f['sampai']))
             ->when(! empty($f['unit']), function ($q) use ($f) {
@@ -70,7 +70,7 @@ class RekapAbsensi
      * Statistik ringkas untuk stat cards.
      *
      * @param  array<string,mixed>  $f
-     * @return array{hadir:int,telat:int,anomali:int}
+     * @return array{hadir:int,telat:int,pulang_cepat:int,anomali:int}
      */
     public static function statistik(array $f): array
     {
@@ -79,6 +79,7 @@ class RekapAbsensi
         return [
             'hadir' => $rows->count(),
             'telat' => $rows->filter(fn (Absensi $a) => $a->statusRekap() === 'telat')->count(),
+            'pulang_cepat' => $rows->filter(fn (Absensi $a) => $a->statusRekap() === 'pulang_cepat')->count(),
             'anomali' => $rows->filter(fn (Absensi $a) => $a->statusRekap() === 'anomali')->count(),
         ];
     }
