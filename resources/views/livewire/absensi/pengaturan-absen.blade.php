@@ -1,6 +1,6 @@
 <div class="max-w-3xl mx-auto"
      x-data="petaPengaturan()"
-     x-init="init({ lat: @entangle('officeLat'), long: @entangle('officeLong'), radius: @entangle('radiusM') })">
+     x-init="init()">
     <div class="mb-5">
         <h1 class="text-2xl font-extrabold tracking-tight">Pengaturan Lokasi Absen</h1>
         <p class="text-neutral-500 text-sm mt-1">
