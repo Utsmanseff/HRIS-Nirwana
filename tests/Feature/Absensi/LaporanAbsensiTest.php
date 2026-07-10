@@ -49,6 +49,44 @@ class LaporanAbsensiTest extends TestCase
             ->assertSee('Budi Santoso');
     }
 
+    public function test_admin_lihat_semua_unit_walau_koordinator(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $unitIt = \App\Models\OrgUnit::factory()->create(['nama' => 'IT']);
+        $unitFar = \App\Models\OrgUnit::factory()->create(['nama' => 'Farmasi']);
+        // Admin = koordinator IT + role Admin Sistem.
+        $jab = \App\Models\Jabatan::factory()->create(['org_unit_id' => $unitIt->id, 'level' => 2]);
+        $adminKar = Karyawan::factory()->create(['org_unit_id' => $unitIt->id, 'jabatan_id' => $jab->id, 'nama_lengkap' => 'Admin IT']);
+        $admin = User::factory()->create(['karyawan_id' => $adminKar->id]);
+        $admin->assignRole(Role::AdminSistem->value);
+
+        $karFar = Karyawan::factory()->create(['org_unit_id' => $unitFar->id, 'nama_lengkap' => 'Orang Farmasi']);
+        Absensi::factory()->create(['karyawan_id' => $karFar->id, 'tanggal_kerja' => now()->toDateString()]);
+
+        // "Semua Unit" (unit null) → admin harus lihat data Farmasi juga.
+        Livewire::actingAs($admin)->test(\App\Livewire\Absensi\LaporanAbsensi::class)
+            ->set('unit', null)
+            ->assertSee('Orang Farmasi');
+    }
+
+    public function test_koordinator_dibatasi_subtree(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $unitIt = \App\Models\OrgUnit::factory()->create(['nama' => 'IT']);
+        $unitFar = \App\Models\OrgUnit::factory()->create(['nama' => 'Farmasi']);
+        $jab = \App\Models\Jabatan::factory()->create(['org_unit_id' => $unitIt->id, 'level' => 2]);
+        $koorKar = Karyawan::factory()->create(['org_unit_id' => $unitIt->id, 'jabatan_id' => $jab->id, 'nama_lengkap' => 'Koor IT']);
+        $koor = User::factory()->create(['karyawan_id' => $koorKar->id]); // tanpa role → koordinator murni
+
+        $karFar = Karyawan::factory()->create(['org_unit_id' => $unitFar->id, 'nama_lengkap' => 'Orang Farmasi']);
+        Absensi::factory()->create(['karyawan_id' => $karFar->id, 'tanggal_kerja' => now()->toDateString()]);
+
+        // Koordinator IT tak boleh lihat data Farmasi walau pilih "Semua".
+        Livewire::actingAs($koor)->test(\App\Livewire\Absensi\LaporanAbsensi::class)
+            ->set('unit', null)
+            ->assertDontSee('Orang Farmasi');
+    }
+
     public function test_ekspor_xlsx_terunduh(): void
     {
         Excel::fake();

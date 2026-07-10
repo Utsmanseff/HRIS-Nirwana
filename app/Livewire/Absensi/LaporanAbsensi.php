@@ -2,8 +2,7 @@
 
 namespace App\Livewire\Absensi;
 
-use App\Enums\Role;
-use App\Models\OrgUnit;
+use App\Support\LingkupAbsensi;
 use App\Support\RekapAbsensi;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -37,24 +36,13 @@ class LaporanAbsensi extends Component
     /** @return array<string,mixed> */
     private function filter(): array
     {
-        $f = [
+        return [
             'dari' => $this->dari ?: null,
             'sampai' => $this->sampai ?: null,
-            'unit' => $this->unit ?: null,
+            'unit' => LingkupAbsensi::unitEfektif(auth()->user(), $this->unit ?: null),
             'status' => $this->status ?: null,
             'cari' => $this->cari ?: null,
         ];
-
-        // Koordinator (bukan HRD) dibatasi subtree unit yang dia pimpin.
-        $user = auth()->user();
-        if (! $user->hasRole(Role::Hrd->value) && ! $this->unit) {
-            $unitDipimpin = $user->karyawan?->unitDipimpin();
-            if ($unitDipimpin && $unitDipimpin->isNotEmpty()) {
-                $f['unit'] = $unitDipimpin->first()->id;
-            }
-        }
-
-        return $f;
     }
 
     public function render()
@@ -64,7 +52,7 @@ class LaporanAbsensi extends Component
         return view('livewire.absensi.laporan-absensi', [
             'baris' => RekapAbsensi::ambil($f),
             'stat' => RekapAbsensi::statistik($f),
-            'unitOpsi' => OrgUnit::orderBy('nama')->get(),
+            'unitOpsi' => LingkupAbsensi::opsiUnit(auth()->user()),
             'query' => array_filter([
                 'dari' => $this->dari, 'sampai' => $this->sampai, 'unit' => $this->unit,
                 'status' => $this->status, 'cari' => $this->cari,

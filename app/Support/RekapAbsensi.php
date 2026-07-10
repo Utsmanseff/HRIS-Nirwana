@@ -54,7 +54,8 @@ class RekapAbsensi
      */
     public static function perUnit(array $f): Collection
     {
-        $rows = self::ambil(array_merge($f, ['unit' => null]));
+        // Hormati filter unit (lingkup): null = semua unit, else subtree unit tsb.
+        $rows = self::ambil($f);
 
         return $rows->groupBy(fn (Absensi $a) => $a->karyawan->org_unit_id)
             ->map(fn (Collection $grup) => [

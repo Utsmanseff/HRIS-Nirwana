@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Absensi;
 
-use App\Enums\Role;
 use App\Exports\AbsensiExport;
 use App\Exports\AbsensiPerUnitExport;
 use App\Http\Controllers\Controller;
+use App\Support\LingkupAbsensi;
 use App\Support\NamaFileLaporan;
 use App\Support\RekapAbsensi;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,19 +19,10 @@ class LaporanAbsensiController extends Controller
         $filter = [
             'dari' => $request->query('dari') ?: null,
             'sampai' => $request->query('sampai') ?: null,
-            'unit' => $request->query('unit') ?: null,
+            'unit' => LingkupAbsensi::unitEfektif(auth()->user(), $request->query('unit') ?: null),
             'status' => $request->query('status') ?: null,
             'cari' => $request->query('cari') ?: null,
         ];
-
-        // Koordinator non-HRD dibatasi subtree (guard server, selaras Livewire).
-        $user = auth()->user();
-        if (! $user->hasRole(Role::Hrd->value) && ! $filter['unit']) {
-            $unitDipimpin = $user->karyawan?->unitDipimpin();
-            if ($unitDipimpin && $unitDipimpin->isNotEmpty()) {
-                $filter['unit'] = $unitDipimpin->first()->id;
-            }
-        }
 
         $bagian = [];
         $tokens = [];
@@ -45,9 +36,10 @@ class LaporanAbsensiController extends Controller
         }
         $keterangan = $bagian ? implode(' · ', $bagian) : 'Semua absensi';
 
-        // Mode batch per-unit: semua unit, tiap unit terpisah (sheet Excel / halaman PDF).
+        // Mode batch per-unit: tiap unit terpisah (sheet Excel / halaman PDF).
+        // Privileged = semua unit; koordinator = subtree yang dipimpin.
         if ($request->query('mode') === 'per-unit') {
-            $filter['unit'] = null; // batch selalu semua unit
+            $filter['unit'] = LingkupAbsensi::bisaSemua(auth()->user()) ? null : $filter['unit'];
             $tokens[] = 'per-unit';
 
             if ($request->query('format') === 'xlsx') {
