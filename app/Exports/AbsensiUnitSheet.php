@@ -44,7 +44,7 @@ class AbsensiUnitSheet implements FromCollection, ShouldAutoSize, WithEvents, Wi
 
     protected function kolomLaporan(): array
     {
-        return ['Tanggal', 'Karyawan', 'NIP', 'Shift', 'Masuk', 'Pulang', 'Jam Kerja (mnt)', 'Telat (mnt)', 'Pulang Cepat (mnt)', 'Status'];
+        return ['Tanggal', 'Karyawan', 'NIP', 'Shift', 'Masuk', 'Pulang', 'Jam Kerja', 'Telat (mnt)', 'Pulang Cepat (mnt)', 'Status'];
     }
 
     public function map($a): array
@@ -56,7 +56,7 @@ class AbsensiUnitSheet implements FromCollection, ShouldAutoSize, WithEvents, Wi
             $a->shift_nama ?? '-',
             $a->jam_masuk?->format('H:i') ?? '-',
             $a->jam_pulang?->format('H:i') ?? '-',
-            $a->totalMenit() ?? '',
+            $a->jamKerjaLabel(),
             $a->telat_menit ?? '',
             $a->pulang_cepat_menit ?? '',
             $a->labelStatus()[0],

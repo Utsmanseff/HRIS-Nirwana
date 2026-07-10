@@ -69,6 +69,14 @@ class Absensi extends Model
             : null;
     }
 
+    /** Label jam kerja "Xj Ym" (atau '-' bila sesi belum tutup). */
+    public function jamKerjaLabel(): string
+    {
+        $m = $this->totalMenit();
+
+        return $m ? intdiv($m, 60).'j '.($m % 60).'m' : '-';
+    }
+
     /** Anomali: sesi nyangkut (aktif & tanggal lampau) atau durasi tak wajar. */
     public function anomali(): bool
     {
