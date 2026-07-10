@@ -2,6 +2,7 @@
 // Deteksi wajah (MediaPipe) & peta (Leaflet) di-hook di Task 5/6 lewat properti reaktif di sini.
 
 import { LokasiHaversine } from './absen-lokasi.js';
+import { mulaiDeteksiWajah } from './absen-wajah.js';
 
 document.addEventListener('alpine:init', () => {
     window.Alpine.data('absenSwipe', (cfg) => ({
@@ -33,6 +34,11 @@ document.addEventListener('alpine:init', () => {
             setInterval(() => this.tickJam(), 1000);
             this.mulaiKamera();
             this.mulaiLokasi();
+            // Mulai deteksi wajah begitu kamera siap (lewati bila kamera gagal → fallback).
+            this.$el.addEventListener('kamera-siap', async () => {
+                if (this._kameraGagal) return;
+                this._stopWajah = await mulaiDeteksiWajah(this.$refs.video, (ada) => { this.wajahAda = ada; });
+            });
         },
 
         tickJam() {
