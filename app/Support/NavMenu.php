@@ -55,4 +55,30 @@ class NavMenu
     {
         return $item['route'] && Route::has($item['route']) ? route($item['route']) : '#';
     }
+
+    /**
+     * ID item yang route-nya paling cocok (prefix terpanjang) dengan route saat ini.
+     * Cocok bila $routeName === route ATAU diawali route.'.' (sub-route sorot induk).
+     */
+    public static function aktif(?string $routeName): ?string
+    {
+        if (! $routeName) {
+            return null;
+        }
+
+        $best = null;
+        $bestLen = -1;
+        foreach (self::semua() as $it) {
+            $r = $it['route'];
+            if (! $r) {
+                continue;
+            }
+            if (($routeName === $r || str_starts_with($routeName, $r.'.')) && strlen($r) > $bestLen) {
+                $best = $it['id'];
+                $bestLen = strlen($r);
+            }
+        }
+
+        return $best;
+    }
 }
