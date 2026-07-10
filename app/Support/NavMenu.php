@@ -26,6 +26,7 @@ class NavMenu
             ['id' => 'laporan-cuti', 'label' => 'Laporan Cuti', 'icon' => 'chart', 'route' => 'cuti.laporan', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
             ['id' => 'absensi',  'label' => 'Absensi',        'icon' => 'clock',    'route' => 'absensi',        'can' => Permission::AjukanCutiAbsen->value, 'group' => 'Operasional'],
             ['id' => 'absensi-jadwal', 'label' => 'Jadwal Shift', 'icon' => 'calendar', 'route' => 'absensi.jadwal', 'can' => 'kelola-jadwal', 'group' => 'Operasional'],
+            ['id' => 'absensi-laporan', 'label' => 'Laporan Absensi', 'icon' => 'chart', 'route' => 'absensi.laporan', 'can' => 'lihat-rekap-absensi', 'group' => 'Operasional'],
             ['id' => 'absensi-pengaturan', 'label' => 'Pengaturan Absen', 'icon' => 'cog', 'route' => 'absensi.pengaturan', 'can' => 'kelola-pengaturan-absensi', 'group' => 'Operasional'],
             ['id' => 'tiket',    'label' => 'Tiket',          'icon' => 'ticket',   'route' => 'tiket',          'can' => null, 'group' => 'Operasional'],
             ['id' => 'inventaris', 'label' => 'Inventaris',   'icon' => 'box',      'route' => 'inventaris',     'can' => 'kelola-inventaris', 'group' => 'Operasional'],
