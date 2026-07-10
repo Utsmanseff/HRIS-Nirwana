@@ -43,8 +43,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         setDari(latlng) {
-            this.$wire.set('officeLat', Number(latlng.lat.toFixed(7)));
-            this.$wire.set('officeLong', Number(latlng.lng.toFixed(7)));
+            // Deferred (arg ke-3 = false) → update properti tanpa round-trip/re-render (peta tak morph).
+            this.$wire.set('officeLat', Number(latlng.lat.toFixed(7)), false);
+            this.$wire.set('officeLong', Number(latlng.lng.toFixed(7)), false);
             this.lingkaran.setLatLng(latlng);
         },
 

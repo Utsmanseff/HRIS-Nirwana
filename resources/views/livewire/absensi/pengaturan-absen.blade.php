@@ -15,7 +15,7 @@
 
     <div class="card card-pad space-y-4">
         {{-- Peta drag-marker --}}
-        <div x-ref="peta" class="w-full h-64 rounded-lg overflow-hidden bg-neutral-100"></div>
+        <div x-ref="peta" wire:ignore class="w-full h-64 rounded-lg overflow-hidden bg-neutral-100"></div>
         <p class="text-[11px] text-neutral-400">Seret pin atau klik peta untuk memindahkan titik kantor. Lingkaran = radius.</p>
 
         <div class="grid grid-cols-2 gap-4">
