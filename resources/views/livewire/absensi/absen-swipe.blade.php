@@ -97,6 +97,12 @@
                         {{ $a->shift_nama ? '· '.$a->shift_nama : '' }}
                     </div>
                 </div>
+                @if ($a->foto_masuk_path)
+                    <a href="{{ route('absensi.foto', [$a->id, 'masuk']) }}" target="_blank"
+                       class="w-9 h-9 rounded-md overflow-hidden bg-neutral-100 shrink-0" title="Foto masuk">
+                        <img src="{{ route('absensi.foto', [$a->id, 'masuk']) }}" alt="Foto masuk" class="w-full h-full object-cover" loading="lazy">
+                    </a>
+                @endif
                 @if ($a->anomali())
                     <span class="badge badge-danger">Anomali</span>
                 @elseif ($a->telat_menit)

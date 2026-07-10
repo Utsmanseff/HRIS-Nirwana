@@ -87,6 +87,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
 
     Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
         ->middleware('can:absen')->name('absensi');
+    Route::get('/absensi/foto/{absensi}/{sesi}', [\App\Http\Controllers\Absensi\LampiranController::class, 'lihat'])
+        ->whereIn('sesi', ['masuk', 'pulang'])->name('absensi.foto');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)
         ->middleware('can:kelola-jadwal')->name('absensi.jadwal');
 
