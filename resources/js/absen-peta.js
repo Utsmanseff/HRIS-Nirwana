@@ -21,11 +21,26 @@ export function buatPeta(el, cfg) {
     }).addTo(peta);
     L.marker([cfg.officeLat, cfg.officeLong]).addTo(peta); // kantor
 
-    let saya = null;
+    let titik = null;   // dot biru posisi user
+    let halo = null;    // lingkaran akurasi GPS
     return {
-        posisi(lat, long) {
-            if (saya) saya.setLatLng([lat, long]);
-            else saya = L.marker([lat, long], { icon: ikon, opacity: 0.9 }).addTo(peta);
+        posisi(lat, long, akurasi) {
+            if (titik) {
+                titik.setLatLng([lat, long]);
+            } else {
+                titik = L.circleMarker([lat, long], {
+                    radius: 6, color: '#fff', weight: 2, fillColor: '#2563EB', fillOpacity: 1,
+                }).addTo(peta);
+            }
+            // Lingkaran akurasi (radius = akurasi meter) — makin besar makin tak akurat.
+            const akur = Math.max(akurasi || 0, 1);
+            if (halo) {
+                halo.setLatLng([lat, long]).setRadius(akur);
+            } else {
+                halo = L.circle([lat, long], {
+                    radius: akur, color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.1, weight: 1,
+                }).addTo(peta);
+            }
             peta.panTo([lat, long]);
         },
         invalidate() { setTimeout(() => peta.invalidateSize(), 100); },

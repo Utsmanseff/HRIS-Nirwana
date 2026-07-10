@@ -48,7 +48,7 @@ document.addEventListener('alpine:init', () => {
                 this._peta.invalidate();
             });
             this.$el.addEventListener('lokasi-berubah', (e) => {
-                this._peta?.posisi(e.detail.lat, e.detail.long);
+                this._peta?.posisi(e.detail.lat, e.detail.long, e.detail.akurasi);
             });
         },
 
@@ -75,6 +75,11 @@ document.addEventListener('alpine:init', () => {
 
         mulaiLokasi() {
             if (!('geolocation' in navigator)) { this.lokasiTeks = 'GPS tak tersedia'; return; }
+            if (!window.isSecureContext) {
+                this.lokasiTeks = 'GPS butuh HTTPS/localhost';
+                console.warn('Geolocation diblokir: origin bukan secure context (butuh https atau localhost).');
+                return;
+            }
             navigator.geolocation.watchPosition(
                 (pos) => {
                     this.lat = pos.coords.latitude;
@@ -82,13 +87,19 @@ document.addEventListener('alpine:init', () => {
                     this.akurasi = pos.coords.accuracy;
                     const jarak = LokasiHaversine(this.lat, this.long, this.officeLat, this.officeLong);
                     this.dalamRadius = jarak <= this.radius;
+                    const akur = Math.round(this.akurasi);
                     this.lokasiTeks = this.dalamRadius
-                        ? `Dalam radius · ${Math.round(jarak)}m`
-                        : `Di luar radius · ${Math.round(jarak)}m`;
-                    this.$dispatch('lokasi-berubah', { lat: this.lat, long: this.long }); // untuk Leaflet (Task 6)
+                        ? `Dalam radius · ${Math.round(jarak)}m (±${akur}m)`
+                        : `Di luar radius · ${Math.round(jarak)}m (±${akur}m)`;
+                    this.$dispatch('lokasi-berubah', { lat: this.lat, long: this.long, akurasi: this.akurasi }); // untuk Leaflet
                 },
-                (err) => { this.lokasiTeks = 'Izin lokasi ditolak'; console.warn(err); },
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+                (err) => {
+                    // Bedakan sebab: 1=izin ditolak, 2=posisi tak tersedia, 3=timeout.
+                    const pesan = { 1: 'Izin lokasi ditolak', 2: 'Lokasi tak tersedia (tak ada sinyal GPS)', 3: 'GPS timeout — coba lagi' };
+                    this.lokasiTeks = pesan[err.code] || 'GPS gagal';
+                    console.warn('Geolocation error', err.code, err.message);
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }, // maximumAge:0 = paksa fix GPS segar, bukan cache network
             );
         },
 
