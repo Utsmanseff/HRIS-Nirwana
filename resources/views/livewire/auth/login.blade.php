@@ -25,7 +25,7 @@
 
             {{-- Aksi utama: Google --}}
             <a href="{{ route('auth.google') }}" class="btn btn-primary btn-lg w-full gap-2">
-                <x-icon name="user" :size="18" /> Masuk dengan Google
+                <x-icon-google :size="18" /> Masuk dengan Google
             </a>
 
             <div class="flex items-center gap-3 my-5 text-neutral-400">
