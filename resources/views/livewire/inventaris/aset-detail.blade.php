@@ -108,7 +108,7 @@
                     <div class="flex items-center gap-1.5">
                         <button wire:click="tandaiJadwalSelesai({{ $j->id }})" class="btn btn-ghost btn-sm">Tandai Selesai</button>
                         <button wire:click="editJadwal({{ $j->id }})" class="btn btn-ghost btn-sm">Ubah</button>
-                        <button wire:click="hapusJadwal({{ $j->id }})" wire:confirm="Hapus jadwal ini?" class="btn btn-ghost btn-sm" style="color:var(--danger-500)">Hapus</button>
+                        <button x-on:click="$store.konfirmasi.buka({ judul: 'Hapus jadwal ini?', pesan: 'Jadwal pemeliharaan akan dihapus.', varian: 'danger', labelYa: 'Hapus', onConfirm: () => $wire.hapusJadwal({{ $j->id }}) })" class="btn btn-ghost btn-sm" style="color:var(--danger-500)">Hapus</button>
                     </div>
                 </div>
             @empty
@@ -205,7 +205,7 @@
                             </a>
                             <div class="flex items-center justify-between gap-1">
                                 <span class="text-xs font-semibold capitalize">{{ $l->tipe }}</span>
-                                <button wire:click="hapusLampiran({{ $l->id }})" wire:confirm="Hapus lampiran ini?" class="btn btn-ghost btn-sm" style="color:var(--danger-500)">×</button>
+                                <button x-on:click="$store.konfirmasi.buka({ judul: 'Hapus lampiran ini?', pesan: 'Berkas lampiran akan dihapus permanen.', varian: 'danger', labelYa: 'Hapus', onConfirm: () => $wire.hapusLampiran({{ $l->id }}) })" class="btn btn-ghost btn-sm" style="color:var(--danger-500)">×</button>
                             </div>
                             @if ($l->berlaku_sampai)
                                 <div class="text-[11px] text-neutral-400">Berlaku s/d {{ $l->berlaku_sampai->format('d M Y') }}</div>

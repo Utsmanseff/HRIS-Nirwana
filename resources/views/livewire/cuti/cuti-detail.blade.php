@@ -91,7 +91,7 @@
     @endif
 
     @if ($pend)
-        <button wire:click="batalkan" wire:confirm="Batalkan pengajuan ini?" class="btn btn-secondary w-full text-danger-600 !border-danger-100">
+        <button x-on:click="$store.konfirmasi.buka({ judul: 'Batalkan pengajuan ini?', pesan: 'Pengajuan cuti akan dibatalkan dan tidak diproses lebih lanjut.', varian: 'primary', labelYa: 'Batalkan', onConfirm: () => $wire.batalkan() })" class="btn btn-secondary w-full text-danger-600 !border-danger-100">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>Batalkan Pengajuan
         </button>
     @endif
