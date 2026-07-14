@@ -10,10 +10,8 @@ use App\Support\PengingatKontrak;
 use App\Support\PengingatSip;
 use App\Support\RekapCuti;
 use App\Support\SaldoCuti;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
 class Beranda extends Component
 {
     public function render()
@@ -82,6 +80,8 @@ class Beranda extends Component
             $data['absenAksi'] = $sesi ? 'Absen Pulang' : 'Absen Masuk';
         }
 
-        return view('livewire.beranda', $data);
+        // brand=true → appbar mobile tampil logo + "NirwanaHRIS" (home only).
+        return view('livewire.beranda', $data)
+            ->layout('components.layouts.app', ['brand' => true]);
     }
 }
