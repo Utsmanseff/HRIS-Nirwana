@@ -74,10 +74,17 @@ class Beranda extends Component
 
         // Kartu absensi untuk siapa pun yang punya karyawan.
         $data['bisaAbsen'] = $kar !== null;
+        $data['shiftHariIni'] = null;
         if ($kar) {
             $sesi = \App\Support\ProsesAbsen::sesiAktif($kar);
             $data['absenSesiAktif'] = $sesi !== null;
             $data['absenAksi'] = $sesi ? 'Absen Pulang' : 'Absen Masuk';
+
+            // Shift terjadwal hari ini (bila unit memakai shift) → ditempel di kartu absensi.
+            $data['shiftHariIni'] = \App\Models\Jadwal::where('karyawan_id', $kar->id)
+                ->whereDate('tanggal', today())
+                ->with('shift')
+                ->first()?->shift;
         }
 
         // brand=true → appbar mobile tampil logo + "NirwanaHRIS" (home only).
