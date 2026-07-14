@@ -33,7 +33,7 @@ class PenggunaDaftarTest extends TestCase
         $user->assignRole(Role::Karyawan->value);
 
         Livewire::test(PenggunaKelola::class)
-            ->assertSee('Budi')
+            ->assertSee('Budi Santoso')
             ->assertSee('NIP-777')
             ->assertSee('Karyawan');
     }
@@ -49,8 +49,8 @@ class PenggunaDaftarTest extends TestCase
 
     public function test_search_menyaring_by_nama_email_nip(): void
     {
-        $k = Karyawan::factory()->create(['nip' => 'NIP-CARI']);
-        User::factory()->create(['name' => 'Target Orang', 'karyawan_id' => $k->id]);
+        $k = Karyawan::factory()->create(['nip' => 'NIP-CARI', 'nama_lengkap' => 'Target Orang']);
+        User::factory()->create(['name' => 'Target User', 'karyawan_id' => $k->id]);
         User::factory()->create(['name' => 'Orang Lain', 'karyawan_id' => Karyawan::factory()->create()->id]);
 
         Livewire::test(PenggunaKelola::class)
@@ -61,9 +61,12 @@ class PenggunaDaftarTest extends TestCase
 
     public function test_filter_role_dan_status(): void
     {
-        $hrd = User::factory()->create(['name' => 'Bu HRD', 'karyawan_id' => Karyawan::factory()->create()->id]);
+        $hrdKaryawan = Karyawan::factory()->create(['nama_lengkap' => 'Bu HRD']);
+        $hrd = User::factory()->create(['name' => 'HRD User', 'karyawan_id' => $hrdKaryawan->id]);
         $hrd->assignRole(Role::Hrd->value);
-        User::factory()->nonaktif()->create(['name' => 'Si Nonaktif', 'karyawan_id' => Karyawan::factory()->create()->id]);
+
+        $nonaktifKaryawan = Karyawan::factory()->create(['nama_lengkap' => 'Si Nonaktif']);
+        User::factory()->nonaktif()->create(['name' => 'Nonaktif User', 'karyawan_id' => $nonaktifKaryawan->id]);
 
         Livewire::test(PenggunaKelola::class)
             ->set('filterRole', Role::Hrd->value)

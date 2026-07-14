@@ -90,7 +90,7 @@
                     @forelse ($users as $u)
                         <tr class="border-b border-neutral-100 last:border-0 align-top">
                             <td class="px-4 py-2.5">
-                                <div class="font-semibold">{{ $u->name }}</div>
+                                <div class="font-semibold">{{ $u->namaTampilan() }}</div>
                                 <div class="text-xs text-neutral-400">{{ $u->email }}</div>
                             </td>
                             <td class="px-4 py-2.5">

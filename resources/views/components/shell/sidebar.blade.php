@@ -68,10 +68,10 @@
         <div class="flex items-center gap-1">
             <a href="{{ route('profil') }}" title="Profil Saya" class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition flex-1 min-w-0">
                 <span class="avatar w-8 h-8 text-xs" style="background:var(--brand-200);color:var(--brand-800)">
-                    {{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
+                    {{ \Illuminate\Support\Str::of(auth()->user()?->namaTampilan() ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}
                 </span>
                 <div class="leading-tight flex-1 min-w-0 sb-label">
-                    <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
+                    <div class="text-[13px] font-semibold text-white truncate">{{ auth()->user()?->namaTampilan() }}</div>
                     <div class="text-[11px] text-brand-200/70 truncate">{{ auth()->user()?->getRoleNames()->implode(' · ') ?: 'Karyawan' }}</div>
                 </div>
             </a>
