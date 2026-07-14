@@ -53,7 +53,7 @@
 <h1>@yield('judul')</h1>
 <div class="meta">
     @yield('keterangan-filter')<br>
-    Dicetak {{ now()->locale('id')->translatedFormat('j F Y H:i') }} oleh {{ auth()->user()->name }}
+    Dicetak {{ now()->locale('id')->translatedFormat('j F Y H:i') }} oleh {{ auth()->user()?->namaTampilan() }}
 </div>
 
 @yield('isi')

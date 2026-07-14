@@ -90,7 +90,7 @@
                     @forelse ($users as $u)
                         <tr class="border-b border-neutral-100 last:border-0 align-top">
                             <td class="px-4 py-2.5">
-                                <div class="font-semibold">{{ $u->name }}</div>
+                                <div class="font-semibold">{{ $u->namaTampilan() }}</div>
                                 <div class="text-xs text-neutral-400">{{ $u->email }}</div>
                             </td>
                             <td class="px-4 py-2.5">
@@ -146,8 +146,7 @@
                                         </div>
                                         <div class="space-y-3">
                                             <div>
-                                                <button wire:click="resetSandi"
-                                                        wire:confirm="Reset sandi akun {{ $u->name }}? Sandi lama tidak berlaku lagi."
+                                                <button x-on:click="$store.konfirmasi.buka({ judul: 'Reset sandi akun?', pesan: @js('Sandi lama akun '.$u->namaTampilan().' tidak berlaku lagi.'), varian: 'danger', labelYa: 'Reset', onConfirm: () => $wire.resetSandi() })"
                                                         class="btn btn-secondary btn-sm w-full">Reset Sandi</button>
                                                 @if ($sandiSementara)
                                                     <div class="mt-2 p-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm">
@@ -159,8 +158,7 @@
                                             </div>
                                             <div>
                                                 @if ($u->akunAktif())
-                                                    <button wire:click="toggleAktif"
-                                                            wire:confirm="Nonaktifkan akun {{ $u->name }}? Ia tidak akan bisa login dan sesi berjalannya diputus."
+                                                    <button x-on:click="$store.konfirmasi.buka({ judul: 'Nonaktifkan akun?', pesan: @js($u->namaTampilan().' tidak akan bisa login dan sesi berjalannya diputus.'), varian: 'danger', labelYa: 'Nonaktifkan', onConfirm: () => $wire.toggleAktif() })"
                                                             class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Nonaktifkan Akun</button>
                                                 @else
                                                     <button wire:click="toggleAktif" class="btn btn-secondary btn-sm w-full">Aktifkan Lagi</button>
@@ -168,15 +166,13 @@
                                             </div>
                                             @if ($u->karyawan)
                                                 <div>
-                                                    <button wire:click="unlink"
-                                                            wire:confirm="Putuskan tautan akun {{ $u->name }} dari karyawan {{ $u->karyawan->nama_lengkap }} ({{ $u->karyawan->nip }})? Semua role dicabut dan data karyawan bisa diklaim ulang."
+                                                    <button x-on:click="$store.konfirmasi.buka({ judul: 'Putuskan tautan akun?', pesan: @js('Akun '.$u->namaTampilan().' dilepas dari karyawan '.($u->karyawan?->nama_lengkap).' ('.($u->karyawan?->nip).'). Semua role dicabut dan data karyawan bisa diklaim ulang.'), varian: 'danger', labelYa: 'Putuskan', onConfirm: () => $wire.unlink() })"
                                                             class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Putuskan Tautan Karyawan</button>
                                                     <p class="text-xs text-neutral-400 mt-1">Untuk kasus salah klaim / penyalahgunaan identitas.</p>
                                                 </div>
                                             @endif
                                             <div class="pt-1 border-t border-neutral-100">
-                                                <button wire:click="hapus"
-                                                        wire:confirm="Hapus permanen akun {{ $u->name }}? Baris akun dihapus (karyawan tetap ada & bisa dibuatkan akun ulang). Tak bisa dibatalkan."
+                                                <button x-on:click="$store.konfirmasi.buka({ judul: 'Hapus permanen akun?', pesan: @js('Baris akun '.$u->namaTampilan().' dihapus (karyawan tetap ada & bisa dibuatkan akun ulang). Tak bisa dibatalkan.'), varian: 'danger', labelYa: 'Hapus', onConfirm: () => $wire.hapus() })"
                                                         class="btn btn-secondary btn-sm w-full" style="color:var(--danger-500)">Hapus Akun</button>
                                                 <p class="text-xs text-neutral-400 mt-1">Berbeda dari nonaktif (bisa diaktifkan lagi). Ini hapus permanen.</p>
                                             </div>

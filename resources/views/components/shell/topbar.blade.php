@@ -32,5 +32,5 @@
 
     <livewire:notification-bell />
 
-    <span class="avatar w-9 h-9 text-xs md:hidden">{{ \Illuminate\Support\Str::of(auth()->user()?->name ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}</span>
+    <span class="avatar w-9 h-9 text-xs md:hidden">{{ \Illuminate\Support\Str::of(auth()->user()?->namaTampilan() ?? 'U')->explode(' ')->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->implode('') }}</span>
 </header>

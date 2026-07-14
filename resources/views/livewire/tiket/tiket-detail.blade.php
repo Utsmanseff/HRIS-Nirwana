@@ -22,7 +22,7 @@
             </div>
             @if ($anggotaTim && in_array($tiket->status, \App\Enums\StatusTiket::aktif(), true))
                 <div class="flex items-center gap-2">
-                    <button class="btn btn-secondary" wire:click="batalkan" wire:confirm="Batalkan tiket ini?">Batalkan</button>
+                    <button class="btn btn-secondary" x-on:click="$store.konfirmasi.buka({ judul: 'Batalkan tiket ini?', pesan: 'Tiket akan ditandai batal dan tidak bisa diproses lagi.', varian: 'primary', labelYa: 'Batalkan', onConfirm: () => $wire.batalkan() })">Batalkan</button>
                     @if ($tiket->status === \App\Enums\StatusTiket::Baru)
                         <button class="btn btn-primary" wire:click="mulai">Mulai Proses</button>
                     @endif
@@ -49,7 +49,7 @@
                         <div class="flex gap-1.5">
                             <a href="{{ route('inventaris.detail', $tiket->aset) }}" class="btn btn-ghost btn-sm">Buka aset</a>
                             @if ($anggotaTim && in_array($tiket->status, \App\Enums\StatusTiket::aktif(), true))
-                                <button class="btn btn-ghost btn-sm text-danger-600" wire:click="lepasAsetTaut" wire:confirm="Lepas taut aset dari tiket ini?">Lepas</button>
+                                <button class="btn btn-ghost btn-sm text-danger-600" x-on:click="$store.konfirmasi.buka({ judul: 'Lepas taut aset?', pesan: 'Aset akan dilepas dari tiket ini.', varian: 'danger', labelYa: 'Lepas', onConfirm: () => $wire.lepasAsetTaut() })">Lepas</button>
                             @endif
                         </div>
                     </div>
