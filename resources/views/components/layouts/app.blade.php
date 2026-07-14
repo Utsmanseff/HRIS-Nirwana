@@ -44,6 +44,7 @@
             <div class="contents lg:hidden"><x-shell.bottom-nav :active="$active" /></div>
         </div>
     </div>
+    <x-konfirmasi />
     @livewireScripts
 </body>
 </html>

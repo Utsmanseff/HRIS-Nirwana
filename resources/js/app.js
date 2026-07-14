@@ -2,6 +2,7 @@
 
 import './absen.js';
 import './absen-pengaturan.js';
+import './konfirmasi.js';
 
 // Register the service worker (PWA shell + web push).
 if ('serviceWorker' in navigator) {
