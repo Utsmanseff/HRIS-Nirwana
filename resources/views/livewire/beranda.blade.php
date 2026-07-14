@@ -121,7 +121,7 @@
         <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Menu</div>
         <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
             @foreach ($menu as $it)
-                @continue(in_array($it['id'], ['beranda', 'notif'], true))
+                @continue(in_array($it['id'], ['beranda', 'riwayat', 'notif'], true))
                 @php $placeholder = $it['route'] === null; @endphp
                 <a href="{{ \App\Support\NavMenu::href($it) }}"
                    @class(['tile', 'opacity-40 pointer-events-none' => $placeholder])

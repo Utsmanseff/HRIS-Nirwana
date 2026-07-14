@@ -1,12 +1,12 @@
 @props(['active' => ''])
 @php
     // Bottom-nav 4 slot tetap karyawan (mockup m-home): Beranda/Riwayat/Notif/Profil.
-    // Beranda & Notif via NavMenu::href (Route::has-guarded). Riwayat masih placeholder ('#').
+    // Beranda/Riwayat/Notif via NavMenu::href (Route::has-guarded).
     $reg = collect(\App\Support\NavMenu::untuk(auth()->user()))->keyBy('id');
     $belumDibaca = auth()->user()->unreadNotifications()->count();
     $nav = [
         ['id' => 'beranda', 'label' => 'Beranda', 'href' => isset($reg['beranda']) ? \App\Support\NavMenu::href($reg['beranda']) : '#', 'icon' => 'home'],
-        ['id' => 'riwayat', 'label' => 'Riwayat', 'href' => '#', 'icon' => 'history'],
+        ['id' => 'riwayat', 'label' => 'Riwayat', 'href' => isset($reg['riwayat']) ? \App\Support\NavMenu::href($reg['riwayat']) : '#', 'icon' => 'history'],
         ['id' => 'notif', 'label' => 'Notifikasi', 'href' => isset($reg['notif']) ? \App\Support\NavMenu::href($reg['notif']) : '#', 'icon' => 'bell', 'badge' => $belumDibaca],
         ['id' => 'profil', 'label' => 'Profil', 'href' => route('profil'), 'icon' => 'user'],
     ];
