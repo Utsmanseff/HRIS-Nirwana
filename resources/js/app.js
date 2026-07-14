@@ -29,7 +29,12 @@ document.addEventListener('click', async (e) => {
     const vapid = document.querySelector('meta[name="vapid-public-key"]')?.content;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!vapid || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-        alert('Browser tidak mendukung notifikasi push.');
+        const store = window.Alpine?.store('konfirmasi');
+        if (store) {
+            store.beritahu({ judul: 'Notifikasi tidak didukung', pesan: 'Browser ini tidak mendukung notifikasi push.' });
+        } else {
+            alert('Browser tidak mendukung notifikasi push.');
+        }
         return;
     }
     if ((await Notification.requestPermission()) !== 'granted') return;
