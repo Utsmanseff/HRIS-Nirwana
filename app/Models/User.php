@@ -39,6 +39,16 @@ class User extends Authenticatable
         return $this->belongsTo(Karyawan::class);
     }
 
+    /**
+     * Nama yang ditampilkan di UI. Derived dari data karyawan bila tertaut
+     * (sumber-kebenaran, no double-entry); jatuh ke users.name (asal Google)
+     * untuk akun pra-klaim; terakhir label generik.
+     */
+    public function namaTampilan(): string
+    {
+        return $this->karyawan?->nama_lengkap ?? $this->name ?? 'Pengguna';
+    }
+
     public function sudahKlaim(): bool
     {
         return $this->karyawan_id !== null;
