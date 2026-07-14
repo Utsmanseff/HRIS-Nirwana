@@ -54,6 +54,7 @@ Route::middleware(['auth', 'aktif'])->group(function () {
 Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/beranda', Beranda::class)->name('beranda');
     Route::redirect('/dashboard', '/beranda');
+    Route::get('/notifikasi', \App\Livewire\Notifikasi::class)->name('notifikasi');
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::get('/cuti', CutiIndex::class)->name('cuti');

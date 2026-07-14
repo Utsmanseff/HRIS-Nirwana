@@ -1,7 +1,7 @@
 <div class="space-y-6 rise">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold tracking-tight">Selamat datang, {{ auth()->user()->karyawan?->nama_lengkap ?? auth()->user()->name }} 👋</h1>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Halo, {{ \Illuminate\Support\Str::of(auth()->user()->karyawan?->nama_lengkap ?? auth()->user()->name)->explode(' ')->first() }} 👋</h1>
             <p class="text-neutral-500 text-sm mt-1">
                 {{ now()->locale('id')->translatedFormat('l, j F Y') }}@if($bisaSdm) · {{ $totalPerhatian }} hal butuh perhatian di SDM.@endif
             </p>
@@ -115,12 +115,13 @@
         </div>
     @endif
 
-    {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}
+    {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan.
+         notif & beranda dikecualikan — sudah ada di bottom-nav/sidebar. --}}
     <div>
-        <div class="text-[13px] font-bold text-neutral-700 mb-3">Menu</div>
-        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Menu</div>
+        <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
             @foreach ($menu as $it)
-                @continue($it['id'] === 'beranda')
+                @continue(in_array($it['id'], ['beranda', 'notif'], true))
                 @php $placeholder = $it['route'] === null; @endphp
                 <a href="{{ \App\Support\NavMenu::href($it) }}"
                    @class(['tile', 'opacity-40 pointer-events-none' => $placeholder])

@@ -37,6 +37,7 @@ class NavMenu
             ['id' => 'karyawan', 'label' => 'Karyawan',       'icon' => 'users',    'route' => 'sdm.karyawan',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],
+            ['id' => 'notif',    'label' => 'Notifikasi',     'icon' => 'bell',     'route' => 'notifikasi',     'can' => null, 'group' => null],
             ['id' => 'profil',   'label' => 'Profil',         'icon' => 'user',     'route' => 'profil',         'can' => null, 'group' => null],
         ];
     }
