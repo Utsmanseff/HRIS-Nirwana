@@ -54,6 +54,8 @@ Route::middleware(['auth', 'aktif'])->group(function () {
 Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/beranda', Beranda::class)->name('beranda');
     Route::redirect('/dashboard', '/beranda');
+    Route::get('/notifikasi', \App\Livewire\Notifikasi::class)->name('notifikasi');
+    Route::get('/riwayat', \App\Livewire\Riwayat::class)->name('riwayat');
     Route::get('/profil', Profil::class)->name('profil');
 
     Route::get('/cuti', CutiIndex::class)->name('cuti');
@@ -87,6 +89,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
 
     Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
         ->middleware('can:absen')->name('absensi');
+    Route::get('/absensi/jadwal-saya', \App\Livewire\Absensi\JadwalSaya::class)
+        ->middleware('can:absen')->name('absensi.jadwal-saya');
     Route::get('/absensi/foto/{absensi}/{sesi}', [\App\Http\Controllers\Absensi\LampiranController::class, 'lihat'])
         ->whereIn('sesi', ['masuk', 'pulang'])->name('absensi.foto');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)

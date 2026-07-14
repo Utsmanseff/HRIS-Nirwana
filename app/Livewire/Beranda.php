@@ -10,10 +10,8 @@ use App\Support\PengingatKontrak;
 use App\Support\PengingatSip;
 use App\Support\RekapCuti;
 use App\Support\SaldoCuti;
-use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
 class Beranda extends Component
 {
     public function render()
@@ -76,12 +74,21 @@ class Beranda extends Component
 
         // Kartu absensi untuk siapa pun yang punya karyawan.
         $data['bisaAbsen'] = $kar !== null;
+        $data['shiftHariIni'] = null;
         if ($kar) {
             $sesi = \App\Support\ProsesAbsen::sesiAktif($kar);
             $data['absenSesiAktif'] = $sesi !== null;
             $data['absenAksi'] = $sesi ? 'Absen Pulang' : 'Absen Masuk';
+
+            // Shift terjadwal hari ini (bila unit memakai shift) → ditempel di kartu absensi.
+            $data['shiftHariIni'] = \App\Models\Jadwal::where('karyawan_id', $kar->id)
+                ->whereDate('tanggal', today())
+                ->with('shift')
+                ->first()?->shift;
         }
 
-        return view('livewire.beranda', $data);
+        // brand=true → appbar mobile tampil logo + "NirwanaHRIS" (home only).
+        return view('livewire.beranda', $data)
+            ->layout('components.layouts.app', ['brand' => true]);
     }
 }

@@ -10,10 +10,13 @@
         </div>
         <div class="flex-1"></div>
         <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white" />
-        <button type="button" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white relative" aria-label="notifikasi">
+        @php $belumDibaca = auth()->user()->unreadNotifications()->count(); @endphp
+        <a href="{{ route('notifikasi') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white relative" aria-label="notifikasi">
             <x-icon name="bell" :size="20" />
-            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style="background:var(--danger-500)"></span>
-        </button>
+            @if ($belumDibaca > 0)
+                <span class="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full text-white text-[9px] font-bold grid place-items-center" style="background:var(--danger-500)">{{ $belumDibaca > 9 ? '9+' : $belumDibaca }}</span>
+            @endif
+        </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" aria-label="Keluar" title="Keluar" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white">

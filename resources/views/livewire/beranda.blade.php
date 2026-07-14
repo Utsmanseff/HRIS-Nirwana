@@ -1,7 +1,7 @@
 <div class="space-y-6 rise">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold tracking-tight">Selamat datang, {{ auth()->user()->karyawan?->nama_lengkap ?? auth()->user()->name }} 👋</h1>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Halo, {{ \Illuminate\Support\Str::of(auth()->user()->karyawan?->nama_lengkap ?? auth()->user()->name)->explode(' ')->first() }} 👋</h1>
             <p class="text-neutral-500 text-sm mt-1">
                 {{ now()->locale('id')->translatedFormat('l, j F Y') }}@if($bisaSdm) · {{ $totalPerhatian }} hal butuh perhatian di SDM.@endif
             </p>
@@ -52,7 +52,16 @@
             @if (! empty($bisaAbsen) && \Illuminate\Support\Facades\Route::has('absensi'))
                 <a href="{{ route('absensi') }}" class="card card-pad block hover:shadow-md transition"
                    style="border-color:var(--brand-200)">
-                    <div class="field-label text-brand-700">Absensi Hari Ini</div>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="field-label text-brand-700">Absensi Hari Ini</div>
+                        @if (! empty($shiftHariIni))
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded"
+                                  style="background:{{ $shiftHariIni->warna }}1a;color:{{ $shiftHariIni->warna }}">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $shiftHariIni->warna }}"></span>
+                                {{ $shiftHariIni->nama }} · {{ \Illuminate\Support\Str::substr($shiftHariIni->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($shiftHariIni->jam_selesai, 0, 5) }}
+                            </span>
+                        @endif
+                    </div>
                     <div class="text-2xl font-bold tnum text-brand-700">{{ $absenAksi }}</div>
                     <div class="text-xs text-neutral-500 mt-1">
                         {{ ! empty($absenSesiAktif) ? 'Sesi masuk aktif · jangan lupa pulang' : 'Ketuk untuk absen masuk' }}
@@ -115,12 +124,13 @@
         </div>
     @endif
 
-    {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan. --}}
+    {{-- Grid menu (gate-permission). Tile placeholder (modul belum ada) diredupkan.
+         notif & beranda dikecualikan — sudah ada di bottom-nav/sidebar. --}}
     <div>
-        <div class="text-[13px] font-bold text-neutral-700 mb-3">Menu</div>
-        <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2.5">Menu</div>
+        <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3">
             @foreach ($menu as $it)
-                @continue($it['id'] === 'beranda')
+                @continue(in_array($it['id'], ['beranda', 'riwayat', 'notif'], true))
                 @php $placeholder = $it['route'] === null; @endphp
                 <a href="{{ \App\Support\NavMenu::href($it) }}"
                    @class(['tile', 'opacity-40 pointer-events-none' => $placeholder])
