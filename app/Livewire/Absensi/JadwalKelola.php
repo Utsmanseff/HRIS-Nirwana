@@ -180,6 +180,24 @@ class JadwalKelola extends Component
         unset($this->polaGrid[$karyawanId], $this->panjangBaris[$karyawanId]);
     }
 
+    public function tambahKolom(int $karyawanId): void
+    {
+        if (! isset($this->panjangBaris[$karyawanId])) {
+            return;
+        }
+        $this->panjangBaris[$karyawanId] = min(60, (int) $this->panjangBaris[$karyawanId] + 1);
+    }
+
+    public function kurangKolom(int $karyawanId): void
+    {
+        if (! isset($this->panjangBaris[$karyawanId])) {
+            return;
+        }
+        $baru = max(1, (int) $this->panjangBaris[$karyawanId] - 1);
+        unset($this->polaGrid[$karyawanId][$baru]);   // buang sel terpangkas (posisi == panjang baru)
+        $this->panjangBaris[$karyawanId] = $baru;
+    }
+
     /** Peta kode(uppercase) → shift_id untuk unit terpilih. */
     protected function shiftIdByKode(): array
     {

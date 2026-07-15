@@ -229,6 +229,37 @@ class JadwalKelolaTest extends TestCase
         $this->assertArrayNotHasKey($luar->id, $c->get('polaGrid'));
     }
 
+    public function test_tambah_kurang_kolom_ubah_panjang_satu_baris(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $staff->id)
+            ->assertSet("panjangBaris.{$staff->id}", 7)
+            ->call('tambahKolom', $staff->id)
+            ->assertSet("panjangBaris.{$staff->id}", 8)
+            ->call('kurangKolom', $staff->id)
+            ->call('kurangKolom', $staff->id)
+            ->assertSet("panjangBaris.{$staff->id}", 6);
+    }
+
+    public function test_kurang_kolom_batas_bawah_satu(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $staff->id)
+            ->set("panjangBaris.{$staff->id}", 1)
+            ->call('kurangKolom', $staff->id)
+            ->assertSet("panjangBaris.{$staff->id}", 1);
+    }
+
     public function test_set_sel_jadwal_membuat_dan_menghapus(): void
     {
         $user = $this->koordinator();
