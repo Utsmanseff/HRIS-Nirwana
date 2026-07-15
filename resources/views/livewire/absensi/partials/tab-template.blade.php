@@ -33,21 +33,12 @@
         <span class="text-neutral-400">· kosong / L = libur</span>
     </div>
 
-    <p class="text-xs text-neutral-400 leading-relaxed">
-        @if($tplMode === 'rotasi')
-            <b>Rotasi:</b> siklus berulang terus dari tanggal jangkar (abaikan nama hari). Panjang siklus diatur per-karyawan lewat tombol +/−. Fase antar-orang diatur dengan menggeser urutannya. Karyawan berpola beda (mis. koordinator office) cukup tak ditambahkan — dijadwalkan manual di tab Jadwal Bulanan.
-        @else
-            <b>Mingguan:</b> kolom = nama hari (Sen–Min), jam tetap tiap minggu. Cocok office.
-        @endif
-        Tukar shift di jadwal bulanan tidak mengubah template ini.
-    </p>
-
     <div class="grid-wrap rounded-xl border border-neutral-200">
         <table class="sched">
             @if($tplMode === 'mingguan')
                 <thead><tr><th class="nm">Karyawan</th>@foreach($hari as $h)<th>{{ $h }}</th>@endforeach<th></th></tr></thead>
             @else
-                <thead><tr><th class="nm">Karyawan</th><th colspan="99" style="text-align:left;font-weight:600">Siklus (kotak 1 = tanggal jangkar) · +/− atur panjang</th></tr></thead>
+                <thead><tr><th class="nm">Karyawan</th><th colspan="99"></th></tr></thead>
             @endif
             <tbody>
                 @forelse($ada as $kid)
@@ -88,7 +79,6 @@
                     <option value="{{ $s->id }}">{{ $s->nama_lengkap }}{{ $s->jabatan ? ' — '.$s->jabatan->nama : '' }}</option>
                 @endforeach
             </select>
-            <span class="text-xs text-neutral-400">Koordinator/pola beda boleh tak ditambahkan.</span>
         </div>
     @endif
 </div>
