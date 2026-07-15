@@ -42,6 +42,11 @@ class JadwalKelola extends Component
     /** polaGrid[karyawan_id][posisi] = kode (string, '' / 'L' = libur). */
     public array $polaGrid = [];
 
+    /** panjangBaris[karyawan_id] = panjang siklus baris (mode rotasi). */
+    public array $panjangBaris = [];
+
+    public const PANJANG_DEFAULT = 7;
+
     // ── Tab Jadwal Bulanan ───────────────────────────────────
     public ?int $tahun = null;
     public ?int $bulan = null;
@@ -147,13 +152,13 @@ class JadwalKelola extends Component
 
         $kodeById = $this->kodeShiftById();
         $grid = [];
-        $maks = 1;
+        $panjang = [];
         foreach ($tpl?->baris ?? [] as $b) {
             $grid[$b->karyawan_id][$b->posisi] = $b->shift_id ? ($kodeById[$b->shift_id] ?? '') : 'L';
-            $maks = max($maks, $b->posisi + 1);
+            $panjang[$b->karyawan_id] = max($panjang[$b->karyawan_id] ?? 1, $b->posisi + 1);
         }
         $this->polaGrid = $grid;
-        $this->tplPanjang = $this->tplMode === 'mingguan' ? 7 : ($tpl ? $maks : 7);
+        $this->panjangBaris = $panjang;
     }
 
     /** Peta kode(uppercase) → shift_id untuk unit terpilih. */
@@ -175,17 +180,26 @@ class JadwalKelola extends Component
         return $k === '' || $k === 'L' || $k === 'LIBUR';
     }
 
+    /** Panjang siklus baris (rotasi): dari panjangBaris bila ada, else turunkan dari posisi tertinggi grid. */
+    protected function panjangSiklus(int $karyawanId, array $baris): int
+    {
+        if (isset($this->panjangBaris[$karyawanId])) {
+            return max(1, min(60, (int) $this->panjangBaris[$karyawanId]));
+        }
+
+        return empty($baris) ? 1 : ((int) max(array_keys($baris)) + 1);
+    }
+
     public function simpanTemplate(): void
     {
         abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
-        $this->validate(['tplJangkar' => ['required', 'date'], 'tplPanjang' => ['required', 'integer', 'min:1', 'max:60']]);
+        $this->validate(['tplJangkar' => ['required', 'date']]);
 
-        $panjang = $this->tplMode === 'mingguan' ? 7 : $this->tplPanjang;
         $peta = $this->shiftIdByKode();
 
         // Validasi kode dikenal (selain libur).
         foreach ($this->polaGrid as $baris) {
-            foreach ($baris as $kode) {
+            foreach ((array) $baris as $kode) {
                 if ($this->kodeLibur((string) $kode)) {
                     continue;
                 }
@@ -197,7 +211,9 @@ class JadwalKelola extends Component
             }
         }
 
-        DB::transaction(function () use ($peta, $panjang) {
+        $mingguan = $this->tplMode === 'mingguan';
+
+        DB::transaction(function () use ($peta, $mingguan) {
             $tpl = TemplateJadwal::updateOrCreate(
                 ['org_unit_id' => $this->unitId],
                 ['tanggal_jangkar' => $this->tplJangkar, 'mode' => $this->tplMode],
@@ -205,6 +221,7 @@ class JadwalKelola extends Component
             PolaJadwal::where('template_id', $tpl->id)->delete();
 
             foreach ($this->polaGrid as $karyawanId => $baris) {
+                $panjang = $mingguan ? 7 : $this->panjangSiklus((int) $karyawanId, (array) $baris);
                 for ($posisi = 0; $posisi < $panjang; $posisi++) {
                     $kode = (string) ($baris[$posisi] ?? '');
                     $shiftId = $this->kodeLibur($kode) ? null : ($peta[strtoupper(trim($kode))] ?? null);

@@ -157,6 +157,29 @@ class JadwalKelolaTest extends TestCase
         $this->assertDatabaseHas('pola_jadwal', ['karyawan_id' => $staff->id, 'posisi' => 6, 'shift_id' => null]);
     }
 
+    public function test_panjang_siklus_beda_per_karyawan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $a = $this->staffDi($unit);
+        $b = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('tplMode', 'rotasi')
+            ->set('tplJangkar', '2026-07-01')
+            ->set("panjangBaris.{$a->id}", 2)
+            ->set("panjangBaris.{$b->id}", 3)
+            ->set("polaGrid.{$a->id}.0", 'P')->set("polaGrid.{$a->id}.1", 'L')
+            ->set("polaGrid.{$b->id}.0", 'P')->set("polaGrid.{$b->id}.1", 'P')->set("polaGrid.{$b->id}.2", 'L')
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        $this->assertSame(2, \App\Models\PolaJadwal::where('karyawan_id', $a->id)->count());
+        $this->assertSame(3, \App\Models\PolaJadwal::where('karyawan_id', $b->id)->count());
+    }
+
     public function test_set_sel_jadwal_membuat_dan_menghapus(): void
     {
         $user = $this->koordinator();
