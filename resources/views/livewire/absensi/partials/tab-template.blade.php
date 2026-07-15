@@ -1,4 +1,7 @@
 @php($hari = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'])
+@php($ada = array_keys($polaGrid))
+@php($byId = $kelolaan->keyBy('id'))
+@php($sisa = $kelolaan->reject(fn ($k) => in_array($k->id, $ada)))
 <div class="space-y-5">
     <div class="flex flex-wrap items-end gap-4">
         <div>
@@ -10,7 +13,6 @@
         </div>
         @if($tplMode === 'rotasi')
             <div><label class="field-label">Tanggal jangkar</label><input type="date" class="input w-auto" wire:model="tplJangkar"></div>
-            <div><label class="field-label">Panjang siklus</label><input type="number" min="1" max="60" class="input w-20 tnum" wire:model.live="tplPanjang"></div>
         @endif
         <button class="btn btn-primary btn-sm" wire:click="simpanTemplate">
             <svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -31,46 +33,52 @@
         <span class="text-neutral-400">· kosong / L = libur</span>
     </div>
 
-    <p class="text-xs text-neutral-400 leading-relaxed">
-        @if($tplMode === 'rotasi')
-            <b>Rotasi:</b> siklus berulang terus dari tanggal jangkar (abaikan nama hari). Fase antar-orang diatur dengan menggeser urutannya. Cocok shift RS 24/7.
-        @else
-            <b>Mingguan:</b> kolom = nama hari (Sen–Min), jam tetap tiap minggu. Cocok office.
-        @endif
-        Tukar shift di jadwal bulanan tidak mengubah template ini.
-    </p>
-
-    @if($kelolaan->isEmpty())
-        <div class="text-center text-sm text-neutral-400 py-6">Belum ada karyawan di unit ini.</div>
-    @else
-        <div class="grid-wrap rounded-xl border border-neutral-200">
-            <table class="sched">
-                <thead>
-                    <tr>
-                        <th class="nm">Karyawan</th>
-                        @if($tplMode === 'mingguan')
-                            @foreach($hari as $h)<th>{{ $h }}</th>@endforeach
-                        @else
-                            @for($p = 0; $p < $tplPanjang; $p++)<th>{{ $p + 1 }}</th>@endfor
-                        @endif
+    <div class="grid-wrap rounded-xl border border-neutral-200">
+        <table class="sched">
+            @if($tplMode === 'mingguan')
+                <thead><tr><th class="nm">Karyawan</th>@foreach($hari as $h)<th>{{ $h }}</th>@endforeach<th></th></tr></thead>
+            @else
+                <thead><tr><th class="nm">Karyawan</th><th colspan="99"></th></tr></thead>
+            @endif
+            <tbody>
+                @forelse($ada as $kid)
+                    @php($k = $byId[$kid] ?? null)
+                    @continue(! $k)
+                    @php($kol = $tplMode === 'mingguan' ? 7 : (int)($panjangBaris[$kid] ?? 7))
+                    <tr wire:key="trow-{{ $tplMode }}-{{ $kid }}">
+                        <td class="nm"><div class="font-semibold leading-tight">{{ $k->nama_lengkap }}</div><div class="text-[11px] text-neutral-400">{{ $k->jabatan?->nama }}</div></td>
+                        @for($p = 0; $p < $kol; $p++)
+                            @php($kode = strtoupper(trim((string)($polaGrid[$kid][$p] ?? ''))))
+                            @php($warna = $warnaKode[$kode] ?? null)
+                            <td @style(['background:'.$warna.'26' => $warna])>
+                                <input class="cell-input" wire:key="tpl-{{ $tplMode }}-{{ $kid }}-{{ $p }}" wire:model="polaGrid.{{ $kid }}.{{ $p }}" maxlength="5" @style(['color:'.$warna => $warna]) placeholder="·">
+                            </td>
+                        @endfor
+                        <td class="whitespace-nowrap px-2">
+                            <div class="flex items-center gap-1 justify-end">
+                                @if($tplMode === 'rotasi')
+                                    <button type="button" wire:click="kurangKolom({{ $kid }})" class="w-6 h-6 rounded border border-neutral-200 text-neutral-500 leading-none" title="Kurangi panjang siklus">−</button>
+                                    <button type="button" wire:click="tambahKolom({{ $kid }})" class="w-6 h-6 rounded border border-neutral-200 text-neutral-500 leading-none" title="Tambah panjang siklus">+</button>
+                                @endif
+                                <button type="button" wire:click="hapusBaris({{ $kid }})" class="ml-1 text-xs text-danger-600 hover:underline" title="Keluarkan dari pola">hapus</button>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @php($kol = $tplMode === 'mingguan' ? 7 : $tplPanjang)
-                    @foreach($kelolaan as $k)
-                        <tr wire:key="trow-{{ $tplMode }}-{{ $k->id }}">
-                            <td class="nm"><div class="font-semibold leading-tight">{{ $k->nama_lengkap }}</div><div class="text-[11px] text-neutral-400">{{ $k->jabatan?->nama }}</div></td>
-                            @for($p = 0; $p < $kol; $p++)
-                                @php($kode = strtoupper(trim((string)($polaGrid[$k->id][$p] ?? ''))))
-                                @php($warna = $warnaKode[$kode] ?? null)
-                                <td @style(['background:'.$warna.'26' => $warna])>
-                                    <input class="cell-input" wire:key="tpl-{{ $tplMode }}-{{ $k->id }}-{{ $p }}" wire:model="polaGrid.{{ $k->id }}.{{ $p }}" maxlength="5" @style(['color:'.$warna => $warna]) placeholder="·">
-                                </td>
-                            @endfor
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                @empty
+                    <tr><td class="nm text-neutral-400" colspan="99">Belum ada karyawan di template. Tambah lewat pilihan di bawah.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @if($sisa->isNotEmpty())
+        <div class="flex flex-wrap items-center gap-2">
+            <select class="select w-auto" wire:key="tambah-karyawan" wire:change="tambahKaryawan($event.target.value)">
+                <option value="">+ Tambah karyawan ke pola…</option>
+                @foreach($sisa as $s)
+                    <option value="{{ $s->id }}">{{ $s->nama_lengkap }}{{ $s->jabatan ? ' — '.$s->jabatan->nama : '' }}</option>
+                @endforeach
+            </select>
         </div>
     @endif
 </div>
