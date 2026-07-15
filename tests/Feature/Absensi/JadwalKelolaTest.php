@@ -180,6 +180,55 @@ class JadwalKelolaTest extends TestCase
         $this->assertSame(3, \App\Models\PolaJadwal::where('karyawan_id', $b->id)->count());
     }
 
+    public function test_tambah_dan_hapus_baris_karyawan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $staff = $this->staffDi($unit);
+
+        $c = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $staff->id)
+            ->assertSet("panjangBaris.{$staff->id}", 7);
+
+        $this->assertArrayHasKey($staff->id, $c->get('polaGrid'));
+
+        $c->call('hapusBaris', $staff->id);
+        $this->assertArrayNotHasKey($staff->id, $c->get('polaGrid'));
+    }
+
+    public function test_hapus_baris_lalu_simpan_menghapus_pola(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $tpl = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => null]);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')   // muat → grid berisi staff
+            ->call('hapusBaris', $staff->id)  // opt-out
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        $this->assertSame(0, \App\Models\PolaJadwal::where('karyawan_id', $staff->id)->count());
+    }
+
+    public function test_tambah_karyawan_luar_kelolaan_ditolak(): void
+    {
+        $user = $this->koordinator();
+        $unitLain = OrgUnit::factory()->create(['tipe' => 'unit', 'parent_id' => null]);
+        $luar = $this->staffDi($unitLain);
+
+        $c = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $luar->id);
+
+        $this->assertArrayNotHasKey($luar->id, $c->get('polaGrid'));
+    }
+
     public function test_set_sel_jadwal_membuat_dan_menghapus(): void
     {
         $user = $this->koordinator();

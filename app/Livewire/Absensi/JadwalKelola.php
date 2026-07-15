@@ -161,6 +161,25 @@ class JadwalKelola extends Component
         $this->panjangBaris = $panjang;
     }
 
+    public function tambahKaryawan(int $karyawanId): void
+    {
+        abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
+
+        $boleh = auth()->user()->karyawan->karyawanKelolaan()->whereKey($karyawanId)->exists();
+        if (! $boleh || isset($this->polaGrid[$karyawanId])) {
+            return;
+        }
+
+        $panjang = $this->tplMode === 'mingguan' ? 7 : self::PANJANG_DEFAULT;
+        $this->polaGrid[$karyawanId] = array_fill(0, $panjang, '');
+        $this->panjangBaris[$karyawanId] = $panjang;
+    }
+
+    public function hapusBaris(int $karyawanId): void
+    {
+        unset($this->polaGrid[$karyawanId], $this->panjangBaris[$karyawanId]);
+    }
+
     /** Peta kode(uppercase) → shift_id untuk unit terpilih. */
     protected function shiftIdByKode(): array
     {
