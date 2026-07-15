@@ -180,6 +180,24 @@ class JadwalKelolaTest extends TestCase
         $this->assertSame(3, \App\Models\PolaJadwal::where('karyawan_id', $b->id)->count());
     }
 
+    public function test_mount_di_tab_template_memuat_pola_tersimpan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $tpl = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => null]);
+        \App\Models\PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $staff->id, 'posisi' => 1, 'shift_id' => null]);
+
+        // Load LANGSUNG dengan tab=template (bukan lewat gantiTab).
+        $c = Livewire::actingAs($user)->withQueryParams(['tab' => 'template'])->test(JadwalKelola::class);
+
+        $this->assertArrayHasKey($staff->id, $c->get('polaGrid'));
+        $this->assertSame(2, $c->get('panjangBaris')[$staff->id]);
+    }
+
     public function test_tambah_dan_hapus_baris_karyawan(): void
     {
         $user = $this->koordinator();

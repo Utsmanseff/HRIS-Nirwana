@@ -57,6 +57,10 @@ class JadwalKelola extends Component
         $this->unitId ??= $unit?->id;
         $this->tahun ??= now()->year;
         $this->bulan ??= now()->month;
+
+        if ($this->tab === 'template' && $this->unitId) {
+            $this->muatTemplate();   // muat saat load langsung / refresh di tab template
+        }
     }
 
     /** Unit-unit yang dipimpin user (untuk selektor). */
