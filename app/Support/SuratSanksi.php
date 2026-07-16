@@ -10,6 +10,7 @@ use App\Models\SanksiDisiplin;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Support\TandaTanganQR;
 
 class SuratSanksi
 {
@@ -40,17 +41,19 @@ class SuratSanksi
     {
         $sanksi->loadMissing(['pengusul.jabatan', 'pengusul.user', 'approval.approver.jabatan']);
 
-        $entri = fn (Karyawan $k, string $peran, $tgl): array => [
+        $entri = fn (Karyawan $k, string $peran, $tgl, ?string $sumber): array => [
             'nama' => $k->nama_lengkap,
             'jabatan' => $k->jabatan?->nama,
             'peran' => $peran,
             'tanggal' => $tgl,
+            'sumber' => $sumber,
+            'qr' => $sumber ? TandaTanganQR::qr(TandaTanganQR::url($sanksi, $sumber)) : null,
         ];
 
         // Penerbit (hal-1) = approver peran Direktur.
         $direkturStep = $sanksi->approval->firstWhere('peran', PeranApproval::Direktur);
         $penerbit = $direkturStep
-            ? $entri($direkturStep->approver, 'Direktur', $direkturStep->acted_at ?? $sanksi->tanggal_terbit)
+            ? $entri($direkturStep->approver, 'Direktur', $direkturStep->acted_at ?? $sanksi->tanggal_terbit, 'penerbit')
             : null;
 
         // Hal-2 hanya bila pengusul = Koordinator/Kabid (unit), bukan HRD/Direktur buat-langsung.
@@ -60,10 +63,10 @@ class SuratSanksi
 
         $pengusulChain = [];
         if ($pakaiHal2) {
-            $pengusulChain[] = $entri($sanksi->pengusul, 'Pengusul', $sanksi->created_at);
+            $pengusulChain[] = $entri($sanksi->pengusul, 'Pengusul', $sanksi->created_at, 'pengusul');
             foreach ($sanksi->approval as $a) {
                 if (in_array($a->peran, [PeranApproval::Koordinator, PeranApproval::Kabid], true)) {
-                    $pengusulChain[] = $entri($a->approver, self::labelPeran($a->peran->value), $a->acted_at);
+                    $pengusulChain[] = $entri($a->approver, self::labelPeran($a->peran->value), $a->acted_at, 'kabid');
                 }
             }
         }
