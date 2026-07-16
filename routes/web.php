@@ -27,6 +27,13 @@ Route::get('/', function () {
 // Design-system styleguide — living reference of ported tokens & components.
 Route::view('/styleguide', 'styleguide')->name('styleguide');
 
+// Publik — verifikasi QR surat sanksi. Di luar auth; signature yang melindungi.
+// Referensi controller pakai ::class (tak meng-autoload) — controller dibuat di Task 2.
+Route::get('/verifikasi/sanksi/{sanksi}/{sumber}', [\App\Http\Controllers\VerifikasiSanksiController::class, 'tampil'])
+    ->whereIn('sumber', ['penerbit', 'pengusul', 'kabid'])
+    ->middleware('signed')
+    ->name('verifikasi.sanksi');
+
 // --- Auth: guest-only routes ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');

@@ -29,6 +29,8 @@
     .ttd td { vertical-align: top; text-align: center; font-size: 10.5px; padding: 6px; }
     .ttd .role { font-weight: bold; }
     .ttd .space { height: 46px; }
+    .ttd .qr { width: 78px; height: 78px; display: inline-block; }
+    .ttd .qr-cap { font-size: 7.5px; color: #777; margin-top: 2px; }
     .ttd .nm { text-decoration: underline; font-weight: bold; }
     .ttd-tunggal { width: 55%; margin-left: 45%; }
     .page-break { page-break-before: always; }
@@ -97,7 +99,12 @@ ditinjau kembali apabila dikemudian hari ditemukan kekeliruan dalam penerbitanny
                 <div>Mengetahui,</div>
                 <div class="role">{{ $ttd['penerbit']['jabatan'] ?? 'Direktur' }}</div>
                 <div>{{ $tgl($ttd['penerbit']['tanggal']) }}</div>
-                <div class="space"></div>
+                @if (!empty($ttd['penerbit']['qr']))
+                    <img class="qr" src="{{ $ttd['penerbit']['qr'] }}" alt="QR verifikasi">
+                    <div class="qr-cap">Ditandatangani elektronik · pindai untuk verifikasi</div>
+                @else
+                    <div class="space"></div>
+                @endif
                 <div class="nm">{{ $ttd['penerbit']['nama'] }}</div>
             </td>
         </tr>
@@ -130,7 +137,12 @@ ditinjau kembali apabila dikemudian hari ditemukan kekeliruan dalam penerbitanny
                     <div>{{ $loop->first ? 'Hormat kami,' : 'Mengetahui,' }}</div>
                     <div class="role">{{ $p['jabatan'] ?? $p['peran'] }}</div>
                     <div>{{ $tgl($p['tanggal']) }}</div>
-                    <div class="space"></div>
+                    @if (!empty($p['qr']))
+                        <img class="qr" src="{{ $p['qr'] }}" alt="QR verifikasi">
+                        <div class="qr-cap">Pindai untuk verifikasi</div>
+                    @else
+                        <div class="space"></div>
+                    @endif
                     <div class="nm">{{ $p['nama'] }}</div>
                 </td>
             @endforeach

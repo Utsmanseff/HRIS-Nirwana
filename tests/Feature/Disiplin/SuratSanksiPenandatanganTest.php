@@ -96,4 +96,19 @@ class SuratSanksiPenandatanganTest extends TestCase
         $this->assertSame([], $ttd['pengusulChain']);
         $this->assertSame($h['direktur']->nama_lengkap, $ttd['penerbit']['nama']);
     }
+
+    public function test_penerbit_dan_kabid_punya_qr_data_uri(): void
+    {
+        $h = $this->hierarki();
+        $ttd = SuratSanksi::penandatangan($this->sanksiDari($h['koor'], $h['staff']));
+
+        $this->assertStringStartsWith('data:image/png;base64,', $ttd['penerbit']['qr']);
+        $this->assertSame('penerbit', $ttd['penerbit']['sumber']);
+
+        // pengusulChain: [pengusul(Koordinator), Kabid] — keduanya punya qr + sumber.
+        $this->assertStringStartsWith('data:image/png;base64,', $ttd['pengusulChain'][0]['qr']);
+        $this->assertSame('pengusul', $ttd['pengusulChain'][0]['sumber']);
+        $this->assertStringStartsWith('data:image/png;base64,', $ttd['pengusulChain'][1]['qr']);
+        $this->assertSame('kabid', $ttd['pengusulChain'][1]['sumber']);
+    }
 }

@@ -29,4 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, Request $request) {
+            if ($request->routeIs('verifikasi.sanksi')) {
+                return response()->view('verifikasi.sanksi', ['invalid' => true], 403);
+            }
+        });
     })->create();
