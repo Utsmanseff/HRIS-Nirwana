@@ -34,6 +34,13 @@ Route::get('/verifikasi/sanksi/{sanksi}/{sumber}', [\App\Http\Controllers\Verifi
     ->middleware('signed')
     ->name('verifikasi.sanksi');
 
+// Publik — verifikasi QR surat cuti. Di luar auth; signature yang melindungi.
+// Referensi controller pakai ::class (tak meng-autoload) — controller dibuat di Task 3.
+Route::get('/verifikasi/cuti/{pengajuan}/{sumber}', [\App\Http\Controllers\VerifikasiCutiController::class, 'tampil'])
+    ->whereIn('sumber', ['pemohon', 'koordinator', 'kabid', 'hrd', 'direktur'])
+    ->middleware('signed')
+    ->name('verifikasi.cuti');
+
 // --- Auth: guest-only routes ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');
