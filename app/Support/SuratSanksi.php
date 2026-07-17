@@ -66,7 +66,7 @@ class SuratSanksi
             $pengusulChain[] = $entri($sanksi->pengusul, 'Pengusul', $sanksi->created_at, 'pengusul');
             foreach ($sanksi->approval as $a) {
                 if (in_array($a->peran, [PeranApproval::Koordinator, PeranApproval::Kabid], true)) {
-                    $pengusulChain[] = $entri($a->approver, self::labelPeran($a->peran->value), $a->acted_at, 'kabid');
+                    $pengusulChain[] = $entri($a->approver, $a->peran->label(), $a->acted_at, 'kabid');
                 }
             }
         }
@@ -78,14 +78,4 @@ class SuratSanksi
         ];
     }
 
-    private static function labelPeran(string $v): string
-    {
-        return match ($v) {
-            'koordinator' => 'Koordinator',
-            'kabid' => 'Kabid',
-            'hrd' => 'HRD',
-            'direktur' => 'Direktur',
-            default => ucfirst($v),
-        };
-    }
 }

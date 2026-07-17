@@ -41,20 +41,10 @@ class SuratCuti
         $signers[] = $entri($pengajuan->karyawan, 'Pemohon', $pengajuan->created_at, 'pemohon');
 
         foreach ($pengajuan->approval as $a) {
-            $signers[] = $entri($a->approver, self::labelPeran($a->peran->value), $a->acted_at, $a->peran->value);
+            $signers[] = $entri($a->approver, $a->peran->label(), $a->acted_at, $a->peran->value);
         }
 
         return $signers;
     }
 
-    private static function labelPeran(string $v): string
-    {
-        return match ($v) {
-            'koordinator' => 'Koordinator',
-            'kabid' => 'Kabid',
-            'hrd' => 'HRD',
-            'direktur' => 'Direktur',
-            default => ucfirst($v),
-        };
-    }
 }
