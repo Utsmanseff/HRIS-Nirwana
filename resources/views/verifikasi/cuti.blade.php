@@ -1,6 +1,6 @@
 @extends('verifikasi.layout')
 
-@section('subjudul', 'Verifikasi Surat Cuti')
+@section('subjudul', 'Verifikasi Surat Keterangan Cuti')
 
 @section('rincian')
     @unless ($invalid ?? false)
