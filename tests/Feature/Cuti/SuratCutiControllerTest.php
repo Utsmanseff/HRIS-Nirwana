@@ -12,7 +12,9 @@ use App\Models\PengajuanCuti;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SuratCutiControllerTest extends TestCase
@@ -83,5 +85,39 @@ class SuratCutiControllerTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => $pemohon->id]);
 
         $this->actingAs($user)->get(route('cuti.surat', $p))->assertForbidden();
+    }
+
+    public function test_nama_file_unduhan_pakai_tanggal_approval_terakhir(): void
+    {
+        $p = $this->cutiDenganSurat();
+        ApprovalCuti::create([
+            'pengajuan_cuti_id' => $p->id, 'urutan' => 1,
+            'approver_id' => Karyawan::factory()->create()->id,
+            'peran' => PeranApproval::Hrd, 'status' => StatusApproval::Setuju,
+            'acted_at' => Carbon::create(2026, 7, 17, 10, 0),
+        ]);
+        $user = User::factory()->create(['karyawan_id' => $p->karyawan_id]);
+
+        $res = $this->actingAs($user)->get(route('cuti.surat', $p));
+
+        $res->assertOk();
+        $this->assertStringContainsString(
+            'surat-keterangan-cuti_'.Str::slug($p->karyawan->nama_lengkap).'_20260717.pdf',
+            $res->headers->get('content-disposition'),
+        );
+    }
+
+    /** Tanpa baris approval (data lama) → jatuh ke tanggal hari ini, bukan error. */
+    public function test_nama_file_tanpa_approval_pakai_hari_ini(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 7, 20, 8, 0));
+        $p = $this->cutiDenganSurat();
+        $user = User::factory()->create(['karyawan_id' => $p->karyawan_id]);
+
+        $res = $this->actingAs($user)->get(route('cuti.surat', $p));
+
+        $res->assertOk();
+        $this->assertStringContainsString('_20260720.pdf', $res->headers->get('content-disposition'));
+        Carbon::setTestNow();
     }
 }
