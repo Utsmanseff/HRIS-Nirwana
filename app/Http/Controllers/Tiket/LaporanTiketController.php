@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Tiket;
 
 use App\Exports\TiketExport;
 use App\Http\Controllers\Controller;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\RekapTiket;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -44,13 +44,13 @@ class LaporanTiketController extends Controller
         $keterangan = $bagian ? implode(' · ', $bagian) : 'Semua tiket';
 
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new TiketExport($filter, $keterangan), NamaFileLaporan::buat('daftar-tiket', $tokens, 'xlsx'));
+            return Excel::download(new TiketExport($filter, $keterangan), NamaFile::laporan('daftar-tiket', $tokens, 'xlsx'));
         }
 
         return Pdf::loadView('laporan.pdf.tiket', [
             'tiket' => RekapTiket::query($filter)->get(),
             'metrik' => RekapTiket::metrikPerTim($filter),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('daftar-tiket', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('daftar-tiket', $tokens, 'pdf'));
     }
 }

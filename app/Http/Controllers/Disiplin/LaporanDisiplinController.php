@@ -6,7 +6,7 @@ use App\Enums\TingkatSanksi;
 use App\Exports\SanksiDisiplinExport;
 use App\Http\Controllers\Controller;
 use App\Models\OrgUnit;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\RekapDisiplin;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -29,14 +29,14 @@ class LaporanDisiplinController extends Controller
         if ($request->query('format') === 'xlsx') {
             return Excel::download(
                 new SanksiDisiplinExport($filter, $keterangan),
-                NamaFileLaporan::buat('rekap-sanksi-disiplin', $tokens, 'xlsx'),
+                NamaFile::laporan('rekap-sanksi-disiplin', $tokens, 'xlsx'),
             );
         }
 
         return Pdf::loadView('laporan.pdf.sanksi-disiplin', [
             'sanksi' => RekapDisiplin::daftarSanksi($filter),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('rekap-sanksi-disiplin', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('rekap-sanksi-disiplin', $tokens, 'pdf'));
     }
 
     /** @return array<int,string> */

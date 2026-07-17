@@ -8,7 +8,7 @@ use App\Models\Karyawan;
 use App\Models\Kontrak;
 use App\Models\OrgUnit;
 use App\Models\User;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
@@ -52,7 +52,7 @@ class LaporanSdmTest extends TestCase
             ->get('/sdm/laporan/karyawan?format=xlsx')
             ->assertOk();
 
-        Excel::assertDownloaded(NamaFileLaporan::buat('daftar-karyawan', [], 'xlsx'));
+        Excel::assertDownloaded(NamaFile::laporan('daftar-karyawan', [], 'xlsx'));
         Carbon::setTestNow();
     }
 
@@ -67,7 +67,7 @@ class LaporanSdmTest extends TestCase
             ->assertOk();
 
         Excel::assertDownloaded(
-            NamaFileLaporan::buat('daftar-karyawan', ['aktif', 'Unit Farmasi', 'L1'], 'xlsx'),
+            NamaFile::laporan('daftar-karyawan', ['aktif', 'Unit Farmasi', 'L1'], 'xlsx'),
         );
         Carbon::setTestNow();
     }
@@ -79,7 +79,7 @@ class LaporanSdmTest extends TestCase
 
         $this->actingAs($this->userSdm())
             ->get('/sdm/laporan/karyawan?format=pdf')
-            ->assertDownload(NamaFileLaporan::buat('daftar-karyawan', [], 'pdf'));
+            ->assertDownload(NamaFile::laporan('daftar-karyawan', [], 'pdf'));
         Carbon::setTestNow();
     }
 
@@ -102,7 +102,7 @@ class LaporanSdmTest extends TestCase
         Carbon::setTestNow(Carbon::create(2026, 7, 4, 15, 32));
         $this->actingAs($this->userSdm())->get('/sdm/laporan/karyawan?format=xlsx&cari=F-1')->assertOk();
 
-        Excel::assertDownloaded(NamaFileLaporan::buat('daftar-karyawan', ['F-1'], 'xlsx'), function (KaryawanExport $export) {
+        Excel::assertDownloaded(NamaFile::laporan('daftar-karyawan', ['F-1'], 'xlsx'), function (KaryawanExport $export) {
             $nips = $export->query()->pluck('nip')->all();
 
             return $nips === ['F-1'];
@@ -143,7 +143,7 @@ class LaporanSdmTest extends TestCase
             ->get('/sdm/laporan/pengingat-kontrak?format=xlsx')
             ->assertOk();
 
-        Excel::assertDownloaded(NamaFileLaporan::buat('pengingat-kontrak', [], 'xlsx'));
+        Excel::assertDownloaded(NamaFile::laporan('pengingat-kontrak', [], 'xlsx'));
         Carbon::setTestNow();
     }
 
