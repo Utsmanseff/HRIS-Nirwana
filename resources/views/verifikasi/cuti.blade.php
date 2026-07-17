@@ -62,7 +62,6 @@
             @endif
 
             <dl>
-                <div><dt>Jenis Cuti</dt><dd>{{ $jenisCuti }}</dd></div>
                 <div><dt>Tanggal</dt><dd>{{ $tanggalMulai }} – {{ $tanggalSelesai }}</dd></div>
                 <div><dt>Jumlah Hari</dt><dd>{{ $jumlahHari }} hari</dd></div>
                 <div><dt>Atas Nama</dt><dd>{{ $karyawan }}</dd></div>

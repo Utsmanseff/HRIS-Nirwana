@@ -94,4 +94,25 @@ class VerifikasiCutiTest extends TestCase
 
         $this->get($url)->assertStatus(403);
     }
+
+    public function test_jenis_cuti_tidak_ditampilkan(): void
+    {
+        $d = $this->cutiDisetujui();
+
+        $this->get(TandaTanganQR::urlCuti($d['pengajuan'], 'pemohon'))
+            ->assertOk()
+            ->assertDontSee('Jenis Cuti')
+            ->assertDontSee($d['pengajuan']->jenisCuti->nama);
+    }
+
+    /** Label peran dari enum, bukan ucfirst($sumber) yang bikin "Hrd". */
+    public function test_sumber_hrd_berlabel_hrd(): void
+    {
+        $d = $this->cutiDisetujui();
+
+        $this->get(TandaTanganQR::urlCuti($d['pengajuan'], 'hrd'))
+            ->assertOk()
+            ->assertSee('HRD')
+            ->assertDontSee('Hrd');
+    }
 }

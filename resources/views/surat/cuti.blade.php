@@ -58,8 +58,7 @@
 <footer>Dokumen resmi {{ config('instansi.nama_resmi') }}</footer>
 @php $tgl = fn ($d) => $d ? $d->locale('id')->translatedFormat('j F Y') : ''; @endphp
 
-<h1>Surat Cuti</h1>
-<div class="surat-title">— {{ $pengajuan->jenisCuti->nama }} —</div>
+<h1>Surat Keterangan Cuti</h1>
 
 <p>Yang bertanda tangan di bawah ini menerangkan bahwa karyawan berikut:</p>
 
@@ -73,7 +72,6 @@
 <p>Mengajukan cuti dengan rincian sebagai berikut:</p>
 
 <table class="id">
-    <tr><td class="k">Jenis Cuti</td><td class="s">:</td><td>{{ $pengajuan->jenisCuti->nama }}</td></tr>
     <tr><td class="k">Tanggal Mulai</td><td class="s">:</td><td>{{ $tgl($pengajuan->tanggal_mulai) }}</td></tr>
     <tr><td class="k">Tanggal Selesai</td><td class="s">:</td><td>{{ $tgl($pengajuan->tanggal_selesai) }}</td></tr>
     <tr><td class="k">Jumlah Hari</td><td class="s">:</td><td>{{ $pengajuan->jumlah_hari }} hari</td></tr>

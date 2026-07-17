@@ -12,7 +12,7 @@ class VerifikasiCutiController extends Controller
     /** Halaman publik verifikasi. Signature sudah divalidasi middleware 'signed'. */
     public function tampil(PengajuanCuti $pengajuan, string $sumber)
     {
-        $pengajuan->load(['karyawan.jabatan', 'jenisCuti', 'approval.approver']);
+        $pengajuan->load(['karyawan.jabatan', 'approval.approver']);
 
         $penanda = $this->resolve($pengajuan, $sumber);
         if (! $penanda) {
@@ -24,7 +24,6 @@ class VerifikasiCutiController extends Controller
         return view('verifikasi.cuti', [
             'invalid' => false,
             'status' => $this->status($pengajuan, $tgl),
-            'jenisCuti' => $pengajuan->jenisCuti->nama ?? '-',
             'tanggalMulai' => $tgl($pengajuan->tanggal_mulai),
             'tanggalSelesai' => $tgl($pengajuan->tanggal_selesai),
             'jumlahHari' => $pengajuan->jumlah_hari,
@@ -66,7 +65,7 @@ class VerifikasiCutiController extends Controller
 
         return [
             'nama' => $step->approver->nama_lengkap,
-            'peran' => ucfirst($sumber),
+            'peran' => $peranEnum->label(),
             'tanggal' => $step->acted_at,
         ];
     }
