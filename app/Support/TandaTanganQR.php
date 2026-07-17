@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\URL;
 class TandaTanganQR
 {
     /** URL publik bertanda-tangan untuk satu penandatangan surat. $sumber ∈ penerbit|pengusul|kabid. */
-    public static function url(SanksiDisiplin $sanksi, string $sumber): string
+    public static function urlSanksi(SanksiDisiplin $sanksi, string $sumber): string
     {
         return URL::signedRoute('verifikasi.sanksi', [
             'sanksi' => $sanksi->id,

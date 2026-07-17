@@ -15,7 +15,7 @@ class TandaTanganQRTest extends TestCase
     public function test_url_signed_mengandung_path_dan_signature(): void
     {
         $s = SanksiDisiplin::factory()->create(['nomor_surat' => 'SP/1']);
-        $url = TandaTanganQR::url($s, 'penerbit');
+        $url = TandaTanganQR::urlSanksi($s, 'penerbit');
 
         $this->assertStringContainsString('/verifikasi/sanksi/'.$s->id.'/penerbit', $url);
         $this->assertStringContainsString('signature=', $url);
@@ -26,8 +26,8 @@ class TandaTanganQRTest extends TestCase
         $s = SanksiDisiplin::factory()->create();
 
         $this->assertNotSame(
-            Str::after(TandaTanganQR::url($s, 'penerbit'), 'signature='),
-            Str::after(TandaTanganQR::url($s, 'kabid'), 'signature='),
+            Str::after(TandaTanganQR::urlSanksi($s, 'penerbit'), 'signature='),
+            Str::after(TandaTanganQR::urlSanksi($s, 'kabid'), 'signature='),
         );
     }
 

@@ -41,6 +41,9 @@ class SuratCuti
         $signers[] = $entri($pengajuan->karyawan, 'Pemohon', $pengajuan->created_at, 'pemohon');
 
         foreach ($pengajuan->approval as $a) {
+            if (! $a->approver) {
+                continue;
+            }
             $signers[] = $entri($a->approver, $a->peran->label(), $a->acted_at, $a->peran->value);
         }
 

@@ -47,7 +47,7 @@ class SuratSanksi
             'peran' => $peran,
             'tanggal' => $tgl,
             'sumber' => $sumber,
-            'qr' => $sumber ? TandaTanganQR::qr(TandaTanganQR::url($sanksi, $sumber)) : null,
+            'qr' => $sumber ? TandaTanganQR::qr(TandaTanganQR::urlSanksi($sanksi, $sumber)) : null,
         ];
 
         // Penerbit (hal-1) = approver peran Direktur.

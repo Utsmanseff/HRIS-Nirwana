@@ -46,7 +46,7 @@
             @if ($pengajuan->lampiran_path)
                 <div class="col-span-2"><a href="{{ route('cuti.lampiran', $pengajuan) }}" target="_blank" class="btn btn-secondary btn-sm">Lihat Lampiran</a></div>
             @endif
-            @if ($pengajuan->status->value === 'disetujui' && $pengajuan->surat_path)
+            @if ($pengajuan->status === \App\Enums\StatusPengajuanCuti::Disetujui && $pengajuan->surat_path)
                 <div class="col-span-2"><a href="{{ route('cuti.surat', $pengajuan) }}" target="_blank" class="btn btn-primary btn-sm">Unduh / Cetak Surat Cuti</a></div>
             @endif
         </div>

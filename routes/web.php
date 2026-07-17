@@ -28,14 +28,12 @@ Route::get('/', function () {
 Route::view('/styleguide', 'styleguide')->name('styleguide');
 
 // Publik — verifikasi QR surat sanksi. Di luar auth; signature yang melindungi.
-// Referensi controller pakai ::class (tak meng-autoload) — controller dibuat di Task 2.
 Route::get('/verifikasi/sanksi/{sanksi}/{sumber}', [\App\Http\Controllers\VerifikasiSanksiController::class, 'tampil'])
     ->whereIn('sumber', ['penerbit', 'pengusul', 'kabid'])
     ->middleware('signed')
     ->name('verifikasi.sanksi');
 
 // Publik — verifikasi QR surat cuti. Di luar auth; signature yang melindungi.
-// Referensi controller pakai ::class (tak meng-autoload) — controller dibuat di Task 3.
 Route::get('/verifikasi/cuti/{pengajuan}/{sumber}', [\App\Http\Controllers\VerifikasiCutiController::class, 'tampil'])
     ->whereIn('sumber', ['pemohon', 'koordinator', 'kabid', 'hrd', 'direktur'])
     ->middleware('signed')

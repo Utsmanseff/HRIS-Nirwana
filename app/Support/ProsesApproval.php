@@ -47,12 +47,11 @@ class ProsesApproval
                 return;
             }
 
-            // Tahap terakhir → final.
+            // Tahap terakhir → final. Status dulu, baru generate: surat harus dibikin dari
+            // pengajuan yang statusnya sudah Disetujui (pola sama dgn ProsesSanksi::terbit).
             self::pastikanJatahCukup($pengajuan);
-            $pengajuan->update([
-                'status' => StatusPengajuanCuti::Disetujui,
-                'surat_path' => SuratCuti::generate($pengajuan->fresh()),
-            ]);
+            $pengajuan->update(['status' => StatusPengajuanCuti::Disetujui]);
+            $pengajuan->update(['surat_path' => SuratCuti::generate($pengajuan->fresh())]);
             $pengajuan->karyawan->user?->notify(new CutiDisetujui($pengajuan));
         });
     }
