@@ -30,9 +30,15 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
+        // QR verifikasi dipindai orang luar: signature rusak harus dapat halaman ramah,
+        // bukan halaman 403 bawaan berbahasa Inggris.
         $exceptions->render(function (\Illuminate\Routing\Exceptions\InvalidSignatureException $e, Request $request) {
-            if ($request->routeIs('verifikasi.sanksi')) {
-                return response()->view('verifikasi.sanksi', ['invalid' => true], 403);
-            }
+            $view = match ($request->route()?->getName()) {
+                'verifikasi.sanksi' => 'verifikasi.sanksi',
+                'verifikasi.cuti' => 'verifikasi.cuti',
+                default => null,
+            };
+
+            return $view ? response()->view($view, ['invalid' => true], 403) : null;
         });
     })->create();

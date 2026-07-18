@@ -92,7 +92,9 @@ class VerifikasiCutiTest extends TestCase
         $d = $this->cutiDisetujui();
         $url = TandaTanganQR::urlCuti($d['pengajuan'], 'pemohon').'x';
 
-        $this->get($url)->assertStatus(403);
+        $this->get($url)
+            ->assertStatus(403)
+            ->assertSee('tidak dikenali', false);
     }
 
     public function test_jenis_cuti_tidak_ditampilkan(): void

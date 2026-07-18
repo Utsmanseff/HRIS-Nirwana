@@ -19,7 +19,6 @@
     }
     footer { position: fixed; bottom: -45px; left: 0; right: 0; font-size: 9px; color: #777; text-align: center; }
     h1 { font-size: 13px; text-align: center; margin: 0; text-transform: uppercase; letter-spacing: .5px; }
-    .surat-title { font-weight: bold; margin: 4px 0 14px; text-align: center; }
     table.id { margin: 10px 0 14px; }
     table.id td { padding: 1px 0; vertical-align: top; }
     table.id td.k { width: 130px; }
