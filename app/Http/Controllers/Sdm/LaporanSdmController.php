@@ -7,7 +7,7 @@ use App\Exports\PengingatKontrakExport;
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\PengingatKontrak;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class LaporanSdmController extends Controller
         if ($request->query('format') === 'xlsx') {
             return Excel::download(
                 new KaryawanExport($filter, $this->keteranganFilter($filter)),
-                NamaFileLaporan::buat('daftar-karyawan', $tokens, 'xlsx'),
+                NamaFile::laporan('daftar-karyawan', $tokens, 'xlsx'),
             );
         }
 
@@ -36,18 +36,18 @@ class LaporanSdmController extends Controller
         return Pdf::loadView('laporan.pdf.karyawan', [
             'karyawan' => $karyawan,
             'keteranganFilter' => $this->keteranganFilter($filter),
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('daftar-karyawan', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('daftar-karyawan', $tokens, 'pdf'));
     }
 
     public function pengingatKontrak(Request $request)
     {
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new PengingatKontrakExport, NamaFileLaporan::buat('pengingat-kontrak', [], 'xlsx'));
+            return Excel::download(new PengingatKontrakExport, NamaFile::laporan('pengingat-kontrak', [], 'xlsx'));
         }
 
         return Pdf::loadView('laporan.pdf.pengingat-kontrak', [
             'pengingat' => PengingatKontrak::semua()->sortBy('sisaHari')->values(),
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('pengingat-kontrak', [], 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('pengingat-kontrak', [], 'pdf'));
     }
 
     /** Token filter aktif utk nama file (status, unit, level, kontrak, cari). */

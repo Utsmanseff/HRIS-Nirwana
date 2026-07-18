@@ -7,7 +7,7 @@ use App\Exports\JatuhTempoPemeliharaanExport;
 use App\Http\Controllers\Controller;
 use App\Models\KategoriInventaris;
 use App\Models\OrgUnit;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\PengingatPemeliharaan;
 use App\Support\RekapInventaris;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -48,13 +48,13 @@ class LaporanInventarisController extends Controller
         $keterangan = implode(' · ', $bagian);
 
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new AsetExport($filter, $keterangan), NamaFileLaporan::buat('daftar-aset', $tokens, 'xlsx'));
+            return Excel::download(new AsetExport($filter, $keterangan), NamaFile::laporan('daftar-aset', $tokens, 'xlsx'));
         }
 
         return Pdf::loadView('laporan.pdf.aset', [
             'aset' => RekapInventaris::daftarAset($filter),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('daftar-aset', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('daftar-aset', $tokens, 'pdf'));
     }
 
     public function pemeliharaan(Request $request)
@@ -63,12 +63,12 @@ class LaporanInventarisController extends Controller
         $keterangan = 'Aset jatuh tempo pemeliharaan (ambang H-14)';
 
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new JatuhTempoPemeliharaanExport($pengingat, $keterangan), NamaFileLaporan::buat('jatuh-tempo-pemeliharaan', [], 'xlsx'));
+            return Excel::download(new JatuhTempoPemeliharaanExport($pengingat, $keterangan), NamaFile::laporan('jatuh-tempo-pemeliharaan', [], 'xlsx'));
         }
 
         return Pdf::loadView('laporan.pdf.jatuh-tempo-pemeliharaan', [
             'pengingat' => $pengingat,
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('jatuh-tempo-pemeliharaan', [], 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('jatuh-tempo-pemeliharaan', [], 'pdf'));
     }
 }

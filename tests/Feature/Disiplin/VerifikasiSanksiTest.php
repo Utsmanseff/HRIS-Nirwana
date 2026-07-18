@@ -72,7 +72,7 @@ class VerifikasiSanksiTest extends TestCase
     public function test_url_signed_penerbit_menampilkan_detail_tanpa_login(): void
     {
         $d = $this->sanksiTerbit();
-        $url = TandaTanganQR::url($d['sanksi'], 'penerbit');
+        $url = TandaTanganQR::urlSanksi($d['sanksi'], 'penerbit');
 
         $this->get($url)
             ->assertOk()
@@ -84,7 +84,7 @@ class VerifikasiSanksiTest extends TestCase
     public function test_pengusul_menampilkan_label_koordinator(): void
     {
         $d = $this->sanksiTerbit();
-        $this->get(TandaTanganQR::url($d['sanksi'], 'pengusul'))
+        $this->get(TandaTanganQR::urlSanksi($d['sanksi'], 'pengusul'))
             ->assertOk()
             ->assertSee($d['koor']->nama_lengkap)
             ->assertSee('Koordinator');
@@ -93,7 +93,7 @@ class VerifikasiSanksiTest extends TestCase
     public function test_signature_rusak_ditolak(): void
     {
         $d = $this->sanksiTerbit();
-        $url = TandaTanganQR::url($d['sanksi'], 'penerbit').'x'; // rusak signature
+        $url = TandaTanganQR::urlSanksi($d['sanksi'], 'penerbit').'x'; // rusak signature
 
         $this->get($url)->assertStatus(403)->assertSee('tidak dikenali', false);
     }
@@ -105,7 +105,7 @@ class VerifikasiSanksiTest extends TestCase
         $admin->assignRole(Role::Hrd->value);
         ProsesSanksi::cabut($d['sanksi'], $admin, 'Pembinaan selesai');
 
-        $this->get(TandaTanganQR::url($d['sanksi']->fresh(), 'penerbit'))
+        $this->get(TandaTanganQR::urlSanksi($d['sanksi']->fresh(), 'penerbit'))
             ->assertOk()
             ->assertSee('DICABUT')
             ->assertSee('Pembinaan selesai');
@@ -116,7 +116,7 @@ class VerifikasiSanksiTest extends TestCase
         $d = $this->sanksiTerbit();
         $uraian = $d['sanksi']->uraian;
 
-        $this->get(TandaTanganQR::url($d['sanksi'], 'penerbit'))
+        $this->get(TandaTanganQR::urlSanksi($d['sanksi'], 'penerbit'))
             ->assertOk()
             ->assertDontSee($uraian);
     }

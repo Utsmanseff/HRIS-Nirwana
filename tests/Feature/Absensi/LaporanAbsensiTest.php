@@ -7,7 +7,7 @@ use App\Exports\AbsensiExport;
 use App\Models\Absensi;
 use App\Models\Karyawan;
 use App\Models\User;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -100,7 +100,7 @@ class LaporanAbsensiTest extends TestCase
             ->assertOk();
 
         Excel::assertDownloaded(
-            NamaFileLaporan::buat('laporan-absensi', ['2026-07-10'], 'xlsx'),
+            NamaFile::laporan('laporan-absensi', ['2026-07-10'], 'xlsx'),
             fn (AbsensiExport $export) => true,
         );
 
@@ -124,7 +124,7 @@ class LaporanAbsensiTest extends TestCase
             ->assertOk();
 
         Excel::assertDownloaded(
-            NamaFileLaporan::buat('laporan-absensi', ['2026-07-10', 'per-unit'], 'xlsx'),
+            NamaFile::laporan('laporan-absensi', ['2026-07-10', 'per-unit'], 'xlsx'),
             fn (\App\Exports\AbsensiPerUnitExport $export) => count($export->sheets()) === 2,
         );
 

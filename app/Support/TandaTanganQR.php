@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\PengajuanCuti;
 use App\Models\SanksiDisiplin;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
@@ -11,10 +12,19 @@ use Illuminate\Support\Facades\URL;
 class TandaTanganQR
 {
     /** URL publik bertanda-tangan untuk satu penandatangan surat. $sumber ∈ penerbit|pengusul|kabid. */
-    public static function url(SanksiDisiplin $sanksi, string $sumber): string
+    public static function urlSanksi(SanksiDisiplin $sanksi, string $sumber): string
     {
         return URL::signedRoute('verifikasi.sanksi', [
             'sanksi' => $sanksi->id,
+            'sumber' => $sumber,
+        ]);
+    }
+
+    /** URL publik bertanda-tangan untuk satu penandatangan surat cuti. $sumber ∈ pemohon|koordinator|kabid|hrd|direktur. */
+    public static function urlCuti(PengajuanCuti $pengajuan, string $sumber): string
+    {
+        return URL::signedRoute('verifikasi.cuti', [
+            'pengajuan' => $pengajuan->id,
             'sumber' => $sumber,
         ]);
     }
