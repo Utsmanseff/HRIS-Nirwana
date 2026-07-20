@@ -32,6 +32,16 @@ class ProsesAbsen
         }
 
         $jam = $data['jam'];
+
+        // Cegah absen masuk kedua di tanggal kerja yang sama (sesi sebelumnya sudah ditutup).
+        $sudahAbsenHariIni = Absensi::where('karyawan_id', $karyawan->id)
+            ->whereDate('tanggal_kerja', $jam->toDateString())
+            ->exists();
+
+        if ($sudahAbsenHariIni) {
+            throw new RuntimeException('Sudah absen hari ini — tidak bisa absen masuk dua kali di tanggal yang sama.');
+        }
+
         $jadwal = Jadwal::where('karyawan_id', $karyawan->id)
             ->whereDate('tanggal', $jam->toDateString())
             ->with('shift')

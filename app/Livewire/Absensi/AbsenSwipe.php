@@ -102,9 +102,17 @@ class AbsenSwipe extends Component
             'flag_lokasi' => LokasiAbsen::heuristik((float) $this->akurasi),
         ];
 
-        ProsesAbsen::sesiAktif($kar)
-            ? ProsesAbsen::pulang($kar, $data)
-            : ProsesAbsen::masuk($kar, $data);
+        try {
+            ProsesAbsen::sesiAktif($kar)
+                ? ProsesAbsen::pulang($kar, $data)
+                : ProsesAbsen::masuk($kar, $data);
+        } catch (\RuntimeException $e) {
+            // Foto sudah kepalang ke-upload sebelum state machine nolak — hapus biar gak nyampah di storage.
+            Storage::disk('local')->delete($path);
+            $this->addError('foto', $e->getMessage());
+
+            return;
+        }
 
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
