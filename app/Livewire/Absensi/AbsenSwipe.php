@@ -14,6 +14,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use RuntimeException;
 
 #[Layout('components.layouts.app')]
 class AbsenSwipe extends Component
@@ -102,9 +103,19 @@ class AbsenSwipe extends Component
             'flag_lokasi' => LokasiAbsen::heuristik((float) $this->akurasi),
         ];
 
-        ProsesAbsen::sesiAktif($kar)
-            ? ProsesAbsen::pulang($kar, $data)
-            : ProsesAbsen::masuk($kar, $data);
+        // Dua submit beruntun bisa balapan: cek sesi di atas sudah basi saat state
+        // machine cek ulang. Jangan 500 — tampilkan pesannya & buang foto yatim.
+        try {
+            ProsesAbsen::sesiAktif($kar)
+                ? ProsesAbsen::pulang($kar, $data)
+                : ProsesAbsen::masuk($kar, $data);
+        } catch (RuntimeException $e) {
+            Storage::disk('local')->delete($path);
+            unset($this->sesi, $this->aksi);
+            $this->addError('sesi', $e->getMessage());
+
+            return;
+        }
 
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
