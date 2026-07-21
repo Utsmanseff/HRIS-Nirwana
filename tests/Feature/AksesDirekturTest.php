@@ -91,6 +91,29 @@ class AksesDirekturTest extends TestCase
         }
     }
 
+    public function test_beranda_direktur_tanpa_kartu_jatah_cuti(): void
+    {
+        $this->actingAs($this->user('DIR-0001'))->get('/beranda')
+            ->assertOk()
+            ->assertDontSee('hari tersisa');
+    }
+
+    public function test_beranda_koordinator_tetap_punya_kartu_jatah(): void
+    {
+        $this->actingAs($this->user('KOR-0001'))->get('/beranda')
+            ->assertOk()
+            ->assertSee('JATAH');
+    }
+
+    /**
+     * Feed riwayat menggabungkan cuti/tiket/sanksi/absensi — untuk Direktur sumbernya
+     * hampir semua kosong, pastikan halamannya tetap render, bukan error.
+     */
+    public function test_riwayat_direktur_tetap_render(): void
+    {
+        $this->actingAs($this->user('DIR-0001'))->get('/riwayat')->assertOk();
+    }
+
     /** Staf biasa tak punya akun di DemoSdmSeeder, jadi dibuatkan di sini. */
     public function test_karyawan_biasa_tidak_kehilangan_akses(): void
     {
