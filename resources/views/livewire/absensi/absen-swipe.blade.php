@@ -66,6 +66,7 @@
     @if (session('absen_ok'))
         <p class="text-xs text-success-700 text-center mb-2">{{ session('absen_ok') }}</p>
     @endif
+    @error('sesi') <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
     @error('foto') <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
     @error('lat')  <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
     @error('akurasi') <p class="text-xs text-danger-600 text-center mb-2">{{ $message }}</p> @enderror
