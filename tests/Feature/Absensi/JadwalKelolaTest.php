@@ -312,4 +312,102 @@ class JadwalKelolaTest extends TestCase
 
         $this->assertSame(31, \App\Models\Jadwal::where('karyawan_id', $staff->id)->count()); // siklus [P] len1 → tiap hari
     }
+
+    /** Dua shift unit yang TIDAK bentrok: Malam 00:00-08:00 & Sore 16:00-00:00. */
+    private function duaShiftTakBentrok(OrgUnit $unit): array
+    {
+        return [
+            \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'M', 'nama' => 'Malam',
+                'jam_mulai' => '00:00:00', 'jam_selesai' => '08:00:00']),
+            \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'S', 'nama' => 'Sore',
+                'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']),
+        ];
+    }
+
+    public function test_set_sel_dua_kode_membuat_dua_jadwal(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        [$malam, $sore] = $this->duaShiftTakBentrok($unit);
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 20, 'M,S')
+            ->assertHasNoErrors();
+
+        $this->assertSame(2, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $malam->id]);
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $sore->id]);
+    }
+
+    public function test_set_sel_mengurangi_kode_menghapus_baris_yang_hilang(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        [$malam, $sore] = $this->duaShiftTakBentrok($unit);
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 20, 'M,S')
+            ->call('setSel', $staff->id, 20, 'S')
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
+        $this->assertDatabaseMissing('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $malam->id]);
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $sore->id]);
+    }
+
+    public function test_set_sel_kosong_menghapus_semua_baris_hari_itu(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $this->duaShiftTakBentrok($unit);
+        $staff = $this->staffDi($unit);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 20, 'M,S')
+            ->call('setSel', $staff->id, 20, '');
+
+        $this->assertSame(0, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
+    }
+
+    public function test_set_sel_menolak_shift_yang_jamnya_bentrok(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P', 'nama' => 'Pagi',
+            'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'D', 'nama' => 'Siang',
+            'jam_mulai' => '13:00:00', 'jam_selesai' => '21:00:00']);
+        $staff = $this->staffDi($unit);
+
+        $komponen = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 20, 'P,D')
+            ->assertHasErrors('jadwal');
+
+        $this->assertStringContainsString('bentrok', $komponen->errors()->first('jadwal'));
+
+        $this->assertSame(0, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
+    }
+
+    public function test_set_sel_kode_tak_dikenal_tak_mengubah_data(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $this->duaShiftTakBentrok($unit);
+        $staff = $this->staffDi($unit);
+
+        $komponen = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('tahun', 2026)->set('bulan', 7)
+            ->call('setSel', $staff->id, 20, 'M,ZZ')
+            ->assertHasErrors('jadwal');
+
+        $this->assertStringContainsString('"ZZ" tidak dikenal', $komponen->errors()->first('jadwal'));
+
+        $this->assertSame(0, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
+    }
 }

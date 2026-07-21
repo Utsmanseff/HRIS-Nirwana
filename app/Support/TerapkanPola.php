@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\DB;
  * - Mode mingguan: posisi = hari (Senin=0…Minggu=6). Jadwal jam-tetap per nama hari.
  * shift = siklus[posisi] (null = libur).
  *
- * $timpa=true  (manual): timpa penuh bulan sasaran (libur → hapus baris).
+ * $timpa=true  (manual): timpa penuh bulan sasaran — SEMUA baris hari itu dihapus dulu
+ *                        (dinas ganda manual ikut hilang), libur → tanpa baris.
  * $timpa=false (auto):   NON-DESTRUKTIF — hanya isi tanggal yang belum ada; libur/edit manual tak disentuh.
  */
 class TerapkanPola
@@ -56,11 +57,12 @@ class TerapkanPola
                     }
 
                     // whereDate agar cocok dgn kolom date yang tersimpan 'Y-m-d 00:00:00'.
-                    $row = Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tgl->toDateString())->first();
+                    // Satu hari bisa punya BANYAK baris (dinas ganda) → jangan pakai first().
+                    $hariIni = fn () => Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tgl->toDateString());
 
                     if (! $timpa) {
-                        // NON-DESTRUKTIF: jangan sentuh yang sudah ada; libur → biarkan kosong.
-                        if ($row || $shiftId === null) {
+                        // NON-DESTRUKTIF: hari yang sudah punya baris apa pun tak disentuh.
+                        if ($shiftId === null || $hariIni()->exists()) {
                             continue;
                         }
                         Jadwal::create(['karyawan_id' => $karyawanId, 'tanggal' => $tgl->toDateString(), 'shift_id' => $shiftId, 'dibuat_oleh' => $dibuatOleh]);
@@ -69,17 +71,12 @@ class TerapkanPola
                         continue;
                     }
 
-                    // TIMPA PENUH.
+                    // TIMPA PENUH: buang semua baris hari itu (dinas ganda manual ikut hilang), lalu tulis pola.
+                    $hariIni()->delete();
                     if ($shiftId === null) {
-                        $row?->delete();
-
                         continue;
                     }
-                    if ($row) {
-                        $row->update(['shift_id' => $shiftId, 'dibuat_oleh' => $dibuatOleh]);
-                    } else {
-                        Jadwal::create(['karyawan_id' => $karyawanId, 'tanggal' => $tgl->toDateString(), 'shift_id' => $shiftId, 'dibuat_oleh' => $dibuatOleh]);
-                    }
+                    Jadwal::create(['karyawan_id' => $karyawanId, 'tanggal' => $tgl->toDateString(), 'shift_id' => $shiftId, 'dibuat_oleh' => $dibuatOleh]);
                     $dibuat++;
                 }
             }

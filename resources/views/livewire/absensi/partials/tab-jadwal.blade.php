@@ -48,15 +48,19 @@
                         <tr wire:key="jrow-{{ $tahun }}-{{ $bulan }}-{{ $k->id }}">
                             <td class="nm"><div class="font-semibold leading-tight">{{ $k->nama_lengkap }}</div><div class="text-[11px] text-neutral-400">{{ $k->jabatan?->nama }}</div></td>
                             @for($d = 1; $d <= $jumlahHari; $d++)
-                                @php($kode = strtoupper((string)($petaJadwal[$k->id][$d] ?? '')))
-                                @php($warna = $warnaKode[$kode] ?? null)
+                                @php($kodeSel = (array) ($petaJadwal[$k->id][$d] ?? []))
+                                @php($isiSel = implode(',', $kodeSel))
+                                @php($warna = $warnaKode[strtoupper((string) ($kodeSel[0] ?? ''))] ?? null)
                                 @php($we = \Illuminate\Support\Carbon::create($tahun, $bulan, $d)->isWeekend())
-                                <td @class(['we' => $we && ! $warna]) @style(['background:'.$warna.'26' => $warna])>
-                                    <input class="cell-input" maxlength="5"
+                                <td @class(['relative' => true, 'we' => $we && ! $warna]) @style(['background:'.$warna.'26' => $warna])>
+                                    <input class="cell-input" maxlength="11"
                                         wire:key="jad-{{ $tahun }}-{{ $bulan }}-{{ $k->id }}-{{ $d }}"
-                                        value="{{ $petaJadwal[$k->id][$d] ?? '' }}"
+                                        value="{{ $isiSel }}"
                                         @style(['color:'.$warna => $warna])
                                         wire:change="setSel({{ $k->id }}, {{ $d }}, $event.target.value)">
+                                    @if(count($kodeSel) > 1)
+                                        <span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-warning-500" title="Dinas ganda"></span>
+                                    @endif
                                 </td>
                             @endfor
                         </tr>
@@ -64,6 +68,6 @@
                 </tbody>
             </table>
         </div>
-        <p class="text-xs text-neutral-400 text-center">Ketik kode untuk ubah shift per orang per hari. Shift malam lintas hari ditangani otomatis di absensi (model sesi). Tanpa jadwal = mode catat (tak dievaluasi telat).</p>
+        <p class="text-xs text-neutral-400 text-center">Ketik kode shift per orang per hari. Dinas ganda: pisahkan dengan koma, mis. <span class="font-mono font-semibold">M,S</span>. Shift malam lintas hari ditangani otomatis di absensi (model sesi). Tanpa jadwal = mode catat (tak dievaluasi telat).</p>
     @endif
 </div>

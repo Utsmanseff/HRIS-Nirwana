@@ -20,12 +20,14 @@ class JadwalTest extends TestCase
         $this->assertInstanceOf(Shift::class, $jadwal->shift);
     }
 
-    public function test_unique_karyawan_tanggal(): void
+    /** Sejak dinas ganda: yang unik (karyawan, tanggal, shift) — bukan lagi (karyawan, tanggal). */
+    public function test_unique_karyawan_tanggal_shift(): void
     {
         $kar = Karyawan::factory()->create();
-        Jadwal::factory()->create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-09']);
+        $shift = Shift::factory()->create();
+        Jadwal::factory()->create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-09', 'shift_id' => $shift->id]);
 
         $this->expectException(QueryException::class);
-        Jadwal::factory()->create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-09']);
+        Jadwal::factory()->create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-09', 'shift_id' => $shift->id]);
     }
 }

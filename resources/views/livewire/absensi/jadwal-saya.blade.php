@@ -17,31 +17,41 @@
 
     <div class="card overflow-hidden">
         <div class="divide-y divide-neutral-100">
-            @forelse ($jadwal as $j)
+            @forelse ($hari as $tanggal => $baris)
                 @php
-                    $s = $j->shift;
-                    $ini = $j->tanggal->isToday();
-                    $warna = $s?->warna ?? '#94a3b8';
+                    $tgl = \Illuminate\Support\Carbon::parse($tanggal);
+                    $ini = $tgl->isToday();
                 @endphp
-                <div class="flex items-center gap-3 px-4 py-3 {{ $ini ? 'bg-brand-50/50' : '' }}">
-                    <div class="shrink-0 w-11 text-center">
-                        <div class="text-[10px] font-semibold uppercase {{ $ini ? 'text-brand-600' : 'text-neutral-400' }}">{{ $j->tanggal->locale('id')->translatedFormat('D') }}</div>
-                        <div class="text-lg font-extrabold tnum leading-none {{ $ini ? 'text-brand-700' : 'text-neutral-700' }}">{{ $j->tanggal->format('j') }}</div>
+                <div class="flex items-start gap-3 px-4 py-3 {{ $ini ? 'bg-brand-50/50' : '' }}" wire:key="hari-{{ $tanggal }}">
+                    <div class="shrink-0 w-11 text-center pt-0.5">
+                        <div class="text-[10px] font-semibold uppercase {{ $ini ? 'text-brand-600' : 'text-neutral-400' }}">{{ $tgl->locale('id')->translatedFormat('D') }}</div>
+                        <div class="text-lg font-extrabold tnum leading-none {{ $ini ? 'text-brand-700' : 'text-neutral-700' }}">{{ $tgl->format('j') }}</div>
                     </div>
-                    <div class="min-w-0 flex-1">
-                        @if ($s)
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $warna }}"></span>
-                                <span class="text-sm font-semibold text-neutral-800">{{ $s->nama }}</span>
-                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:{{ $warna }}1a;color:{{ $warna }}">{{ $s->kode }}</span>
+                    <div class="min-w-0 flex-1 space-y-2">
+                        @foreach ($baris as $j)
+                            @php
+                                $s = $j->shift;
+                                $warna = $s?->warna ?? '#94a3b8';
+                            @endphp
+                            <div wire:key="jad-{{ $j->id }}">
+                                @if ($s)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ $warna }}"></span>
+                                        <span class="text-sm font-semibold text-neutral-800">{{ $s->nama }}</span>
+                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:{{ $warna }}1a;color:{{ $warna }}">{{ $s->kode }}</span>
+                                    </div>
+                                    <div class="text-xs text-neutral-500 mt-0.5 tnum">{{ \Illuminate\Support\Str::substr($s->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($s->jam_selesai, 0, 5) }}</div>
+                                @else
+                                    <span class="text-sm text-neutral-400">Libur</span>
+                                @endif
                             </div>
-                            <div class="text-xs text-neutral-500 mt-0.5 tnum">{{ \Illuminate\Support\Str::substr($s->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($s->jam_selesai, 0, 5) }}</div>
-                        @else
-                            <span class="text-sm text-neutral-400">Libur</span>
+                        @endforeach
+                        @if (count($baris) > 1)
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-warning-600">Dinas ganda</div>
                         @endif
                     </div>
                     @if ($ini)
-                        <span class="shrink-0 text-[10px] font-bold text-brand-600 uppercase tracking-wide">Hari ini</span>
+                        <span class="shrink-0 text-[10px] font-bold text-brand-600 uppercase tracking-wide pt-1">Hari ini</span>
                     @endif
                 </div>
             @empty

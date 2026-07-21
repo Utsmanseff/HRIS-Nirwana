@@ -170,4 +170,45 @@ class TerapkanPolaTest extends TestCase
         $this->assertGreaterThan(0, Jadwal::where('karyawan_id', $ikut->id)->count());
         $this->assertSame(0, Jadwal::where('karyawan_id', $optout->id)->count());
     }
+
+    public function test_timpa_menghapus_semua_baris_hari_itu_lalu_menulis_pola(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
+        $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $this->siklusPL($unit, $kar, $pagi);
+
+        // Dinas ganda manual di 2026-07-01 (posisi pola = Pagi): dua baris sekaligus,
+        // supaya jalur "cuma sentuh baris pertama" ketahuan.
+        $malam = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'M', 'jam_mulai' => '00:00:00', 'jam_selesai' => '06:00:00']);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $sore->id]);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $malam->id]);
+
+        TerapkanPola::generate($unit, 2026, 7, null, timpa: true);
+
+        $baris = Jadwal::where('karyawan_id', $kar->id)->whereDate('tanggal', '2026-07-01')->get();
+        $this->assertCount(1, $baris);
+        $this->assertSame($pagi->id, $baris->first()->shift_id);
+    }
+
+    public function test_non_destruktif_melewati_hari_yang_sudah_punya_baris(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
+        $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $this->siklusPL($unit, $kar, $pagi);
+
+        $malam = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'M', 'jam_mulai' => '00:00:00', 'jam_selesai' => '06:00:00']);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $sore->id]);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $malam->id]);
+
+        TerapkanPola::generate($unit, 2026, 7, null, timpa: false);
+
+        $baris = Jadwal::where('karyawan_id', $kar->id)->whereDate('tanggal', '2026-07-01')->get();
+        $this->assertCount(2, $baris);   // dinas ganda manual utuh, pola tak menambah baris
+        $diharapkan = collect([$sore->id, $malam->id])->sort()->values()->all();
+        $this->assertSame($diharapkan, $baris->pluck('shift_id')->sort()->values()->all());
+    }
 }
