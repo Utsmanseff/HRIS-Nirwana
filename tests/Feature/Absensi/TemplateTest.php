@@ -60,4 +60,25 @@ class TemplateTest extends TestCase
 
         $this->assertSame(2, TemplateJadwal::where('nama', 'Pola Pagi')->count());
     }
+
+    public function test_scope_untuk_unit_mengurutkan_pola_menurut_nama(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $lain = OrgUnit::factory()->create();
+        TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Zulu', 'tanggal_jangkar' => '2026-07-01']);
+        TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Alfa', 'tanggal_jangkar' => '2026-07-01']);
+        TemplateJadwal::create(['org_unit_id' => $lain->id, 'nama' => 'Pola Beta', 'tanggal_jangkar' => '2026-07-01']);
+
+        $hasil = TemplateJadwal::untukUnit($unit->id)->pluck('nama')->all();
+
+        $this->assertSame(['Pola Alfa', 'Pola Zulu'], $hasil);
+    }
+
+    public function test_factory_memberi_nama_pola_yang_berbeda(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        TemplateJadwal::factory()->count(2)->create(['org_unit_id' => $unit->id]);
+
+        $this->assertSame(2, TemplateJadwal::where('org_unit_id', $unit->id)->distinct('nama')->count('nama'));
+    }
 }

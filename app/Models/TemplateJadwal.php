@@ -26,6 +26,12 @@ class TemplateJadwal extends Model
         return $this->belongsTo(OrgUnit::class, 'org_unit_id');
     }
 
+    /** Semua pola milik satu unit, urut nama. */
+    public function scopeUntukUnit($q, int $unitId)
+    {
+        return $q->where('org_unit_id', $unitId)->orderBy('nama');
+    }
+
     public function baris(): HasMany
     {
         return $this->hasMany(PolaJadwal::class, 'template_id');
