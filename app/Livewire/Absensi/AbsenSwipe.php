@@ -57,6 +57,20 @@ class AbsenSwipe extends Component
         return JadwalHarian::pilihUntukAbsen(auth()->user()->karyawan, now());
     }
 
+    /**
+     * shift_id yang sudah punya sesi absensi hari ini. Beda dengan "tak terpilih":
+     * shift yang belum tiba gilirannya bukan berarti sudah dijalani.
+     */
+    #[Computed]
+    public function shiftTerpakai(): array
+    {
+        return Absensi::where('karyawan_id', auth()->user()->karyawan_id)
+            ->whereDate('tanggal_kerja', now()->toDateString())
+            ->whereNotNull('shift_id')
+            ->pluck('shift_id')
+            ->all();
+    }
+
     /** Riwayat 7 sesi terakhir milik sendiri. */
     #[Computed]
     public function riwayat()
@@ -116,7 +130,7 @@ class AbsenSwipe extends Component
                 : ProsesAbsen::masuk($kar, $data);
         } catch (RuntimeException $e) {
             Storage::disk('local')->delete($path);
-            unset($this->sesi, $this->aksi, $this->jadwalHariIni, $this->jadwalTerpilih);
+            unset($this->sesi, $this->aksi, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
             $this->addError('sesi', $e->getMessage());
 
             return;
@@ -124,7 +138,7 @@ class AbsenSwipe extends Component
 
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
-        unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih);
+        unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
         $this->dispatch('absen-tersimpan');
         session()->flash('absen_ok', 'Absensi tercatat.');
     }

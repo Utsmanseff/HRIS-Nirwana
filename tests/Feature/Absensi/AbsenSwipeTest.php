@@ -188,7 +188,31 @@ class AbsenSwipeTest extends TestCase
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
             ->assertOk()
             ->assertSee('Malam')
-            ->assertSee('Sore');
+            ->assertSee('Sore')
+            // Belum ada sesi sama sekali → tak boleh ada shift berlabel "selesai".
+            ->assertDontSee('selesai');
+    }
+
+    public function test_absen_menandai_selesai_hanya_untuk_shift_yang_sudah_dipakai(): void
+    {
+        [$user, $malam] = $this->karyawanDinasGanda();
+        Absensi::create([
+            'karyawan_id' => $user->karyawan_id,
+            'tanggal_kerja' => today()->toDateString(),
+            'shift_id' => $malam->id,
+            'shift_nama' => $malam->nama,
+            'shift_mulai' => $malam->jam_mulai,
+            'shift_selesai' => $malam->jam_selesai,
+            'shift_toleransi' => $malam->toleransi_telat,
+            'jam_masuk' => today()->setTime(0, 5),
+            'jam_pulang' => today()->setTime(8, 0),
+            'lat_masuk' => -3.31, 'long_masuk' => 114.59, 'akurasi_masuk' => 10,
+            'wajah_verif_masuk' => true,
+        ]);
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->assertOk()
+            ->assertSeeInOrder(['Malam', 'selesai']);
     }
 
     public function test_beranda_menampilkan_chip_untuk_tiap_shift_hari_ini(): void

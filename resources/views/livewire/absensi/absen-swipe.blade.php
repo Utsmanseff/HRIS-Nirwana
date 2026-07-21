@@ -24,7 +24,7 @@
                 {{ \Illuminate\Support\Str::of($s->jam_mulai)->substr(0, 5) }}–{{ \Illuminate\Support\Str::of($s->jam_selesai)->substr(0, 5) }}
                 @if ($j->id === $terpilihId)
                     · toleransi {{ $s->toleransi_telat }}m
-                @else
+                @elseif (in_array($j->shift_id, $this->shiftTerpakai))
                     · selesai
                 @endif
             </div>
