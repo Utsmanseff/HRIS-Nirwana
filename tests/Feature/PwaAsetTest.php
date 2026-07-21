@@ -43,6 +43,17 @@ class PwaAsetTest extends TestCase
         $this->assertSame($sebelum, md5_file($path), 'menjalankan ulang harus menghasilkan berkas identik');
     }
 
+    public function test_pwa_head_punya_tag_startup_image_untuk_tiap_ukuran(): void
+    {
+        $blade = file_get_contents(resource_path('views/partials/pwa-head.blade.php'));
+
+        $this->assertSame(6, substr_count($blade, 'apple-touch-startup-image'));
+
+        foreach (BuatSplashPwa::UKURAN as [$w, $h]) {
+            $this->assertStringContainsString("/img/splash/splash-{$w}x{$h}.png", $blade);
+        }
+    }
+
     public function test_pwa_splash_gagal_jelas_bila_font_hilang(): void
     {
         $this->artisan('pwa:splash', ['--font' => '/jalur/tidak/ada.ttf'])
