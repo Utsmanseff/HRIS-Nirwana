@@ -3,6 +3,32 @@
 @php($byId = $kelolaan->keyBy('id'))
 @php($sisa = $kelolaan->reject(fn ($k) => in_array($k->id, $ada)))
 <div class="space-y-5">
+    <div class="flex flex-wrap items-center gap-2">
+        @foreach($daftarPola as $p)
+            <button type="button" wire:key="pola-{{ $p->id }}" wire:click="gantiPola({{ $p->id }})"
+                @class(['px-3 py-1.5 text-sm font-semibold rounded-lg border transition',
+                        'border-brand-200 text-brand-700' => $polaId === $p->id,
+                        'border-neutral-200 text-neutral-500' => $polaId !== $p->id])
+                @style(['background:var(--brand-50)' => $polaId === $p->id])>
+                {{ $p->nama }}
+            </button>
+        @endforeach
+        @unless($formPola)
+            <button type="button" wire:click="bukaFormPola" class="btn btn-secondary btn-sm">+ Pola Baru</button>
+        @else
+            <div class="flex items-center gap-2">
+                <input class="input w-auto" wire:model="pNama" placeholder="Nama pola, mis. Pola CS IGD" maxlength="60">
+                <button type="button" wire:click="buatPola" class="btn btn-primary btn-sm">Simpan</button>
+                <button type="button" wire:click="batalFormPola" class="btn btn-secondary btn-sm">Batal</button>
+            </div>
+        @endunless
+    </div>
+    @error('pNama')<p class="text-xs text-danger-600">{{ $message }}</p>@enderror
+
+    @if($daftarPola->isEmpty())
+        <p class="text-sm text-neutral-400">Unit ini belum punya pola. Buat pola dulu, mis. "Pola CS IGD".</p>
+    @endif
+
     <div class="flex flex-wrap items-end gap-4">
         <div>
             <label class="field-label">Mode template</label>

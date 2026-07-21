@@ -37,6 +37,12 @@ class JadwalKelola extends Component
     public int $sToleransi = 10;
 
     // ── Tab Template ─────────────────────────────────────────
+    #[Url]
+    public ?int $polaId = null;
+
+    public string $pNama = '';          // nama pola (buat / ubah)
+    public bool $formPola = false;      // form buat pola terbuka
+
     public string $tplMode = 'rotasi';   // rotasi | mingguan
     public string $tplJangkar = '';
     public int $tplPanjang = 7;
@@ -56,6 +62,7 @@ class JadwalKelola extends Component
     {
         $unit = $this->unitDipimpin()->first();
         $this->unitId ??= $unit?->id;
+        $this->polaId ??= $this->daftarPola()->first()?->id;
         $this->tahun ??= now()->year;
         $this->bulan ??= now()->month;
 
@@ -89,6 +96,8 @@ class JadwalKelola extends Component
     {
         if ($this->unitDipimpin()->contains('id', $unitId)) {
             $this->unitId = $unitId;
+            $this->polaId = $this->daftarPola()->first()?->id;
+            $this->muatTemplate();
         }
     }
 
@@ -149,6 +158,61 @@ class JadwalKelola extends Component
     }
 
     // ── Tab Template ─────────────────────────────────────────
+    /** Semua pola milik unit terpilih, urut nama. */
+    public function daftarPola()
+    {
+        return $this->unitId ? TemplateJadwal::untukUnit($this->unitId)->get() : collect();
+    }
+
+    /** Pola aktif (yang gridnya sedang disunting), atau null. */
+    public function polaAktif(): ?TemplateJadwal
+    {
+        return $this->polaId ? TemplateJadwal::where('org_unit_id', $this->unitId)->find($this->polaId) : null;
+    }
+
+    public function gantiPola(int $polaId): void
+    {
+        if (! TemplateJadwal::where('org_unit_id', $this->unitId)->whereKey($polaId)->exists()) {
+            return;
+        }
+        $this->polaId = $polaId;
+        $this->muatTemplate();
+    }
+
+    public function bukaFormPola(): void
+    {
+        $this->formPola = true;
+        $this->pNama = '';
+        $this->resetErrorBag('pNama');
+    }
+
+    public function batalFormPola(): void
+    {
+        $this->formPola = false;
+        $this->pNama = '';
+        $this->resetErrorBag('pNama');
+    }
+
+    public function buatPola(): void
+    {
+        abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
+
+        $this->validate([
+            'pNama' => ['required', 'string', 'max:60', Rule::unique('template_jadwal', 'nama')->where('org_unit_id', $this->unitId)],
+        ], attributes: ['pNama' => 'nama pola']);
+
+        $pola = TemplateJadwal::create([
+            'org_unit_id' => $this->unitId,
+            'nama' => trim($this->pNama),
+            'tanggal_jangkar' => now()->startOfMonth()->toDateString(),
+            'mode' => 'rotasi',
+        ]);
+
+        $this->polaId = $pola->id;
+        $this->batalFormPola();
+        $this->muatTemplate();
+    }
+
     public function muatTemplate(): void
     {
         $tpl = TemplateJadwal::where('org_unit_id', $this->unitId)->with('baris')->first();
@@ -422,6 +486,8 @@ class JadwalKelola extends Component
             'kelolaan' => $this->unitId
                 ? auth()->user()->karyawan->karyawanKelolaan()->with('jabatan')->orderBy('nama_lengkap')->get()
                 : collect(),
+            'daftarPola' => $this->daftarPola(),
+            'polaAktif' => $this->polaAktif(),
             'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
             'petaJadwal' => $this->petaJadwalBulan(),
             'namaBulan' => Carbon::create($this->tahun, $this->bulan, 1)->translatedFormat('F Y'),

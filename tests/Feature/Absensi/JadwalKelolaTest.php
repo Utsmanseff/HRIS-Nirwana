@@ -410,4 +410,46 @@ class JadwalKelolaTest extends TestCase
 
         $this->assertSame(0, \App\Models\Jadwal::where('karyawan_id', $staff->id)->whereDate('tanggal', '2026-07-20')->count());
     }
+
+    public function test_buat_pola_baru_untuk_unit(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('pNama', 'Pola CS IGD')
+            ->call('buatPola')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('template_jadwal', ['org_unit_id' => $unit->id, 'nama' => 'Pola CS IGD']);
+    }
+
+    public function test_buat_pola_menolak_nama_kembar_di_unit_sama(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola CS IGD', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('pNama', 'Pola CS IGD')
+            ->call('buatPola')
+            ->assertHasErrors('pNama');
+
+        $this->assertSame(1, \App\Models\TemplateJadwal::where('org_unit_id', $unit->id)->count());
+    }
+
+    public function test_buat_pola_langsung_jadi_pola_aktif(): void
+    {
+        $user = $this->koordinator();
+
+        $komponen = Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->call('gantiTab', 'template')
+            ->set('pNama', 'Pola CS Poli')
+            ->call('buatPola');
+
+        $baru = \App\Models\TemplateJadwal::where('nama', 'Pola CS Poli')->first();
+        $komponen->assertSet('polaId', $baru->id);
+    }
 }
