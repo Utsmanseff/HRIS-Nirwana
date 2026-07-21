@@ -8,6 +8,7 @@ use App\Models\OrgUnit;
 use App\Models\PolaJadwal;
 use App\Models\Shift;
 use App\Models\TemplateJadwal;
+use App\Support\JadwalHarian;
 use App\Support\TerapkanPola;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -294,33 +295,83 @@ class JadwalKelola extends Component
         $this->bulan = $t->month;
     }
 
-    public function setSel(int $karyawanId, int $hari, string $kode): void
+    /** Urai isi sel "P,M" / "p+m" → ['P','M'] unik. Kosong / L / LIBUR diabaikan. */
+    protected function uraiKode(string $teks): array
+    {
+        $hasil = [];
+        foreach (preg_split('/[,+]/', $teks) ?: [] as $bagian) {
+            $kode = strtoupper(trim((string) $bagian));
+            if ($this->kodeLibur($kode) || in_array($kode, $hasil, true)) {
+                continue;
+            }
+            $hasil[] = $kode;
+        }
+
+        return $hasil;
+    }
+
+    /** Isi satu sel grid. Dinas ganda: beberapa kode dipisah koma, mis. "M,S". */
+    public function setSel(int $karyawanId, int $hari, string $teks): void
     {
         abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
         abort_unless(auth()->user()->karyawan->karyawanKelolaan()->whereKey($karyawanId)->exists(), 403);
 
+        $this->resetErrorBag('jadwal');
         $tanggal = Carbon::create($this->tahun, $this->bulan, $hari)->toDateString();
+        $kode = $this->uraiKode($teks);
 
-        if ($this->kodeLibur($kode)) {
+        // whereDate agar cocok kolom date 'Y-m-d 00:00:00'.
+        if ($kode === []) {
             Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)->delete();
 
             return;
         }
 
-        $shiftId = $this->shiftIdByKode()[strtoupper(trim($kode))] ?? null;
-        if (! $shiftId) {
-            $this->addError('jadwal', "Kode \"{$kode}\" tidak dikenal.");
+        $peta = $this->shiftIdByKode();
+        $shiftIds = [];
+        foreach ($kode as $k) {
+            if (! isset($peta[$k])) {
+                $this->addError('jadwal', "Kode \"{$k}\" tidak dikenal.");
 
-            return;
+                return;
+            }
+            $shiftIds[] = $peta[$k];
         }
 
-        // whereDate agar cocok kolom date 'Y-m-d 00:00:00'.
-        $row = Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)->first();
-        if ($row) {
-            $row->update(['shift_id' => $shiftId, 'dibuat_oleh' => auth()->id()]);
-        } else {
-            Jadwal::create(['karyawan_id' => $karyawanId, 'tanggal' => $tanggal, 'shift_id' => $shiftId, 'dibuat_oleh' => auth()->id()]);
+        // Baris yang bertahan selalu himpunan bagian dari yang diminta (sisanya dihapus),
+        // jadi cukup periksa bentrok antar shift yang diminta.
+        $daftarShift = Shift::whereIn('id', $shiftIds)->get()->values();
+        foreach ($daftarShift as $i => $a) {
+            foreach ($daftarShift as $j => $b) {
+                if ($j <= $i) {
+                    continue;
+                }
+                [$aMulai, $aSelesai] = JadwalHarian::rentang($a);
+                [$bMulai, $bSelesai] = JadwalHarian::rentang($b);
+                if ($aMulai < $bSelesai && $bMulai < $aSelesai) {
+                    $this->addError('jadwal', "Shift {$a->kode} dan {$b->kode} bentrok jamnya.");
+
+                    return;
+                }
+            }
         }
+
+        DB::transaction(function () use ($karyawanId, $tanggal, $shiftIds) {
+            Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)
+                ->whereNotIn('shift_id', $shiftIds)->delete();
+
+            $ada = Jadwal::where('karyawan_id', $karyawanId)->whereDate('tanggal', $tanggal)
+                ->pluck('shift_id')->all();
+
+            foreach (array_diff($shiftIds, $ada) as $shiftId) {
+                Jadwal::create([
+                    'karyawan_id' => $karyawanId,
+                    'tanggal' => $tanggal,
+                    'shift_id' => $shiftId,
+                    'dibuat_oleh' => auth()->id(),
+                ]);
+            }
+        });
     }
 
     public function terapkanPola(): void
@@ -330,7 +381,7 @@ class JadwalKelola extends Component
         session()->flash('sukses', "Pola diterapkan: {$jumlah} jadwal.");
     }
 
-    /** petaJadwal[karyawan_id][hari] = kode shift (untuk isi grid). */
+    /** petaJadwal[karyawan_id][hari] = daftar kode shift (urut jam mulai). */
     protected function petaJadwalBulan(): array
     {
         if (! $this->unitId) {
@@ -343,10 +394,13 @@ class JadwalKelola extends Component
         $peta = [];
         Jadwal::whereIn('karyawan_id', $kelolaanIds)
             ->whereBetween('tanggal', [$awal, $akhir])
-            ->with('shift:id,kode')
+            ->with('shift:id,kode,jam_mulai')
             ->get()
+            ->sortBy(fn (Jadwal $j) => $j->shift?->jam_mulai ?? '99:99:99')
             ->each(function (Jadwal $j) use (&$peta) {
-                $peta[$j->karyawan_id][(int) $j->tanggal->format('j')] = $j->shift?->kode;
+                if ($j->shift?->kode) {
+                    $peta[$j->karyawan_id][(int) $j->tanggal->format('j')][] = $j->shift->kode;
+                }
             });
 
         return $peta;
