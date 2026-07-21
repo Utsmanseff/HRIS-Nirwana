@@ -377,7 +377,12 @@ class JadwalKelola extends Component
     public function terapkanPola(): void
     {
         abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
-        $jumlah = TerapkanPola::generate($this->unitTerpilih(), $this->tahun, $this->bulan, auth()->id(), timpa: true);
+
+        $jumlah = 0;
+        foreach (TemplateJadwal::untukUnit($this->unitId)->get() as $pola) {
+            $jumlah += TerapkanPola::untukPola($pola, $this->tahun, $this->bulan, auth()->id(), timpa: true);
+        }
+
         session()->flash('sukses', "Pola diterapkan: {$jumlah} jadwal.");
     }
 

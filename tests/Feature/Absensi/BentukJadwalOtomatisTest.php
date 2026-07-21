@@ -49,4 +49,25 @@ class BentukJadwalOtomatisTest extends TestCase
         // Manual 20 Jul tak tertimpa.
         $this->assertDatabaseHas('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $lain->id]);
     }
+
+    public function test_membentuk_jadwal_untuk_semua_pola_dalam_satu_unit(): void
+    {
+        Carbon::setTestNow('2026-07-15 09:00:00');
+
+        $unit = OrgUnit::factory()->create();
+        $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P']);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S']);
+        $a = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $b = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+
+        $polaA = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaA->id, 'karyawan_id' => $a->id, 'posisi' => 0, 'shift_id' => $pagi->id]);
+        $polaB = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaB->id, 'karyawan_id' => $b->id, 'posisi' => 0, 'shift_id' => $sore->id]);
+
+        $this->artisan('absensi:bentuk-jadwal')->assertSuccessful();
+
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $a->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $pagi->id]);
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $b->id, 'tanggal' => '2026-07-20 00:00:00', 'shift_id' => $sore->id]);
+    }
 }

@@ -4,13 +4,12 @@ namespace App\Support;
 
 use App\Enums\ModeTemplate;
 use App\Models\Jadwal;
-use App\Models\OrgUnit;
 use App\Models\TemplateJadwal;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Generasi jadwal bulanan dari template pola (deterministik).
+ * Generasi jadwal bulanan dari SATU pola (deterministik). Cakupannya hanya anggota pola itu.
  * - Mode rotasi:   posisi = ((tanggal − jangkar) mod panjang_siklus). Rotasi kontinu, abai nama hari.
  * - Mode mingguan: posisi = hari (Senin=0…Minggu=6). Jadwal jam-tetap per nama hari.
  * shift = siklus[posisi] (null = libur).
@@ -22,20 +21,20 @@ use Illuminate\Support\Facades\DB;
 class TerapkanPola
 {
     /** @return int jumlah baris jadwal yang di-set (shift, bukan libur) */
-    public static function generate(OrgUnit $unit, int $tahun, int $bulan, ?int $dibuatOleh = null, bool $timpa = true): int
+    public static function untukPola(TemplateJadwal $pola, int $tahun, int $bulan, ?int $dibuatOleh = null, bool $timpa = true): int
     {
-        $tpl = TemplateJadwal::where('org_unit_id', $unit->id)->with('baris')->first();
-        if (! $tpl || $tpl->baris->isEmpty()) {
+        $pola->loadMissing('baris');
+        if ($pola->baris->isEmpty()) {
             return 0;
         }
 
-        $mingguan = $tpl->mode === ModeTemplate::Mingguan;
-        $jangkar = $tpl->tanggal_jangkar->copy()->startOfDay();
+        $mingguan = $pola->mode === ModeTemplate::Mingguan;
+        $jangkar = $pola->tanggal_jangkar->copy()->startOfDay();
         $awal = Carbon::create($tahun, $bulan, 1)->startOfDay();
         $akhir = $awal->copy()->endOfMonth();
 
         // Siklus per karyawan: [posisi => shift_id|null], terurut.
-        $siklus = $tpl->baris->groupBy('karyawan_id')->map(
+        $siklus = $pola->baris->groupBy('karyawan_id')->map(
             fn ($rows) => $rows->sortBy('posisi')->pluck('shift_id')->all()
         );
 
