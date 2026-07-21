@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Absensi;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\Shift;
@@ -25,6 +26,38 @@ class JadwalHarian
             ->get()
             ->sortBy(fn (Jadwal $j) => $j->shift?->jam_mulai ?? '99:99:99')
             ->values();
+    }
+
+    /**
+     * Jadwal yang dipakai saat absen masuk: shift terdekat (jarak melingkar) yang
+     * BELUM punya sesi absensi pada tanggal itu. Null → mode catat (tanpa evaluasi).
+     */
+    public static function pilihUntukAbsen(Karyawan $karyawan, Carbon $jam): ?Jadwal
+    {
+        $kandidat = self::untuk($karyawan, $jam)->filter(fn (Jadwal $j) => $j->shift !== null);
+        if ($kandidat->isEmpty()) {
+            return null;
+        }
+
+        $terpakai = Absensi::where('karyawan_id', $karyawan->id)
+            ->whereDate('tanggal_kerja', $jam->toDateString())
+            ->whereNotNull('shift_id')
+            ->pluck('shift_id')
+            ->all();
+
+        $sisa = $kandidat->reject(fn (Jadwal $j) => in_array($j->shift_id, $terpakai));
+        if ($sisa->isEmpty()) {
+            return null;
+        }
+
+        $menitAbsen = self::menit($jam->format('H:i'));
+
+        return $sisa->sort(function (Jadwal $a, Jadwal $b) use ($menitAbsen) {
+            $ja = self::jarakMelingkar($menitAbsen, self::menit($a->shift->jam_mulai));
+            $jb = self::jarakMelingkar($menitAbsen, self::menit($b->shift->jam_mulai));
+
+            return $ja <=> $jb ?: strcmp($a->shift->jam_mulai, $b->shift->jam_mulai);
+        })->first();
     }
 
     /** Rentang menit shift relatif tanggal jadwal; lintas tengah malam → selesai + 1440. */
