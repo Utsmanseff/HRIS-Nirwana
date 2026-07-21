@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Absensi;
-use App\Models\Jadwal;
 use App\Models\Karyawan;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -24,7 +23,10 @@ class ProsesAbsen
             ->first();
     }
 
-    /** Buka sesi baru (absen masuk). Snapshot shift dari jadwal hari itu (bila ada) + hitung telat. */
+    /**
+     * Buka sesi baru (absen masuk). Snapshot shift dari jadwal hari itu (bila ada) + hitung telat.
+     * Dinas ganda: shift dipilih JadwalHarian (terdekat & belum terpakai), bukan baris pertama.
+     */
     public static function masuk(Karyawan $karyawan, array $data): Absensi
     {
         if (self::sesiAktif($karyawan)) {
@@ -32,10 +34,7 @@ class ProsesAbsen
         }
 
         $jam = $data['jam'];
-        $jadwal = Jadwal::where('karyawan_id', $karyawan->id)
-            ->whereDate('tanggal', $jam->toDateString())
-            ->with('shift')
-            ->first();
+        $jadwal = JadwalHarian::pilihUntukAbsen($karyawan, $jam);
         $shift = $jadwal?->shift;
 
         $telat = $shift
