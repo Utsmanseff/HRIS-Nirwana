@@ -70,8 +70,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/riwayat', \App\Livewire\Riwayat::class)->name('riwayat');
     Route::get('/profil', Profil::class)->name('profil');
 
-    Route::get('/cuti', CutiIndex::class)->name('cuti');
-    Route::get('/cuti/ajukan', CutiForm::class)->name('cuti.ajukan');
+    Route::get('/cuti', CutiIndex::class)->middleware('can:ajukan-cuti')->name('cuti');
+    Route::get('/cuti/ajukan', CutiForm::class)->middleware('can:ajukan-cuti')->name('cuti.ajukan');
     Route::get('/cuti/persetujuan', \App\Livewire\Cuti\Persetujuan::class)
         ->middleware('can:approve-cuti')->name('cuti.persetujuan');
     Route::get('/cuti/kelola', \App\Livewire\Cuti\KelolaCuti::class)
@@ -92,7 +92,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:approve-disiplin')->name('disiplin.persetujuan');
     Route::get('/disiplin/kelola', \App\Livewire\Disiplin\KelolaDisiplin::class)
         ->middleware('can:buat-sanksi')->name('disiplin.kelola');
-    Route::get('/disiplin/saya', \App\Livewire\Disiplin\SanksiSaya::class)->name('disiplin.saya');
+    Route::get('/disiplin/saya', \App\Livewire\Disiplin\SanksiSaya::class)
+        ->middleware('can:lihat-sanksi-sendiri')->name('disiplin.saya');
     Route::get('/disiplin/laporan', \App\Livewire\Disiplin\LaporanDisiplin::class)
         ->middleware('can:kelola-disiplin')->name('disiplin.laporan');
     Route::get('/disiplin/laporan/sanksi', [\App\Http\Controllers\Disiplin\LaporanDisiplinController::class, 'sanksi'])
@@ -103,7 +104,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
         ->middleware('can:absen')->name('absensi');
     Route::get('/absensi/jadwal-saya', \App\Livewire\Absensi\JadwalSaya::class)
-        ->middleware('can:absen')->name('absensi.jadwal-saya');
+        ->middleware('can:lihat-jadwal-sendiri')->name('absensi.jadwal-saya');
     Route::get('/absensi/foto/{absensi}/{sesi}', [\App\Http\Controllers\Absensi\LampiranController::class, 'lihat'])
         ->whereIn('sesi', ['masuk', 'pulang'])->name('absensi.foto');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)

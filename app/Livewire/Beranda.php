@@ -36,9 +36,9 @@ class Beranda extends Component
             ];
         }
 
-        // Kartu jatah cuti untuk siapa pun yang punya data karyawan.
+        // Kartu jatah cuti — hanya untuk yang memang boleh mengajukan cuti (Direktur tidak).
         $kar = $user->karyawan()->first();
-        $data['saldo'] = $kar ? SaldoCuti::untuk($kar) : null;
+        $data['saldo'] = $kar && $user->can('ajukan-cuti') ? SaldoCuti::untuk($kar) : null;
 
         // Kartu sanksi aktif untuk karyawan (muncul saat ada yang aktif).
         $data['sanksiAktif'] = $kar ? \App\Support\EskalasiSanksi::sanksiAktif($kar)->count() : 0;
