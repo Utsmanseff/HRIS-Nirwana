@@ -10,15 +10,29 @@
     <div class="text-center mb-3">
         <div class="text-3xl font-extrabold tnum tracking-tight leading-none" x-text="jam">--:--</div>
         <div class="text-xs text-neutral-500 mt-1">{{ now()->translatedFormat('l, d F Y') }}</div>
-        @if ($this->shiftHariIni)
-            <div class="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full text-xs font-semibold"
-                 style="background:var(--brand-50);color:var(--brand-700)">
-                {{ $this->shiftHariIni->nama }} ·
-                {{ \Illuminate\Support\Str::of($this->shiftHariIni->jam_mulai)->substr(0, 5) }}–{{ \Illuminate\Support\Str::of($this->shiftHariIni->jam_selesai)->substr(0, 5) }}
-                · toleransi {{ $this->shiftHariIni->toleransi_telat }}m
+        @php($terpilihId = $this->jadwalTerpilih?->id)
+        @forelse ($this->jadwalHariIni as $j)
+            @php($s = $j->shift)
+            <div class="inline-flex items-center gap-2 mt-2 mx-0.5 px-3 py-1 rounded-full text-xs font-semibold"
+                 wire:key="shift-hari-ini-{{ $j->id }}"
+                 @if ($j->id === $terpilihId)
+                     style="background:var(--brand-50);color:var(--brand-700)"
+                 @else
+                     style="background:var(--bg-muted);color:var(--text-muted)"
+                 @endif>
+                {{ $s->nama }} ·
+                {{ \Illuminate\Support\Str::of($s->jam_mulai)->substr(0, 5) }}–{{ \Illuminate\Support\Str::of($s->jam_selesai)->substr(0, 5) }}
+                @if ($j->id === $terpilihId)
+                    · toleransi {{ $s->toleransi_telat }}m
+                @else
+                    · selesai
+                @endif
             </div>
-        @else
+        @empty
             <div class="mt-2 text-xs text-neutral-400">Tidak ada shift terjadwal hari ini (mode catat)</div>
+        @endforelse
+        @if ($this->jadwalHariIni->isNotEmpty() && ! $terpilihId)
+            <div class="mt-2 text-xs text-neutral-400">Semua shift hari ini sudah terpakai — absen berikutnya masuk mode catat.</div>
         @endif
     </div>
 

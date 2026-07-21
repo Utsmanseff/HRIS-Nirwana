@@ -5,6 +5,7 @@ namespace App\Livewire\Absensi;
 use App\Models\Absensi;
 use App\Models\Jadwal;
 use App\Models\PengaturanAbsensi;
+use App\Support\JadwalHarian;
 use App\Support\KompresGambar;
 use App\Support\LokasiAbsen;
 use App\Support\ProsesAbsen;
@@ -42,14 +43,18 @@ class AbsenSwipe extends Component
         return $this->sesi ? 'pulang' : 'masuk';
     }
 
-    /** Jadwal + shift hari ini (info; ProsesAbsen tetap snapshot ulang saat masuk). */
+    /** Semua jadwal hari ini (info; ProsesAbsen tetap snapshot ulang saat masuk). */
     #[Computed]
-    public function shiftHariIni()
+    public function jadwalHariIni()
     {
-        return Jadwal::where('karyawan_id', auth()->user()->karyawan_id)
-            ->whereDate('tanggal', now()->toDateString())
-            ->with('shift')
-            ->first()?->shift;
+        return JadwalHarian::untuk(auth()->user()->karyawan, now());
+    }
+
+    /** Jadwal yang akan dipakai bila absen masuk sekarang (null = mode catat). */
+    #[Computed]
+    public function jadwalTerpilih(): ?Jadwal
+    {
+        return JadwalHarian::pilihUntukAbsen(auth()->user()->karyawan, now());
     }
 
     /** Riwayat 7 sesi terakhir milik sendiri. */
@@ -111,7 +116,7 @@ class AbsenSwipe extends Component
                 : ProsesAbsen::masuk($kar, $data);
         } catch (RuntimeException $e) {
             Storage::disk('local')->delete($path);
-            unset($this->sesi, $this->aksi);
+            unset($this->sesi, $this->aksi, $this->jadwalHariIni, $this->jadwalTerpilih);
             $this->addError('sesi', $e->getMessage());
 
             return;
@@ -119,7 +124,7 @@ class AbsenSwipe extends Component
 
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
-        unset($this->sesi, $this->aksi, $this->riwayat);
+        unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih);
         $this->dispatch('absen-tersimpan');
         session()->flash('absen_ok', 'Absensi tercatat.');
     }

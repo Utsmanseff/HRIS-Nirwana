@@ -162,4 +162,41 @@ class AbsenSwipeTest extends TestCase
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Beranda::class)
             ->assertSee('Absensi Hari Ini');
     }
+
+    /** @return array{0: User, 1: \App\Models\Shift, 2: \App\Models\Shift} */
+    private function karyawanDinasGanda(): array
+    {
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $user = User::factory()->create(['karyawan_id' => $kar->id]);
+        $malam = \App\Models\Shift::factory()->for($unit, 'orgUnit')->create([
+            'kode' => 'M', 'nama' => 'Malam', 'jam_mulai' => '00:00:00', 'jam_selesai' => '08:00:00',
+        ]);
+        $sore = \App\Models\Shift::factory()->for($unit, 'orgUnit')->create([
+            'kode' => 'S', 'nama' => 'Sore', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00',
+        ]);
+        \App\Models\Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => today()->toDateString(), 'shift_id' => $malam->id]);
+        \App\Models\Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => today()->toDateString(), 'shift_id' => $sore->id]);
+
+        return [$user, $malam, $sore];
+    }
+
+    public function test_absen_menampilkan_semua_shift_hari_ini(): void
+    {
+        [$user] = $this->karyawanDinasGanda();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->assertOk()
+            ->assertSee('Malam')
+            ->assertSee('Sore');
+    }
+
+    public function test_beranda_menampilkan_chip_untuk_tiap_shift_hari_ini(): void
+    {
+        [$user] = $this->karyawanDinasGanda();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Beranda::class)
+            ->assertSee('Malam')
+            ->assertSee('Sore');
+    }
 }
