@@ -60,6 +60,28 @@ class JadwalHarian
         })->first();
     }
 
+    /**
+     * Benar bila jam $shift beririsan dengan jadwal lain karyawan di tanggal itu.
+     * Sentuhan ujung (16:00-00:00 lalu 00:00-08:00) BUKAN bentrok.
+     * Batas sadar: hanya dihitung dalam satu tanggal jadwal.
+     */
+    public static function bentrok(Karyawan $karyawan, Carbon|string $tanggal, Shift $shift, ?int $abaikanJadwalId = null): bool
+    {
+        [$mulaiBaru, $selesaiBaru] = self::rentang($shift);
+
+        foreach (self::untuk($karyawan, $tanggal) as $j) {
+            if ($j->id === $abaikanJadwalId || $j->shift === null) {
+                continue;
+            }
+            [$mulai, $selesai] = self::rentang($j->shift);
+            if ($mulaiBaru < $selesai && $mulai < $selesaiBaru) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** Rentang menit shift relatif tanggal jadwal; lintas tengah malam → selesai + 1440. */
     public static function rentang(Shift $shift): array
     {

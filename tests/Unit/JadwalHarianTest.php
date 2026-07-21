@@ -148,4 +148,37 @@ class JadwalHarianTest extends TestCase
         $this->assertSame([960, 1440], JadwalHarian::rentang($this->shift('S', '16:00:00', '00:00:00')));
         $this->assertSame([420, 840], JadwalHarian::rentang($this->shift('P', '07:00:00', '14:00:00')));
     }
+
+    public function test_bentrok_benar_saat_jam_beririsan(): void
+    {
+        $this->jadwal($this->shift('P', '07:00:00', '14:00:00'));
+        $siang = $this->shift('D', '13:00:00', '21:00:00');
+
+        $this->assertTrue(JadwalHarian::bentrok($this->kar, '2026-07-20', $siang));
+    }
+
+    public function test_bentrok_salah_saat_hanya_bersentuhan_ujung(): void
+    {
+        $this->jadwal($this->shift('S', '16:00:00', '00:00:00'));
+        $malam = $this->shift('M', '00:00:00', '08:00:00');
+
+        $this->assertFalse(JadwalHarian::bentrok($this->kar, '2026-07-20', $malam));
+    }
+
+    public function test_bentrok_salah_untuk_hari_lain(): void
+    {
+        $this->jadwal($this->shift('P', '07:00:00', '14:00:00'), '2026-07-21');
+        $siang = $this->shift('D', '13:00:00', '21:00:00');
+
+        $this->assertFalse(JadwalHarian::bentrok($this->kar, '2026-07-20', $siang));
+    }
+
+    public function test_bentrok_bisa_mengabaikan_satu_baris(): void
+    {
+        $pagi = $this->shift('P', '07:00:00', '14:00:00');
+        $baris = $this->jadwal($pagi);
+
+        $this->assertFalse(JadwalHarian::bentrok($this->kar, '2026-07-20', $pagi, $baris->id));
+        $this->assertTrue(JadwalHarian::bentrok($this->kar, '2026-07-20', $pagi));
+    }
 }
