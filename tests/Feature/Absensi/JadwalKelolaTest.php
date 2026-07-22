@@ -597,7 +597,8 @@ class JadwalKelolaTest extends TestCase
             ->set('polaId', $polaB->id)
             ->call('gantiTab', 'template')
             ->set('cariAnggota', 'Siti')
-            ->assertSee('akan dipindah')      // penanda "sudah di Pola A — akan dipindah"
+            ->assertSee('sudah di Pola A')     // penanda pola asal
+            ->assertSee('Tukar dengan…')       // aksi tukar antar pola tersedia
             ->assertViewHas('polaLainPeta', fn ($peta) => ($peta[$staff->id] ?? null) === 'Pola A');
     }
 
@@ -690,6 +691,84 @@ class JadwalKelolaTest extends TestCase
         $minTaufik = \App\Models\PolaJadwal::where('template_id', $pola->id)->where('karyawan_id', $taufik->id)->min('id');
         $minIda = \App\Models\PolaJadwal::where('template_id', $pola->id)->where('karyawan_id', $ida->id)->min('id');
         $this->assertLessThan($minIda, $minTaufik);
+    }
+
+    public function test_tukar_antar_pola_menukar_anggota_siklus_tetap_di_polanya(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shiftP = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $shiftS = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'S']);
+        $a = $this->staffDi($unit);
+        $b = $this->staffDi($unit);
+
+        $polaX = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola X', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaX->id, 'karyawan_id' => $a->id, 'posisi' => 0, 'shift_id' => $shiftP->id]);
+        $polaY = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Y', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaY->id, 'karyawan_id' => $b->id, 'posisi' => 0, 'shift_id' => $shiftS->id]);
+
+        // Pola aktif Y; tukar A (dari Pola X) dengan B (anggota Pola Y).
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaY->id)
+            ->call('gantiTab', 'template')
+            ->call('mulaiTukarLuar', $a->id)
+            ->assertSet('tukarLuarId', $a->id)
+            ->call('tukarAntarPola', $b->id)
+            ->assertHasNoErrors()
+            ->assertSet('tukarLuarId', null);
+
+        // Siklus tetap di polanya: A masuk Pola Y pakai siklus lama Y (S),
+        // B masuk Pola X pakai siklus lama X (P).
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $polaY->id, 'karyawan_id' => $a->id, 'posisi' => 0, 'shift_id' => $shiftS->id]);
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $polaX->id, 'karyawan_id' => $b->id, 'posisi' => 0, 'shift_id' => $shiftP->id]);
+        // Tak ada A di X, tak ada B di Y.
+        $this->assertDatabaseMissing('pola_jadwal', ['template_id' => $polaX->id, 'karyawan_id' => $a->id]);
+        $this->assertDatabaseMissing('pola_jadwal', ['template_id' => $polaY->id, 'karyawan_id' => $b->id]);
+        // Masing-masing tetap satu pola.
+        $this->assertSame(1, \App\Models\PolaJadwal::where('karyawan_id', $a->id)->distinct('template_id')->count('template_id'));
+        $this->assertSame(1, \App\Models\PolaJadwal::where('karyawan_id', $b->id)->distinct('template_id')->count('template_id'));
+    }
+
+    public function test_tukar_antar_pola_bisa_dibalik(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shiftP = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $shiftS = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'S']);
+        $a = $this->staffDi($unit);
+        $b = $this->staffDi($unit);
+
+        $polaX = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola X', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaX->id, 'karyawan_id' => $a->id, 'posisi' => 0, 'shift_id' => $shiftP->id]);
+        $polaY = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Y', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaY->id, 'karyawan_id' => $b->id, 'posisi' => 0, 'shift_id' => $shiftS->id]);
+
+        // Tukar A↔B (aktif Y), lalu balik lagi (aktif X) → kembali ke keadaan semula.
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaY->id)->call('gantiTab', 'template')
+            ->call('mulaiTukarLuar', $a->id)->call('tukarAntarPola', $b->id)
+            // Sekarang B di X (siklus P), A di Y (siklus S). Balik: aktif X, tukar B(dari Y) dgn A(di X)...
+            // A kini di Y, jadi dari sisi pola X, "luar" = A.
+            ->call('gantiPola', $polaX->id)
+            ->call('mulaiTukarLuar', $a->id)->call('tukarAntarPola', $b->id)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $polaX->id, 'karyawan_id' => $a->id, 'posisi' => 0, 'shift_id' => $shiftP->id]);
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $polaY->id, 'karyawan_id' => $b->id, 'posisi' => 0, 'shift_id' => $shiftS->id]);
+    }
+
+    public function test_mulai_tukar_luar_diabaikan_untuk_karyawan_tanpa_pola_lain(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $lepas = $this->staffDi($unit);   // tidak di pola mana pun
+        $polaY = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Y', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaY->id)
+            ->call('gantiTab', 'template')
+            ->call('mulaiTukarLuar', $lepas->id)
+            ->assertSet('tukarLuarId', null);
     }
 
     public function test_grid_bulanan_mengelompokkan_per_pola_dan_tanpa_pola(): void

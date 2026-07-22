@@ -4,6 +4,7 @@ namespace App\Livewire\Absensi;
 
 use App\Enums\ModeTemplate;
 use App\Models\Jadwal;
+use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PolaJadwal;
 use App\Models\Shift;
@@ -47,6 +48,9 @@ class JadwalKelola extends Component
 
     /** karyawan_id baris yang sedang menunggu lawan tukar (null = tak ada). */
     public ?int $tukarDari = null;
+
+    /** karyawan dari pola LAIN yang dipilih untuk ditukar masuk ke pola aktif. */
+    public ?int $tukarLuarId = null;
 
     public string $tplMode = 'rotasi';   // rotasi | mingguan
     public string $tplJangkar = '';
@@ -388,6 +392,81 @@ class JadwalKelola extends Component
         $this->panjangBaris[$karyawanId] = $panjangDari;
     }
 
+    /** Pilih karyawan (dari pola lain) sebagai calon tukar antar pola. */
+    public function mulaiTukarLuar(int $karyawanId): void
+    {
+        // Hanya berlaku untuk karyawan yang memang ada di pola lain unit ini.
+        if (! isset($this->polaLainPeta()[$karyawanId])) {
+            $this->tukarLuarId = null;
+
+            return;
+        }
+        $this->tukarLuarId = $karyawanId;
+    }
+
+    public function batalTukarLuar(): void
+    {
+        $this->tukarLuarId = null;
+    }
+
+    /**
+     * Tukar dua karyawan antar pola: si `tukarLuarId` (dari pola X) dengan
+     * `$anggotaId` (anggota pola aktif Y). SIKLUS TETAP DI POLANYA — occupant
+     * ditukar via UPDATE karyawan_id sehingga posisi/shift & urutan baris utuh.
+     */
+    public function tukarAntarPola(int $anggotaId): void
+    {
+        abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
+
+        $luar = $this->tukarLuarId;
+        $this->tukarLuarId = null;
+
+        $polaY = $this->polaAktif();
+        if ($luar === null || $luar === $anggotaId || ! $polaY) {
+            return;
+        }
+
+        // Pola asal si luar (pola X ≠ Y, dalam unit ini).
+        $polaX = TemplateJadwal::where('org_unit_id', $this->unitId)
+            ->whereKeyNot($polaY->id)
+            ->whereHas('baris', fn ($q) => $q->where('karyawan_id', $luar))
+            ->first();
+
+        // Anggota harus benar-benar di pola aktif (data tersimpan).
+        $anggotaDiY = PolaJadwal::where('template_id', $polaY->id)
+            ->where('karyawan_id', $anggotaId)->exists();
+
+        if (! $polaX || ! $anggotaDiY) {
+            return;
+        }
+
+        DB::transaction(function () use ($polaX, $polaY, $luar, $anggotaId) {
+            // Pola Y: slot anggota → jadi si luar (siklus Y tetap).
+            PolaJadwal::where('template_id', $polaY->id)->where('karyawan_id', $anggotaId)
+                ->update(['karyawan_id' => $luar]);
+            // Pola X: slot si luar → jadi anggota (siklus X tetap).
+            PolaJadwal::where('template_id', $polaX->id)->where('karyawan_id', $luar)
+                ->update(['karyawan_id' => $anggotaId]);
+        });
+
+        $this->cariAnggota = '';
+        $this->muatTemplate();
+        session()->flash('sukses', 'Dua karyawan ditukar antar pola.');
+    }
+
+    /** Anggota pola aktif (tersimpan), urut nama — untuk picker lawan tukar. */
+    public function anggotaPolaAktif()
+    {
+        $pola = $this->polaAktif();
+        if (! $pola) {
+            return collect();
+        }
+
+        $ids = PolaJadwal::where('template_id', $pola->id)->distinct()->pluck('karyawan_id');
+
+        return Karyawan::whereIn('id', $ids)->orderBy('nama_lengkap')->get(['id', 'nama_lengkap', 'nip']);
+    }
+
     public function tambahKolom(int $karyawanId): void
     {
         if (! isset($this->panjangBaris[$karyawanId])) {
@@ -679,6 +758,7 @@ class JadwalKelola extends Component
             'urutanGrid' => $this->urutanGrid(),
             'hasilCariAnggota' => $this->hasilCariAnggota(),
             'polaLainPeta' => $this->polaLainPeta(),
+            'anggotaPolaAktif' => $this->tukarLuarId ? $this->anggotaPolaAktif() : collect(),
             'blokJadwal' => $this->blokJadwal(),
             'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
             'petaJadwal' => $this->petaJadwalBulan(),
