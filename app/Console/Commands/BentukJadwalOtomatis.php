@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\TemplateJadwal;
+use App\Support\ProsesPengganti;
 use App\Support\TerapkanPola;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -23,7 +24,11 @@ class BentukJadwalOtomatis extends Command
             }
         }
 
-        $this->info("Selesai. {$total} jadwal terbentuk.");
+        // Lowongan terbuka: jadwal si nonaktif yang baru lahir harus ikut disalin
+        // ke penggantinya. Idempoten, jadi aman dipanggil tiap kali.
+        $salinan = ProsesPengganti::sinkronSemuaLowongan();
+
+        $this->info("Selesai. {$total} jadwal terbentuk, {$salinan} salinan pengganti.");
 
         return self::SUCCESS;
     }
