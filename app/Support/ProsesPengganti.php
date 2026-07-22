@@ -2,12 +2,14 @@
 
 namespace App\Support;
 
+use App\Enums\StatusPengajuanCuti;
 use App\Enums\StatusPengganti;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\PenggantiCuti;
 use App\Models\User;
+use App\Notifications\DitunjukJadiPengganti;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -105,7 +107,7 @@ class ProsesPengganti
             self::hapusJadwalRencana($lama);
             PenggantiCuti::whereIn('id', $lama)->delete();
 
-            return PenggantiCuti::create([
+            $baris = PenggantiCuti::create([
                 'pengajuan_cuti_id' => $cuti->id,
                 'karyawan_id' => $pengganti->id,
                 'tanggal_mulai' => Carbon::parse($cuti->tanggal_mulai)->toDateString(),
@@ -113,7 +115,64 @@ class ProsesPengganti
                 'status' => StatusPengganti::Aktif,
                 'dibuat_oleh' => $oleh->id,
             ]);
+
+            // Cuti yang sudah disetujui → salinan jadwal langsung berlaku.
+            self::generateSaatDisetujui($cuti->fresh());
+
+            return $baris;
         });
+    }
+
+    /**
+     * Materialisasi rencana aktif jadi baris jadwal untuk pengganti.
+     * No-op bila cuti belum Disetujui. Idempoten. Mengembalikan jumlah baris baru.
+     */
+    public static function generateSaatDisetujui(PengajuanCuti $cuti): int
+    {
+        if ($cuti->status !== StatusPengajuanCuti::Disetujui) {
+            return 0;
+        }
+
+        $total = 0;
+
+        foreach ($cuti->pengganti()->aktif()->with('karyawan')->get() as $rencana) {
+            $dibuat = 0;
+            $mulai = Carbon::parse($rencana->tanggal_mulai);
+            $selesai = Carbon::parse($rencana->tanggal_selesai);
+
+            for ($t = $mulai->copy()->startOfDay(); $t->lte($selesai); $t->addDay()) {
+                $shiftPemohon = JadwalHarian::untuk($cuti->karyawan, $t)
+                    ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_cuti_id === null);
+
+                foreach ($shiftPemohon as $j) {
+                    // Lewati bila pengganti sudah punya baris shift itu (idempoten +
+                    // menjaga unique (karyawan, tanggal, shift)).
+                    $ada = Jadwal::where('karyawan_id', $rencana->karyawan_id)
+                        ->whereDate('tanggal', $t->toDateString())
+                        ->where('shift_id', $j->shift_id)
+                        ->exists();
+                    if ($ada) {
+                        continue;
+                    }
+
+                    Jadwal::create([
+                        'karyawan_id' => $rencana->karyawan_id,
+                        'tanggal' => $t->toDateString(),
+                        'shift_id' => $j->shift_id,
+                        'dibuat_oleh' => $rencana->dibuat_oleh,
+                        'pengganti_cuti_id' => $rencana->id,
+                    ]);
+                    $dibuat++;
+                }
+            }
+
+            if ($dibuat > 0) {
+                $rencana->karyawan->user?->notify(new DitunjukJadiPengganti($cuti, $rencana));
+            }
+            $total += $dibuat;
+        }
+
+        return $total;
     }
 
     /** Hapus baris jadwal hasil salinan milik rencana tertentu (opsional: hanya sejak tanggal). */
