@@ -225,24 +225,26 @@ class ProsesPengganti
         return $total;
     }
 
-    /** Estafet Jalur-1: mulai tanggal X, cakupan berpindah ke $penggantiBaru sampai akhir cuti. */
-    public static function alihkan(PengajuanCuti $cuti, Carbon $mulaiBaru, Karyawan $penggantiBaru, User $oleh): void
+    /** Estafet Jalur-1: mulai tanggal X, cakupan berpindah ke $penggantiBaru sampai ujung kasus. */
+    public static function alihkan(PengajuanCuti|Karyawan $kasus, Carbon $mulaiBaru, Karyawan $penggantiBaru, User $oleh): void
     {
-        self::pastikanBisaEstafet($cuti, $mulaiBaru);
+        $k = KasusPengganti::dari($kasus);
+        self::pastikanBisaEstafet($k, $mulaiBaru);
 
-        if ($penggantiBaru->id === $cuti->karyawan_id) {
+        if ($penggantiBaru->id === $k->digantikan->id) {
             throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
         }
 
-        $akhir = Carbon::parse($cuti->tanggal_selesai);
-        $bentrok = self::cekBentrok($penggantiBaru, $cuti, $mulaiBaru, $akhir);
+        $bentrok = self::cekBentrok($penggantiBaru, $kasus, $mulaiBaru, $k->batasAkhir());
         if ($bentrok) {
             throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
         }
 
-        DB::transaction(function () use ($cuti, $mulaiBaru, $penggantiBaru, $oleh, $akhir) {
-            $beririsan = $cuti->pengganti()->aktif()->get()
-                ->filter(fn (PenugasanPengganti $p) => Carbon::parse($p->tanggal_selesai)->gte($mulaiBaru));
+        DB::transaction(function () use ($k, $kasus, $mulaiBaru, $penggantiBaru, $oleh) {
+            // Lowongan terbuka (tanggal_selesai null) selalu beririsan ke depan.
+            $beririsan = $k->rencana()->aktif()->get()
+                ->filter(fn (PenugasanPengganti $p) => $p->tanggal_selesai === null
+                    || Carbon::parse($p->tanggal_selesai)->gte($mulaiBaru));
 
             foreach ($beririsan as $p) {
                 if (Carbon::parse($p->tanggal_mulai)->lt($mulaiBaru)) {
@@ -254,56 +256,50 @@ class ProsesPengganti
                 }
             }
 
-            PenugasanPengganti::create([
-                'tipe' => TipePengganti::Cuti,
-                'pengajuan_cuti_id' => $cuti->id,
-                'karyawan_digantikan_id' => $cuti->karyawan_id,
+            PenugasanPengganti::create($k->atribut() + [
                 'karyawan_id' => $penggantiBaru->id,
                 'tanggal_mulai' => $mulaiBaru->toDateString(),
-                'tanggal_selesai' => $akhir->toDateString(),
+                'tanggal_selesai' => $k->akhir?->toDateString(),
                 'status' => StatusPengganti::Aktif,
                 'dibuat_oleh' => $oleh->id,
             ]);
 
-            self::sinkronKasus($cuti->fresh());
+            self::sinkronKasus($kasus);
         });
     }
 
-    /** Jalur-2: rekan satu unit pemohon mengajukan diri menutup [$mulai, akhir cuti]. */
-    public static function ajukanDiri(PengajuanCuti $cuti, Karyawan $pengaju, Carbon $mulai, User $oleh): PenugasanPengganti
+    /** Jalur-2: rekan satu unit yang digantikan mengajukan diri menutup [$mulai, ujung kasus]. */
+    public static function ajukanDiri(PengajuanCuti|Karyawan $kasus, Karyawan $pengaju, Carbon $mulai, User $oleh): PenugasanPengganti
     {
-        self::pastikanBisaEstafet($cuti, $mulai);
+        $k = KasusPengganti::dari($kasus);
+        self::pastikanBisaEstafet($k, $mulai);
 
-        $pemohon = $cuti->karyawan;
-        if ($pengaju->id === $pemohon->id) {
+        $digantikan = $k->digantikan;
+        if ($pengaju->id === $digantikan->id) {
             throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
         }
         if ($pengaju->status !== StatusKaryawan::Aktif) {
             throw new ProsesPenggantiException('Karyawan nonaktif tak bisa menjadi pengganti.');
         }
-        if ($pengaju->org_unit_id === null || $pengaju->org_unit_id !== $pemohon->org_unit_id) {
+        if ($pengaju->org_unit_id === null || $pengaju->org_unit_id !== $digantikan->org_unit_id) {
             throw new ProsesPenggantiException('Hanya rekan satu unit yang bisa mengajukan diri.');
         }
 
-        $akhir = Carbon::parse($cuti->tanggal_selesai);
-        $bentrok = self::cekBentrok($pengaju, $cuti, $mulai, $akhir);
+        $bentrok = self::cekBentrok($pengaju, $kasus, $mulai, $k->batasAkhir());
         if ($bentrok) {
             throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
         }
 
-        return DB::transaction(function () use ($cuti, $pengaju, $mulai, $akhir, $oleh) {
-            $usulan = PenugasanPengganti::create([
-                'tipe' => TipePengganti::Cuti,
-                'pengajuan_cuti_id' => $cuti->id,
-                'karyawan_digantikan_id' => $cuti->karyawan_id,
+        return DB::transaction(function () use ($k, $pengaju, $mulai, $oleh) {
+            $usulan = PenugasanPengganti::create($k->atribut() + [
                 'karyawan_id' => $pengaju->id,
                 'tanggal_mulai' => $mulai->toDateString(),
-                'tanggal_selesai' => $akhir->toDateString(),
+                'tanggal_selesai' => $k->akhir?->toDateString(),
                 'status' => StatusPengganti::Usulan,
                 'dibuat_oleh' => $oleh->id,
             ]);
 
-            $cuti->karyawan->orgUnit?->kepala()?->user?->notify(new UsulanPenggantiMasuk($usulan));
+            $k->digantikan->orgUnit?->kepala()?->user?->notify(new UsulanPenggantiMasuk($usulan));
 
             return $usulan;
         });
@@ -312,8 +308,8 @@ class ProsesPengganti
     /** Koordinator menyetujui usulan → baris usulan gugur, estafet dijalankan. */
     public static function accUsulan(PenugasanPengganti $usulan, User $koordinator): void
     {
-        $cuti = $usulan->pengajuan;
-        self::pastikanKoordinator($cuti, $koordinator);
+        $kasus = self::kasusDari($usulan);
+        self::pastikanKoordinator($usulan, $koordinator);
         if ($usulan->status !== StatusPengganti::Usulan) {
             throw new ProsesPenggantiException('Baris ini bukan usulan.');
         }
@@ -321,16 +317,16 @@ class ProsesPengganti
         $pengaju = $usulan->karyawan;
         $mulai = Carbon::parse($usulan->tanggal_mulai);
 
-        DB::transaction(function () use ($usulan, $cuti, $pengaju, $mulai, $koordinator) {
+        DB::transaction(function () use ($usulan, $kasus, $pengaju, $mulai, $koordinator) {
             $usulan->delete();
-            self::alihkan($cuti->fresh(), $mulai, $pengaju, $koordinator);
+            self::alihkan($kasus, $mulai, $pengaju, $koordinator);
         });
     }
 
     /** Koordinator menolak usulan → baris dibuang, cakupan tak berubah. */
     public static function tolakUsulan(PenugasanPengganti $usulan, User $koordinator): void
     {
-        self::pastikanKoordinator($usulan->pengajuan, $koordinator);
+        self::pastikanKoordinator($usulan, $koordinator);
         if ($usulan->status !== StatusPengganti::Usulan) {
             throw new ProsesPenggantiException('Baris ini bukan usulan.');
         }
@@ -338,21 +334,43 @@ class ProsesPengganti
         $usulan->delete();
     }
 
-    private static function pastikanKoordinator(PengajuanCuti $cuti, User $aktor): void
+    /** Sumber kasus dari sebuah baris rencana (cuti → pengajuannya, lowongan → karyawan digantikan). */
+    private static function kasusDari(PenugasanPengganti $rencana): PengajuanCuti|Karyawan
     {
-        $kepala = $cuti->karyawan->orgUnit?->kepala();
+        return $rencana->tipe === TipePengganti::Cuti
+            ? $rencana->pengajuan->fresh()
+            : $rencana->karyawanDigantikan;
+    }
+
+    private static function pastikanKoordinator(PenugasanPengganti $rencana, User $aktor): void
+    {
+        $kepala = $rencana->karyawanDigantikan?->orgUnit?->kepala();
         if (! $kepala || $kepala->id !== $aktor->karyawan_id) {
             throw new ProsesPenggantiException('Hanya koordinator unit pemohon yang boleh melakukan ini.');
         }
     }
 
-    /** Estafet hanya untuk cuti disetujui, dan tanggal harus di dalam masa cuti. */
-    private static function pastikanBisaEstafet(PengajuanCuti $cuti, Carbon $mulai): void
+    /**
+     * Cuti: hanya untuk pengajuan Disetujui, tanggal harus di dalam masa cuti.
+     * Lowongan: cukup masih terbuka; batas atas tak diperiksa (rentangnya terbuka).
+     */
+    private static function pastikanBisaEstafet(KasusPengganti $k, Carbon $mulai): void
     {
-        if ($cuti->status !== StatusPengajuanCuti::Disetujui) {
+        if ($k->tipe === TipePengganti::Lowongan) {
+            if ($k->digantikan->status !== StatusKaryawan::Nonaktif) {
+                throw new ProsesPenggantiException('Lowongan sudah ditutup.');
+            }
+            if ($mulai->lt($k->mulai)) {
+                throw new ProsesPenggantiException('Tanggal mulai sebelum karyawan dinonaktifkan.');
+            }
+
+            return;
+        }
+
+        if ($k->cuti->status !== StatusPengajuanCuti::Disetujui) {
             throw new ProsesPenggantiException('Estafet hanya untuk cuti yang sudah disetujui.');
         }
-        if ($mulai->lt(Carbon::parse($cuti->tanggal_mulai)) || $mulai->gt(Carbon::parse($cuti->tanggal_selesai))) {
+        if ($mulai->lt($k->mulai) || $mulai->gt($k->akhir)) {
             throw new ProsesPenggantiException('Tanggal mulai estafet di luar masa cuti.');
         }
     }
