@@ -57,6 +57,13 @@ class JadwalKelola extends Component
     /** panjangBaris[karyawan_id] = panjang siklus baris (mode rotasi). */
     public array $panjangBaris = [];
 
+    /**
+     * Urutan anggota pola (daftar karyawan_id, urut penambahan). Dipakai untuk
+     * tampilan & urutan simpan. WAJIB list berindeks 0..n (bukan peta) supaya
+     * kebal reorder-kunci-integer yang dilakukan JS pada objek polaGrid.
+     */
+    public array $urutanAnggota = [];
+
     public const PANJANG_DEFAULT = 7;
 
     // ── Tab Jadwal Bulanan ───────────────────────────────────
@@ -266,13 +273,32 @@ class JadwalKelola extends Component
         $kodeById = $this->kodeShiftById();
         $grid = [];
         $panjang = [];
-        foreach ($tpl?->baris ?? [] as $b) {
+        $urutan = [];
+        // baris diurut id → urutan kemunculan pertama = urutan penambahan asli.
+        foreach (($tpl?->baris ?? collect())->sortBy('id') as $b) {
+            if (! isset($grid[$b->karyawan_id])) {
+                $urutan[] = $b->karyawan_id;
+            }
             $grid[$b->karyawan_id][$b->posisi] = $b->shift_id ? ($kodeById[$b->shift_id] ?? '') : 'L';
             $panjang[$b->karyawan_id] = max($panjang[$b->karyawan_id] ?? 1, $b->posisi + 1);
         }
         $this->polaGrid = $grid;
         $this->panjangBaris = $panjang;
+        $this->urutanAnggota = $urutan;
         $this->tukarDari = null;
+    }
+
+    /** Daftar karyawan_id di grid, urut penambahan (fallback kunci grid). */
+    protected function urutanGrid(): array
+    {
+        $urut = array_values(array_filter($this->urutanAnggota, fn ($id) => isset($this->polaGrid[$id])));
+        foreach (array_keys($this->polaGrid) as $kid) {
+            if (! in_array($kid, $urut, true)) {
+                $urut[] = $kid;
+            }
+        }
+
+        return $urut;
     }
 
     public function tambahKaryawan(int $karyawanId): void
@@ -287,6 +313,9 @@ class JadwalKelola extends Component
         $panjang = $this->tplMode === 'mingguan' ? 7 : self::PANJANG_DEFAULT;
         $this->polaGrid[$karyawanId] = array_fill(0, $panjang, '');
         $this->panjangBaris[$karyawanId] = $panjang;
+        if (! in_array($karyawanId, $this->urutanAnggota, true)) {
+            $this->urutanAnggota[] = $karyawanId;
+        }
         $this->cariAnggota = '';
     }
 
@@ -325,6 +354,7 @@ class JadwalKelola extends Component
     public function hapusBaris(int $karyawanId): void
     {
         unset($this->polaGrid[$karyawanId], $this->panjangBaris[$karyawanId]);
+        $this->urutanAnggota = array_values(array_filter($this->urutanAnggota, fn ($id) => $id !== $karyawanId));
         if ($this->tukarDari === $karyawanId) {
             $this->tukarDari = null;
         }
@@ -446,8 +476,10 @@ class JadwalKelola extends Component
                 ->whereIn('karyawan_id', array_keys($this->polaGrid))
                 ->delete();
 
-            foreach ($this->polaGrid as $karyawanId => $baris) {
-                $panjang = $mingguan ? 7 : $this->panjangSiklus((int) $karyawanId, (array) $baris);
+            // Urut penambahan (bukan urutan kunci grid yang bisa di-reorder JS).
+            foreach ($this->urutanGrid() as $karyawanId) {
+                $baris = (array) $this->polaGrid[$karyawanId];
+                $panjang = $mingguan ? 7 : $this->panjangSiklus((int) $karyawanId, $baris);
                 for ($posisi = 0; $posisi < $panjang; $posisi++) {
                     $kode = (string) ($baris[$posisi] ?? '');
                     $shiftId = $this->kodeLibur($kode) ? null : ($peta[strtoupper(trim($kode))] ?? null);
@@ -644,6 +676,7 @@ class JadwalKelola extends Component
                 : collect(),
             'daftarPola' => $this->daftarPola(),
             'polaAktif' => $this->polaAktif(),
+            'urutanGrid' => $this->urutanGrid(),
             'hasilCariAnggota' => $this->hasilCariAnggota(),
             'polaLainPeta' => $this->polaLainPeta(),
             'blokJadwal' => $this->blokJadwal(),

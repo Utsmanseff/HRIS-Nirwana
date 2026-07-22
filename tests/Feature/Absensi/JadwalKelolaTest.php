@@ -644,6 +644,54 @@ class JadwalKelolaTest extends TestCase
             ->assertSet('tukarDari', null);
     }
 
+    public function test_grid_template_urut_ikut_urutan_tambah_bukan_kunci_grid(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        // Ida dibuat lebih dulu → id lebih kecil; Taufik id lebih besar.
+        $ida = $this->staffDi($unit);
+        $ida->update(['nama_lengkap' => 'Ida Ayu']);
+        $taufik = $this->staffDi($unit);
+        $taufik->update(['nama_lengkap' => 'Taufik Hidayat']);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+
+        // Grid berurut kunci integer menaik (Ida id-kecil di depan) — meniru
+        // reorder kunci objek oleh JS — tapi urutan tambah = Taufik dulu.
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $taufik->id)   // ditambah lebih dulu
+            ->call('tambahKaryawan', $ida->id)      // ditambah kemudian
+            ->set('polaGrid', [$ida->id => [0 => 'P'], $taufik->id => [0 => 'P']])
+            ->assertSeeInOrder(['Taufik Hidayat', 'Ida Ayu']);
+    }
+
+    public function test_simpan_menulis_baris_urut_urutan_tambah(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $ida = $this->staffDi($unit);
+        $taufik = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $taufik->id)
+            ->call('tambahKaryawan', $ida->id)
+            ->set('tplJangkar', '2026-07-01')
+            ->set('polaGrid', [$ida->id => [0 => 'P'], $taufik->id => [0 => 'P']])
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        // Taufik ditambah lebih dulu → barisnya harus dibuat lebih dulu (id lebih kecil).
+        $minTaufik = \App\Models\PolaJadwal::where('template_id', $pola->id)->where('karyawan_id', $taufik->id)->min('id');
+        $minIda = \App\Models\PolaJadwal::where('template_id', $pola->id)->where('karyawan_id', $ida->id)->min('id');
+        $this->assertLessThan($minIda, $minTaufik);
+    }
+
     public function test_grid_bulanan_mengelompokkan_per_pola_dan_tanpa_pola(): void
     {
         $user = $this->koordinator();

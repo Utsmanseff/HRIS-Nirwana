@@ -1,5 +1,5 @@
 @php($hari = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'])
-@php($ada = array_keys($polaGrid))
+@php($ada = $urutanGrid)
 @php($byId = $kelolaan->keyBy('id'))
 <div class="space-y-5">
     <div class="flex flex-wrap items-center gap-2">
