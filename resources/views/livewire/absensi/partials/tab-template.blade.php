@@ -94,6 +94,13 @@
                                     <button type="button" wire:click="kurangKolom({{ $kid }})" class="w-6 h-6 rounded border border-neutral-200 text-neutral-500 leading-none" title="Kurangi panjang siklus">−</button>
                                     <button type="button" wire:click="tambahKolom({{ $kid }})" class="w-6 h-6 rounded border border-neutral-200 text-neutral-500 leading-none" title="Tambah panjang siklus">+</button>
                                 @endif
+                                @if($tukarDari === null)
+                                    <button type="button" wire:click="pilihTukar({{ $kid }})" class="text-xs text-neutral-500 hover:underline" title="Tukar baris dengan orang lain">tukar</button>
+                                @elseif($tukarDari === $kid)
+                                    <button type="button" wire:click="pilihTukar({{ $kid }})" class="text-xs font-bold text-brand-600 hover:underline">batal tukar</button>
+                                @else
+                                    <button type="button" wire:click="tukarBaris({{ $kid }})" class="text-xs font-bold text-brand-600 hover:underline">tukar ke sini</button>
+                                @endif
                                 <button type="button" wire:click="hapusBaris({{ $kid }})" class="ml-1 text-xs text-danger-600 hover:underline" title="Keluarkan dari pola">hapus</button>
                             </div>
                         </td>

@@ -45,6 +45,9 @@ class JadwalKelola extends Component
     public string $modeFormPola = 'buat';   // buat | ubah
     public string $cariAnggota = '';
 
+    /** karyawan_id baris yang sedang menunggu lawan tukar (null = tak ada). */
+    public ?int $tukarDari = null;
+
     public string $tplMode = 'rotasi';   // rotasi | mingguan
     public string $tplJangkar = '';
     public int $tplPanjang = 7;
@@ -269,6 +272,7 @@ class JadwalKelola extends Component
         }
         $this->polaGrid = $grid;
         $this->panjangBaris = $panjang;
+        $this->tukarDari = null;
     }
 
     public function tambahKaryawan(int $karyawanId): void
@@ -321,6 +325,37 @@ class JadwalKelola extends Component
     public function hapusBaris(int $karyawanId): void
     {
         unset($this->polaGrid[$karyawanId], $this->panjangBaris[$karyawanId]);
+        if ($this->tukarDari === $karyawanId) {
+            $this->tukarDari = null;
+        }
+    }
+
+    /** Tandai baris sebagai asal tukar; klik lagi pada baris yang sama membatalkan. */
+    public function pilihTukar(int $karyawanId): void
+    {
+        $this->tukarDari = ($this->tukarDari === $karyawanId) ? null : $karyawanId;
+    }
+
+    /** Tukar isi siklus + panjang siklus antara baris asal dan baris tujuan. */
+    public function tukarBaris(int $karyawanId): void
+    {
+        $dari = $this->tukarDari;
+        $this->tukarDari = null;
+
+        if ($dari === null || $dari === $karyawanId) {
+            return;
+        }
+        if (! isset($this->polaGrid[$dari], $this->polaGrid[$karyawanId])) {
+            return;
+        }
+
+        [$this->polaGrid[$dari], $this->polaGrid[$karyawanId]] =
+            [$this->polaGrid[$karyawanId], $this->polaGrid[$dari]];
+
+        $panjangDari = $this->panjangBaris[$dari] ?? self::PANJANG_DEFAULT;
+        $panjangTujuan = $this->panjangBaris[$karyawanId] ?? self::PANJANG_DEFAULT;
+        $this->panjangBaris[$dari] = $panjangTujuan;
+        $this->panjangBaris[$karyawanId] = $panjangDari;
     }
 
     public function tambahKolom(int $karyawanId): void

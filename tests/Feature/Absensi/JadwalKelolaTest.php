@@ -600,4 +600,47 @@ class JadwalKelolaTest extends TestCase
             ->assertSee('akan dipindah')      // penanda "sudah di Pola A — akan dipindah"
             ->assertViewHas('polaLainPeta', fn ($peta) => ($peta[$staff->id] ?? null) === 'Pola A');
     }
+
+    public function test_tukar_baris_menukar_siklus_dua_karyawan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'S']);
+        $a = $this->staffDi($unit);
+        $b = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $a->id)
+            ->call('tambahKaryawan', $b->id)
+            ->set("polaGrid.{$a->id}.0", 'P')
+            ->set("polaGrid.{$b->id}.0", 'S')
+            ->call('pilihTukar', $a->id)
+            ->call('tukarBaris', $b->id)
+            ->assertSet("polaGrid.{$a->id}.0", 'S')
+            ->assertSet("polaGrid.{$b->id}.0", 'P')
+            ->assertSet('tukarDari', null);
+    }
+
+    public function test_tukar_baris_dengan_diri_sendiri_diabaikan(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $a = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $a->id)
+            ->set("polaGrid.{$a->id}.0", 'P')
+            ->call('pilihTukar', $a->id)
+            ->call('tukarBaris', $a->id)
+            ->assertSet("polaGrid.{$a->id}.0", 'P')
+            ->assertSet('tukarDari', null);
+    }
 }
