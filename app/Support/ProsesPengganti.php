@@ -68,19 +68,25 @@ class ProsesPengganti
         return $bentrok;
     }
 
-    /** Versi berbasis pengajuan; default rentang = seluruh masa cuti. */
+    /** Versi berbasis kasus; default rentang = seluruh rentang kasus. */
     public static function cekBentrok(
         Karyawan $pengganti,
-        PengajuanCuti $cuti,
+        PengajuanCuti|Karyawan $kasus,
         ?Carbon $mulai = null,
         ?Carbon $selesai = null,
     ): array {
+        $k = KasusPengganti::dari($kasus);
+        $akhir = $selesai ?? $k->batasAkhir();
+        if (! $akhir) {
+            return [];   // lowongan tanpa jejak jadwal → tak ada yang bisa bentrok
+        }
+
         return self::cekBentrokRentang(
             $pengganti,
-            $cuti->karyawan,
-            $mulai ?? Carbon::parse($cuti->tanggal_mulai),
-            $selesai ?? Carbon::parse($cuti->tanggal_selesai),
-            $cuti->pengganti()->pluck('id')->all(),
+            $k->digantikan,
+            $mulai ?? $k->mulai,
+            $akhir,
+            $k->rencana()->pluck('id')->all(),
         );
     }
 
@@ -93,39 +99,130 @@ class ProsesPengganti
             ." beririsan dengan shift {$b['shift_pemohon']} pemohon.";
     }
 
-    /** Tetapkan pengganti untuk seluruh rentang cuti; ganti baris aktif yang ada. */
-    public static function tetapkan(PengajuanCuti $cuti, Karyawan $pengganti, User $oleh): PenugasanPengganti
+    /** Tetapkan pengganti untuk seluruh rentang kasus; ganti baris aktif yang ada. */
+    public static function tetapkan(PengajuanCuti|Karyawan $kasus, Karyawan $pengganti, User $oleh): PenugasanPengganti
     {
-        if ($pengganti->id === $cuti->karyawan_id) {
+        $k = KasusPengganti::dari($kasus);
+
+        if ($k->tipe === TipePengganti::Lowongan && $k->digantikan->status !== StatusKaryawan::Nonaktif) {
+            throw new ProsesPenggantiException('Lowongan hanya untuk karyawan nonaktif.');
+        }
+        if ($pengganti->id === $k->digantikan->id) {
             throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
         }
+        if ($pengganti->status !== StatusKaryawan::Aktif) {
+            throw new ProsesPenggantiException('Karyawan nonaktif tak bisa menjadi pengganti.');
+        }
 
-        $bentrok = self::cekBentrok($pengganti, $cuti);
+        $bentrok = self::cekBentrok($pengganti, $kasus);
         if ($bentrok) {
             throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
         }
 
-        return DB::transaction(function () use ($cuti, $pengganti, $oleh) {
-            $lama = $cuti->pengganti()->aktif()->pluck('id')->all();
+        return DB::transaction(function () use ($k, $pengganti, $oleh) {
+            $lama = $k->rencana()->aktif()->pluck('id')->all();
             self::hapusJadwalRencana($lama);
             PenugasanPengganti::whereIn('id', $lama)->delete();
 
-            $baris = PenugasanPengganti::create([
-                'tipe' => TipePengganti::Cuti,
-                'pengajuan_cuti_id' => $cuti->id,
-                'karyawan_digantikan_id' => $cuti->karyawan_id,
+            $baris = PenugasanPengganti::create($k->atribut() + [
                 'karyawan_id' => $pengganti->id,
-                'tanggal_mulai' => Carbon::parse($cuti->tanggal_mulai)->toDateString(),
-                'tanggal_selesai' => Carbon::parse($cuti->tanggal_selesai)->toDateString(),
+                'tanggal_mulai' => $k->mulai->toDateString(),
+                'tanggal_selesai' => $k->akhir?->toDateString(),
                 'status' => StatusPengganti::Aktif,
                 'dibuat_oleh' => $oleh->id,
             ]);
 
-            // Cuti yang sudah disetujui → salinan jadwal langsung berlaku.
-            self::generateSaatDisetujui($cuti->fresh());
+            // Cuti disetujui / lowongan → salinan jadwal langsung berlaku.
+            self::sinkronSalinan($baris->fresh());
 
             return $baris;
         });
+    }
+
+    /**
+     * Materialisasi SATU baris rencana jadi baris jadwal untuk penggantinya.
+     * Cuti: no-op bila pengajuannya belum Disetujui. Lowongan: selalu jalan.
+     * Idempoten — baris (karyawan, tanggal, shift) yang sudah ada dilewati.
+     */
+    public static function sinkronSalinan(PenugasanPengganti $rencana): int
+    {
+        if ($rencana->status !== StatusPengganti::Aktif) {
+            return 0;
+        }
+        if ($rencana->tipe === TipePengganti::Cuti
+            && $rencana->pengajuan?->status !== StatusPengajuanCuti::Disetujui) {
+            return 0;
+        }
+
+        $digantikan = $rencana->karyawanDigantikan;
+        if (! $digantikan) {
+            return 0;
+        }
+
+        $mulai = Carbon::parse($rencana->tanggal_mulai)->startOfDay();
+        $selesai = $rencana->tanggal_selesai
+            ? Carbon::parse($rencana->tanggal_selesai)->startOfDay()
+            : KasusPengganti::dari($digantikan)->batasAkhir();
+
+        if (! $selesai) {
+            return 0;
+        }
+
+        $dibuat = 0;
+
+        for ($t = $mulai->copy(); $t->lte($selesai); $t->addDay()) {
+            $shiftAsli = JadwalHarian::untuk($digantikan, $t)
+                ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_id === null);
+
+            foreach ($shiftAsli as $j) {
+                // Lewati bila pengganti sudah punya baris shift itu (idempoten +
+                // menjaga unique (karyawan, tanggal, shift)).
+                $ada = Jadwal::where('karyawan_id', $rencana->karyawan_id)
+                    ->whereDate('tanggal', $t->toDateString())
+                    ->where('shift_id', $j->shift_id)
+                    ->exists();
+                if ($ada) {
+                    continue;
+                }
+
+                Jadwal::create([
+                    'karyawan_id' => $rencana->karyawan_id,
+                    'tanggal' => $t->toDateString(),
+                    'shift_id' => $j->shift_id,
+                    'dibuat_oleh' => $rencana->dibuat_oleh,
+                    'pengganti_id' => $rencana->id,
+                ]);
+                $dibuat++;
+            }
+        }
+
+        if ($dibuat > 0) {
+            $rencana->karyawan->user?->notify(new DitunjukJadiPengganti($rencana));
+        }
+
+        return $dibuat;
+    }
+
+    /** Sinkron seluruh rencana aktif milik satu kasus (dipakai hook approval & UI). */
+    public static function sinkronKasus(PengajuanCuti|Karyawan $kasus): int
+    {
+        $total = 0;
+        foreach (KasusPengganti::dari($kasus)->rencana()->aktif()->get() as $rencana) {
+            $total += self::sinkronSalinan($rencana);
+        }
+
+        return $total;
+    }
+
+    /** Sinkron semua lowongan terbuka — dipanggil tiap ada jadwal baru terbentuk. */
+    public static function sinkronSemuaLowongan(): int
+    {
+        $total = 0;
+        foreach (PenugasanPengganti::lowongan()->aktif()->get() as $rencana) {
+            $total += self::sinkronSalinan($rencana);
+        }
+
+        return $total;
     }
 
     /**
@@ -172,7 +269,7 @@ class ProsesPengganti
             }
 
             if ($dibuat > 0) {
-                $rencana->karyawan->user?->notify(new DitunjukJadiPengganti($cuti, $rencana));
+                $rencana->karyawan->user?->notify(new DitunjukJadiPengganti($rencana));
             }
             $total += $dibuat;
         }

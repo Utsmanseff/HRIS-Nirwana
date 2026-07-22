@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\PengajuanCuti;
+use App\Enums\TipePengganti;
 use App\Models\PenugasanPengganti;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -13,7 +13,7 @@ class DitunjukJadiPengganti extends Notification
 {
     use Queueable;
 
-    public function __construct(public PengajuanCuti $pengajuan, public PenugasanPengganti $rencana) {}
+    public function __construct(public PenugasanPengganti $rencana) {}
 
     public function via(object $notifiable): array
     {
@@ -23,8 +23,8 @@ class DitunjukJadiPengganti extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'jenis' => 'pengganti-cuti',
-            'pengajuan_id' => $this->pengajuan->id,
+            'jenis' => 'pengganti',
+            'pengajuan_id' => $this->rencana->pengajuan_cuti_id,
             'pesan' => $this->pesan(),
             'url' => '/absensi/jadwal-saya',
         ];
@@ -33,7 +33,7 @@ class DitunjukJadiPengganti extends Notification
     public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Pengganti Cuti')
+            ->title($this->rencana->tipe->label())
             ->body($this->pesan())
             ->icon('/img/android-chrome-192x192.png')
             ->data(['url' => '/absensi/jadwal-saya']);
@@ -41,10 +41,15 @@ class DitunjukJadiPengganti extends Notification
 
     private function pesan(): string
     {
-        $nama = $this->pengajuan->karyawan->nama_lengkap;
-        $mulai = $this->rencana->tanggal_mulai->translatedFormat('d M');
+        $nama = $this->rencana->karyawanDigantikan?->nama_lengkap ?? 'rekan';
+        $mulai = $this->rencana->tanggal_mulai;
+
+        if ($this->rencana->tipe === TipePengganti::Lowongan) {
+            return "Anda mengisi jadwal kosong {$nama} mulai ".$mulai->translatedFormat('d M Y').'.';
+        }
+
         $akhir = $this->rencana->tanggal_selesai->translatedFormat('d M Y');
 
-        return "Anda menggantikan dinas {$nama} pada ".$mulai.' – '.$akhir.'.';
+        return "Anda menggantikan dinas {$nama} pada ".$mulai->translatedFormat('d M').' – '.$akhir.'.';
     }
 }
