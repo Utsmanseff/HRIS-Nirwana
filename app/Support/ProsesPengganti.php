@@ -175,6 +175,59 @@ class ProsesPengganti
         return $total;
     }
 
+    /** Estafet Jalur-1: mulai tanggal X, cakupan berpindah ke $penggantiBaru sampai akhir cuti. */
+    public static function alihkan(PengajuanCuti $cuti, Carbon $mulaiBaru, Karyawan $penggantiBaru, User $oleh): void
+    {
+        self::pastikanBisaEstafet($cuti, $mulaiBaru);
+
+        if ($penggantiBaru->id === $cuti->karyawan_id) {
+            throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
+        }
+
+        $akhir = Carbon::parse($cuti->tanggal_selesai);
+        $bentrok = self::cekBentrok($penggantiBaru, $cuti, $mulaiBaru, $akhir);
+        if ($bentrok) {
+            throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
+        }
+
+        DB::transaction(function () use ($cuti, $mulaiBaru, $penggantiBaru, $oleh, $akhir) {
+            $beririsan = $cuti->pengganti()->aktif()->get()
+                ->filter(fn (PenggantiCuti $p) => Carbon::parse($p->tanggal_selesai)->gte($mulaiBaru));
+
+            foreach ($beririsan as $p) {
+                if (Carbon::parse($p->tanggal_mulai)->lt($mulaiBaru)) {
+                    self::hapusJadwalRencana([$p->id], $mulaiBaru);
+                    $p->update(['tanggal_selesai' => $mulaiBaru->copy()->subDay()->toDateString()]);
+                } else {
+                    self::hapusJadwalRencana([$p->id]);
+                    $p->delete();
+                }
+            }
+
+            PenggantiCuti::create([
+                'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_id' => $penggantiBaru->id,
+                'tanggal_mulai' => $mulaiBaru->toDateString(),
+                'tanggal_selesai' => $akhir->toDateString(),
+                'status' => StatusPengganti::Aktif,
+                'dibuat_oleh' => $oleh->id,
+            ]);
+
+            self::generateSaatDisetujui($cuti->fresh());
+        });
+    }
+
+    /** Estafet hanya untuk cuti disetujui, dan tanggal harus di dalam masa cuti. */
+    private static function pastikanBisaEstafet(PengajuanCuti $cuti, Carbon $mulai): void
+    {
+        if ($cuti->status !== StatusPengajuanCuti::Disetujui) {
+            throw new ProsesPenggantiException('Estafet hanya untuk cuti yang sudah disetujui.');
+        }
+        if ($mulai->lt(Carbon::parse($cuti->tanggal_mulai)) || $mulai->gt(Carbon::parse($cuti->tanggal_selesai))) {
+            throw new ProsesPenggantiException('Tanggal mulai estafet di luar masa cuti.');
+        }
+    }
+
     /** Hapus baris jadwal hasil salinan milik rencana tertentu (opsional: hanya sejak tanggal). */
     private static function hapusJadwalRencana(array $ids, ?Carbon $sejak = null): void
     {
