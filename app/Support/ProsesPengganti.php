@@ -225,58 +225,6 @@ class ProsesPengganti
         return $total;
     }
 
-    /**
-     * Materialisasi rencana aktif jadi baris jadwal untuk pengganti.
-     * No-op bila cuti belum Disetujui. Idempoten. Mengembalikan jumlah baris baru.
-     */
-    public static function generateSaatDisetujui(PengajuanCuti $cuti): int
-    {
-        if ($cuti->status !== StatusPengajuanCuti::Disetujui) {
-            return 0;
-        }
-
-        $total = 0;
-
-        foreach ($cuti->pengganti()->aktif()->with('karyawan')->get() as $rencana) {
-            $dibuat = 0;
-            $mulai = Carbon::parse($rencana->tanggal_mulai);
-            $selesai = Carbon::parse($rencana->tanggal_selesai);
-
-            for ($t = $mulai->copy()->startOfDay(); $t->lte($selesai); $t->addDay()) {
-                $shiftPemohon = JadwalHarian::untuk($cuti->karyawan, $t)
-                    ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_id === null);
-
-                foreach ($shiftPemohon as $j) {
-                    // Lewati bila pengganti sudah punya baris shift itu (idempoten +
-                    // menjaga unique (karyawan, tanggal, shift)).
-                    $ada = Jadwal::where('karyawan_id', $rencana->karyawan_id)
-                        ->whereDate('tanggal', $t->toDateString())
-                        ->where('shift_id', $j->shift_id)
-                        ->exists();
-                    if ($ada) {
-                        continue;
-                    }
-
-                    Jadwal::create([
-                        'karyawan_id' => $rencana->karyawan_id,
-                        'tanggal' => $t->toDateString(),
-                        'shift_id' => $j->shift_id,
-                        'dibuat_oleh' => $rencana->dibuat_oleh,
-                        'pengganti_id' => $rencana->id,
-                    ]);
-                    $dibuat++;
-                }
-            }
-
-            if ($dibuat > 0) {
-                $rencana->karyawan->user?->notify(new DitunjukJadiPengganti($rencana));
-            }
-            $total += $dibuat;
-        }
-
-        return $total;
-    }
-
     /** Estafet Jalur-1: mulai tanggal X, cakupan berpindah ke $penggantiBaru sampai akhir cuti. */
     public static function alihkan(PengajuanCuti $cuti, Carbon $mulaiBaru, Karyawan $penggantiBaru, User $oleh): void
     {
@@ -317,7 +265,7 @@ class ProsesPengganti
                 'dibuat_oleh' => $oleh->id,
             ]);
 
-            self::generateSaatDisetujui($cuti->fresh());
+            self::sinkronKasus($cuti->fresh());
         });
     }
 

@@ -18,7 +18,11 @@ class PenugasanPenggantiFactory extends Factory
         return [
             'tipe' => TipePengganti::Cuti,
             'pengajuan_cuti_id' => PengajuanCuti::factory(),
-            'karyawan_digantikan_id' => Karyawan::factory(),
+            // Ikut pemohon pengajuannya: baris cuti dengan "digantikan" yang bukan
+            // si pemohon adalah baris mustahil, jangan sampai lahir dari factory.
+            'karyawan_digantikan_id' => fn (array $attr) => isset($attr['pengajuan_cuti_id'])
+                ? PengajuanCuti::whereKey($attr['pengajuan_cuti_id'])->value('karyawan_id')
+                : Karyawan::factory(),
             'karyawan_id' => Karyawan::factory(),
             'tanggal_mulai' => now()->addDays(1)->toDateString(),
             'tanggal_selesai' => now()->addDays(3)->toDateString(),

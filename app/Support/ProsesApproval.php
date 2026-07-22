@@ -55,7 +55,7 @@ class ProsesApproval
             $pengajuan->update(['surat_path' => SuratCuti::generate($pengajuan->fresh())]);
             $pengajuan->karyawan->user?->notify(new CutiDisetujui($pengajuan));
             // Cuti final → salinan jadwal untuk pengganti (no-op bila tak ada rencana).
-            ProsesPengganti::generateSaatDisetujui($pengajuan->fresh());
+            ProsesPengganti::sinkronKasus($pengajuan->fresh());
         });
     }
 
