@@ -305,6 +305,16 @@ class ProsesPengganti
         }
     }
 
+    /** Cuti batal → salinan jadwal dilepas dan rencana penugasan gugur. */
+    public static function bersihkanSaatBatal(PengajuanCuti $cuti): void
+    {
+        DB::transaction(function () use ($cuti) {
+            $ids = $cuti->pengganti()->pluck('id')->all();
+            self::hapusJadwalRencana($ids);
+            PenggantiCuti::whereIn('id', $ids)->delete();
+        });
+    }
+
     /** Hapus baris jadwal hasil salinan milik rencana tertentu (opsional: hanya sejak tanggal). */
     private static function hapusJadwalRencana(array $ids, ?Carbon $sejak = null): void
     {

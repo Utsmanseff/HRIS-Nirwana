@@ -32,6 +32,8 @@ class CutiDetail extends Component
             'alasan_batal' => 'Dibatalkan oleh pemohon.',
         ]);
 
+        \App\Support\ProsesPengganti::bersihkanSaatBatal($this->pengajuan);
+
         return $this->redirectRoute('cuti');
     }
 
