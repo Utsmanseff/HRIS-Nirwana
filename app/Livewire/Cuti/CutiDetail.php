@@ -39,6 +39,8 @@ class CutiDetail extends Component
 
     public function render()
     {
-        return view('livewire.cuti.cuti-detail');
+        return view('livewire.cuti.cuti-detail', [
+            'pengganti' => $this->pengajuan->pengganti()->aktif()->with('karyawan')->get(),
+        ]);
     }
 }

@@ -52,6 +52,22 @@
         </div>
     </div>
 
+    {{-- Cakupan pengganti (read-only; perubahan lewat koordinator) --}}
+    @if ($pengganti->isNotEmpty())
+        <div class="card card-pad space-y-2">
+            <div class="text-[13px] font-bold">Pengganti selama cuti</div>
+            @foreach ($pengganti as $pg)
+                <div wire:key="pgd-{{ $pg->id }}" class="flex items-center justify-between text-sm">
+                    <span class="font-semibold">{{ $pg->karyawan->nama_lengkap }}</span>
+                    <span class="text-xs text-neutral-500 tnum">
+                        {{ $pg->tanggal_mulai->format('d M') }} s/d {{ $pg->tanggal_selesai->format('d M Y') }}
+                    </span>
+                </div>
+            @endforeach
+            <p class="text-xs text-neutral-500">Perubahan pengganti diatur koordinator unit Anda.</p>
+        </div>
+    @endif
+
     {{-- Timeline persetujuan --}}
     <div class="card card-pad">
         <div class="text-[13px] font-bold mb-4">Status Persetujuan</div>
