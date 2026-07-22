@@ -142,6 +142,16 @@ class Karyawan extends Model
         return $this->hasMany(Kontrak::class);
     }
 
+    public function jadwal(): HasMany
+    {
+        return $this->hasMany(Jadwal::class);
+    }
+
+    public function polaJadwal(): HasMany
+    {
+        return $this->hasMany(PolaJadwal::class);
+    }
+
     public function pengajuanCuti(): HasMany
     {
         return $this->hasMany(PengajuanCuti::class)->latest();

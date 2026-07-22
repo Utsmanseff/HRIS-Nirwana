@@ -10,10 +10,12 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Models\PenugasanPengganti;
+use App\Models\PolaJadwal;
 use App\Models\User;
 use App\Notifications\DitunjukJadiPengganti;
 use App\Notifications\UsulanPenggantiMasuk;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -383,6 +385,63 @@ class ProsesPengganti
             self::hapusJadwalRencana($ids);
             PenugasanPengganti::whereIn('id', $ids)->delete();
         });
+    }
+
+    /**
+     * Tutup lowongan seorang karyawan nonaktif sejak tanggal tertentu:
+     * jadwalnya (dan salinan penggantinya) sejak tanggal itu dihapus, rencana
+     * dipotong/dibuang, keanggotaan pola dicabut. Jadwal masa lalu — dasar rekap
+     * absensi — tak pernah disentuh.
+     */
+    public static function tutupLowongan(Karyawan $nonaktif, Carbon $sejak): void
+    {
+        $sejak = $sejak->copy()->startOfDay();
+
+        DB::transaction(function () use ($nonaktif, $sejak) {
+            $rencana = PenugasanPengganti::lowongan()
+                ->where('karyawan_digantikan_id', $nonaktif->id)->get();
+
+            foreach ($rencana as $p) {
+                if (Carbon::parse($p->tanggal_mulai)->lt($sejak)) {
+                    self::hapusJadwalRencana([$p->id], $sejak);
+                    $p->update(['tanggal_selesai' => $sejak->copy()->subDay()->toDateString()]);
+                } else {
+                    self::hapusJadwalRencana([$p->id]);
+                    $p->delete();
+                }
+            }
+
+            // Jejak yang membuat lowongan ini "ada" dihabiskan.
+            Jadwal::where('karyawan_id', $nonaktif->id)
+                ->whereDate('tanggal', '>=', $sejak->toDateString())
+                ->delete();
+
+            PolaJadwal::where('karyawan_id', $nonaktif->id)->delete();
+        });
+    }
+
+    /**
+     * Lowongan (derived): karyawan nonaktif di unit-unit ini yang masih punya
+     * jejak jadwal — baris jadwal ≥ hari ini, atau keanggotaan pola.
+     *
+     * @param  list<int>  $unitIds
+     * @return Collection<int,Karyawan>
+     */
+    public static function lowongan(array $unitIds): Collection
+    {
+        if (! $unitIds) {
+            return collect();
+        }
+
+        return Karyawan::query()
+            ->where('status', StatusKaryawan::Nonaktif->value)
+            ->whereIn('org_unit_id', $unitIds)
+            ->where(fn ($q) => $q
+                ->whereHas('jadwal', fn ($j) => $j->whereDate('tanggal', '>=', now()->toDateString()))
+                ->orWhereHas('polaJadwal'))
+            ->with('orgUnit')
+            ->orderBy('nama_lengkap')
+            ->get();
     }
 
     /** Hapus baris jadwal hasil salinan milik rencana tertentu (opsional: hanya sejak tanggal). */
