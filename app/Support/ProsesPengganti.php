@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\StatusKaryawan;
 use App\Enums\StatusPengajuanCuti;
 use App\Enums\StatusPengganti;
 use App\Models\Jadwal;
@@ -10,6 +11,7 @@ use App\Models\PengajuanCuti;
 use App\Models\PenggantiCuti;
 use App\Models\User;
 use App\Notifications\DitunjukJadiPengganti;
+use App\Notifications\UsulanPenggantiMasuk;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -215,6 +217,81 @@ class ProsesPengganti
 
             self::generateSaatDisetujui($cuti->fresh());
         });
+    }
+
+    /** Jalur-2: rekan satu unit pemohon mengajukan diri menutup [$mulai, akhir cuti]. */
+    public static function ajukanDiri(PengajuanCuti $cuti, Karyawan $pengaju, Carbon $mulai, User $oleh): PenggantiCuti
+    {
+        self::pastikanBisaEstafet($cuti, $mulai);
+
+        $pemohon = $cuti->karyawan;
+        if ($pengaju->id === $pemohon->id) {
+            throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
+        }
+        if ($pengaju->status !== StatusKaryawan::Aktif) {
+            throw new ProsesPenggantiException('Karyawan nonaktif tak bisa menjadi pengganti.');
+        }
+        if ($pengaju->org_unit_id === null || $pengaju->org_unit_id !== $pemohon->org_unit_id) {
+            throw new ProsesPenggantiException('Hanya rekan satu unit yang bisa mengajukan diri.');
+        }
+
+        $akhir = Carbon::parse($cuti->tanggal_selesai);
+        $bentrok = self::cekBentrok($pengaju, $cuti, $mulai, $akhir);
+        if ($bentrok) {
+            throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
+        }
+
+        return DB::transaction(function () use ($cuti, $pengaju, $mulai, $akhir, $oleh) {
+            $usulan = PenggantiCuti::create([
+                'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_id' => $pengaju->id,
+                'tanggal_mulai' => $mulai->toDateString(),
+                'tanggal_selesai' => $akhir->toDateString(),
+                'status' => StatusPengganti::Usulan,
+                'dibuat_oleh' => $oleh->id,
+            ]);
+
+            $cuti->karyawan->orgUnit?->kepala()?->user?->notify(new UsulanPenggantiMasuk($usulan));
+
+            return $usulan;
+        });
+    }
+
+    /** Koordinator menyetujui usulan → baris usulan gugur, estafet dijalankan. */
+    public static function accUsulan(PenggantiCuti $usulan, User $koordinator): void
+    {
+        $cuti = $usulan->pengajuan;
+        self::pastikanKoordinator($cuti, $koordinator);
+        if ($usulan->status !== StatusPengganti::Usulan) {
+            throw new ProsesPenggantiException('Baris ini bukan usulan.');
+        }
+
+        $pengaju = $usulan->karyawan;
+        $mulai = Carbon::parse($usulan->tanggal_mulai);
+
+        DB::transaction(function () use ($usulan, $cuti, $pengaju, $mulai, $koordinator) {
+            $usulan->delete();
+            self::alihkan($cuti->fresh(), $mulai, $pengaju, $koordinator);
+        });
+    }
+
+    /** Koordinator menolak usulan → baris dibuang, cakupan tak berubah. */
+    public static function tolakUsulan(PenggantiCuti $usulan, User $koordinator): void
+    {
+        self::pastikanKoordinator($usulan->pengajuan, $koordinator);
+        if ($usulan->status !== StatusPengganti::Usulan) {
+            throw new ProsesPenggantiException('Baris ini bukan usulan.');
+        }
+
+        $usulan->delete();
+    }
+
+    private static function pastikanKoordinator(PengajuanCuti $cuti, User $aktor): void
+    {
+        $kepala = $cuti->karyawan->orgUnit?->kepala();
+        if (! $kepala || $kepala->id !== $aktor->karyawan_id) {
+            throw new ProsesPenggantiException('Hanya koordinator unit pemohon yang boleh melakukan ini.');
+        }
     }
 
     /** Estafet hanya untuk cuti disetujui, dan tanggal harus di dalam masa cuti. */
