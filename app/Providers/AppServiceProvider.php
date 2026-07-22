@@ -42,8 +42,15 @@ class AppServiceProvider extends ServiceProvider
         // Predikatnya sama dengan 'ajukan-cuti'; sengaja dipisah agar nama di call site jelas.
         Gate::define('lihat-sanksi-sendiri', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
         Gate::define('lihat-jadwal-sendiri', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
-        // Laporan absensi: HRD, Staff HR, dan Admin Sistem (via Gate::before). Koordinator TIDAK.
-        Gate::define('lihat-rekap-absensi', fn ($user) => $user->hasRole(Role::Hrd->value) || $user->hasRole(Role::StaffHr->value));
+        // Laporan absensi: HRD, Staff HR, Admin Sistem (via Gate::before), dan
+        // pemimpin unit — dibatasi subtree lewat LingkupAbsensi, layar MAUPUN ekspor.
+        // Predikat "memimpin unit" sengaja sama dengan sumber pembatasan itu, supaya
+        // yang lolos gate dijamin punya data untuk dilihat. Direktur ikut lolos:
+        // rekap dianggap informasi baca-saja setingkat pimpinan (beda dari
+        // 'lihat-jadwal-sendiri'/'ajukan-cuti' yang mengecualikan Direktur).
+        Gate::define('lihat-rekap-absensi', fn ($user) => $user->hasRole(Role::Hrd->value)
+            || $user->hasRole(Role::StaffHr->value)
+            || (bool) $user->karyawan?->unitDipimpin()->isNotEmpty());
         Gate::define('kelola-pengaturan-absensi', fn ($user) => false); // Admin-only via Gate::before
     }
 }

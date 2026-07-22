@@ -55,7 +55,7 @@ class CutiDetailTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => $pemohon->id]);
         $cuti = PengajuanCuti::factory()->rentang('2026-08-01', '2026-08-03', 3)
             ->create(['karyawan_id' => $pemohon->id]);
-        \App\Models\PenggantiCuti::factory()->create([
+        \App\Models\PenugasanPengganti::factory()->create([
             'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $b->id,
             'tanggal_mulai' => '2026-08-01', 'tanggal_selesai' => '2026-08-03',
         ]);
@@ -73,7 +73,7 @@ class CutiDetailTest extends TestCase
         $user = User::factory()->create(['karyawan_id' => $pemohon->id]);
         $cuti = PengajuanCuti::factory()->rentang('2026-08-01', '2026-08-03', 3)
             ->create(['karyawan_id' => $pemohon->id]);
-        \App\Models\PenggantiCuti::factory()->usulan()->create([
+        \App\Models\PenugasanPengganti::factory()->usulan()->create([
             'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $b->id,
             'tanggal_mulai' => '2026-08-02', 'tanggal_selesai' => '2026-08-03',
         ]);

@@ -45,7 +45,7 @@ class JadwalSaya extends Component
         // Satu tanggal bisa punya lebih dari satu shift (dinas ganda) → kelompokkan per hari.
         $hari = Jadwal::where('karyawan_id', $kar->id)
             ->whereBetween('tanggal', [$awal->toDateString(), $akhir->toDateString()])
-            ->with('shift')
+            ->with(['shift', 'penugasan.karyawanDigantikan'])
             ->orderBy('tanggal')
             ->get()
             ->sortBy(fn (Jadwal $j) => [$j->tanggal->toDateString(), $j->shift?->jam_mulai ?? '99:99:99'])

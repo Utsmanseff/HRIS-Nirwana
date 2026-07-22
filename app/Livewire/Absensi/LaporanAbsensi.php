@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Absensi;
 
+use App\Support\LabelPengganti;
 use App\Support\LingkupAbsensi;
 use App\Support\RekapAbsensi;
 use Livewire\Attributes\Layout;
@@ -48,9 +49,11 @@ class LaporanAbsensi extends Component
     public function render()
     {
         $f = $this->filter();
+        $baris = RekapAbsensi::ambil($f);
 
         return view('livewire.absensi.laporan-absensi', [
-            'baris' => RekapAbsensi::ambil($f),
+            'baris' => $baris,
+            'keterangan' => LabelPengganti::petaAbsensi($baris),
             'stat' => RekapAbsensi::statistik($f),
             'unitOpsi' => LingkupAbsensi::opsiUnit(auth()->user()),
             'query' => array_filter([

@@ -7,7 +7,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\DitunjukJadiPengganti;
@@ -65,9 +65,9 @@ class ProsesPenggantiGenerateTest extends TestCase
      * Rencana dibuat LANGSUNG lewat factory (bukan `tetapkan`) supaya test ini
      * murni menguji generate — `tetapkan` sendiri memanggil generate.
      */
-    private function rencana(PengajuanCuti $cuti, string $mulai, string $selesai): PenggantiCuti
+    private function rencana(PengajuanCuti $cuti, string $mulai, string $selesai): PenugasanPengganti
     {
-        return PenggantiCuti::factory()->create([
+        return PenugasanPengganti::factory()->create([
             'pengajuan_cuti_id' => $cuti->id,
             'karyawan_id' => $this->b->id,
             'tanggal_mulai' => $mulai,
@@ -81,12 +81,12 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->jadwalPemohon(['2026-08-01', '2026-08-02', '2026-08-03']);
         $rencana = $this->rencana($cuti, '2026-08-01', '2026-08-03');
 
-        $dibuat = ProsesPengganti::generateSaatDisetujui($cuti->fresh());
+        $dibuat = ProsesPengganti::sinkronKasus($cuti->fresh());
 
         $this->assertSame(3, $dibuat);
         $salinan = Jadwal::where('karyawan_id', $this->b->id)->salinanPengganti()->get();
         $this->assertCount(3, $salinan);
-        $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->pengganti_cuti_id === $rencana->id));
+        $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->pengganti_id === $rencana->id));
         $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->shift_id === $this->pagi->id));
     }
 
@@ -96,7 +96,7 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->jadwalPemohon(['2026-08-01', '2026-08-03']); // 08-02 libur
         $this->rencana($cuti, '2026-08-01', '2026-08-03');
 
-        $dibuat = ProsesPengganti::generateSaatDisetujui($cuti->fresh());
+        $dibuat = ProsesPengganti::sinkronKasus($cuti->fresh());
 
         $this->assertSame(2, $dibuat);
         $this->assertFalse(Jadwal::where('karyawan_id', $this->b->id)->whereDate('tanggal', '2026-08-02')->exists());
@@ -112,7 +112,7 @@ class ProsesPenggantiGenerateTest extends TestCase
         Jadwal::factory()->create(['karyawan_id' => $this->b->id, 'tanggal' => '2026-08-01', 'shift_id' => $sore->id]);
         $this->rencana($cuti, '2026-08-01', '2026-08-01');
 
-        ProsesPengganti::generateSaatDisetujui($cuti->fresh());
+        ProsesPengganti::sinkronKasus($cuti->fresh());
 
         $this->assertSame(2, Jadwal::where('karyawan_id', $this->b->id)->whereDate('tanggal', '2026-08-01')->count());
     }
@@ -123,8 +123,8 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->jadwalPemohon(['2026-08-01', '2026-08-02']);
         $this->rencana($cuti, '2026-08-01', '2026-08-02');
 
-        $pertama = ProsesPengganti::generateSaatDisetujui($cuti->fresh());
-        $kedua = ProsesPengganti::generateSaatDisetujui($cuti->fresh());
+        $pertama = ProsesPengganti::sinkronKasus($cuti->fresh());
+        $kedua = ProsesPengganti::sinkronKasus($cuti->fresh());
 
         $this->assertSame(2, $pertama);
         $this->assertSame(0, $kedua);
@@ -138,7 +138,7 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->jadwalPemohon(['2026-08-01']);
         $this->rencana($cuti, '2026-08-01', '2026-08-03');
 
-        $this->assertSame(0, ProsesPengganti::generateSaatDisetujui($cuti->fresh()));
+        $this->assertSame(0, ProsesPengganti::sinkronKasus($cuti->fresh()));
         $this->assertSame(0, Jadwal::salinanPengganti()->count());
     }
 
@@ -149,7 +149,7 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->jadwalPemohon(['2026-08-01']);
         $this->rencana($cuti, '2026-08-01', '2026-08-01');
 
-        ProsesPengganti::generateSaatDisetujui($cuti->fresh());
+        ProsesPengganti::sinkronKasus($cuti->fresh());
 
         Notification::assertSentTo($userB, DitunjukJadiPengganti::class);
     }
@@ -158,12 +158,12 @@ class ProsesPenggantiGenerateTest extends TestCase
     {
         $cuti = $this->cutiDisetujui();
         $this->jadwalPemohon(['2026-08-01']);
-        PenggantiCuti::factory()->usulan()->create([
+        PenugasanPengganti::factory()->usulan()->create([
             'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $this->b->id,
             'tanggal_mulai' => '2026-08-01', 'tanggal_selesai' => '2026-08-03',
         ]);
 
-        $this->assertSame(0, ProsesPengganti::generateSaatDisetujui($cuti->fresh()));
+        $this->assertSame(0, ProsesPengganti::sinkronKasus($cuti->fresh()));
     }
 
     public function test_tetapkan_pada_cuti_disetujui_langsung_materialisasi(): void

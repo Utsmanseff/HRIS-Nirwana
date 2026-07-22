@@ -9,7 +9,7 @@ use App\Models\ApprovalCuti;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\User;
 use Database\Seeders\JenisCutiSeeder;
 use Database\Seeders\RoleSeeder;
@@ -62,7 +62,7 @@ class PersetujuanPenggantiTest extends TestCase
             ->assertViewHas('bolehSetPengganti', true)
             ->call('setPengganti', $b->id);
 
-        $this->assertSame(1, PenggantiCuti::where('karyawan_id', $b->id)->count());
+        $this->assertSame(1, PenugasanPengganti::where('karyawan_id', $b->id)->count());
     }
 
     public function test_unit_tanpa_flag_tidak_boleh(): void
@@ -75,7 +75,7 @@ class PersetujuanPenggantiTest extends TestCase
             ->assertViewHas('bolehSetPengganti', false)
             ->call('setPengganti', $b->id);
 
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 
     public function test_approver_hrd_tidak_boleh_set_pengganti(): void
@@ -95,7 +95,7 @@ class PersetujuanPenggantiTest extends TestCase
             ->assertViewHas('bolehSetPengganti', false)
             ->call('setPengganti', $this->koor->id);
 
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 
     public function test_pencarian_kandidat_hanya_saat_boleh(): void

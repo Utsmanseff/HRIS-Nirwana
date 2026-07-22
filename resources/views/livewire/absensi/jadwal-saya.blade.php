@@ -41,6 +41,9 @@
                                         <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background:{{ $warna }}1a;color:{{ $warna }}">{{ $s->kode }}</span>
                                     </div>
                                     <div class="text-xs text-neutral-500 mt-0.5 tnum">{{ \Illuminate\Support\Str::substr($s->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($s->jam_selesai, 0, 5) }}</div>
+                                    @if ($j->penugasan)
+                                        <div class="text-[10px] font-bold uppercase tracking-wide text-brand-600 mt-0.5">{{ $j->penugasan->label() }}</div>
+                                    @endif
                                 @else
                                     <span class="text-sm text-neutral-400">Libur</span>
                                 @endif

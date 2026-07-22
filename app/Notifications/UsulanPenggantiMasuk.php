@@ -2,7 +2,8 @@
 
 namespace App\Notifications;
 
-use App\Models\PenggantiCuti;
+use App\Enums\TipePengganti;
+use App\Models\PenugasanPengganti;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
@@ -12,7 +13,7 @@ class UsulanPenggantiMasuk extends Notification
 {
     use Queueable;
 
-    public function __construct(public PenggantiCuti $usulan) {}
+    public function __construct(public PenugasanPengganti $usulan) {}
 
     public function via(object $notifiable): array
     {
@@ -22,28 +23,30 @@ class UsulanPenggantiMasuk extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'jenis' => 'pengganti-cuti',
+            'jenis' => 'pengganti',
             'pengganti_id' => $this->usulan->id,
             'pesan' => $this->pesan(),
-            'url' => '/cuti/pengganti',
+            'url' => '/pengganti',
         ];
     }
 
     public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Usulan Pengganti Cuti')
+            ->title('Usulan '.$this->usulan->tipe->label())
             ->body($this->pesan())
             ->icon('/img/android-chrome-192x192.png')
-            ->data(['url' => '/cuti/pengganti']);
+            ->data(['url' => '/pengganti']);
     }
 
     private function pesan(): string
     {
         $pengaju = $this->usulan->karyawan->nama_lengkap;
-        $pemohon = $this->usulan->pengajuan->karyawan->nama_lengkap;
+        $digantikan = $this->usulan->karyawanDigantikan?->nama_lengkap ?? 'rekan';
         $mulai = $this->usulan->tanggal_mulai->translatedFormat('d M Y');
 
-        return "{$pengaju} mengajukan diri menggantikan {$pemohon} mulai {$mulai}.";
+        return $this->usulan->tipe === TipePengganti::Lowongan
+            ? "{$pengaju} mengajukan diri mengisi jadwal kosong {$digantikan} mulai {$mulai}."
+            : "{$pengaju} mengajukan diri menggantikan {$digantikan} mulai {$mulai}.";
     }
 }

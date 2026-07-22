@@ -3,12 +3,12 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\StatusPengajuanCuti;
-use App\Livewire\Cuti\PenggantiKelola;
+use App\Livewire\Pengganti\PenggantiKelola;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\ProsesPengganti;
@@ -83,8 +83,22 @@ class PenggantiKelolaTest extends TestCase
         $tanpaKaryawan = User::factory()->create(['karyawan_id' => null]);
 
         // Akun belum tertaut karyawan dicegat middleware klaim (redirect), sebelum gate.
-        $this->actingAs($tanpaKaryawan)->get('/cuti/pengganti')->assertRedirect();
-        $this->actingAs($this->userC)->get('/cuti/pengganti')->assertOk();
+        $this->actingAs($tanpaKaryawan)->get('/pengganti')->assertRedirect();
+        $this->actingAs($this->userC)->get('/pengganti')->assertOk();
+    }
+
+    public function test_rute_baru_terdaftar_dan_rute_lama_hilang(): void
+    {
+        $this->assertSame('/pengganti', route('pengganti', absolute: false));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('cuti.pengganti'));
+    }
+
+    public function test_nav_memuat_item_pengganti_jadwal(): void
+    {
+        $ids = array_column(\App\Support\NavMenu::semua(), 'id');
+
+        $this->assertContains('pengganti', $ids);
+        $this->assertNotContains('cuti-pengganti', $ids);
     }
 
     public function test_daftar_hanya_cuti_berjalan_di_unit_saya(): void
@@ -95,7 +109,7 @@ class PenggantiKelolaTest extends TestCase
             ->status(StatusPengajuanCuti::Disetujui)->create(['karyawan_id' => $luar->id]);
 
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->assertViewHas('daftar', fn ($d) => $d->pluck('id')->all() === [$this->cuti->id]);
+            ->assertViewHas('kartu', fn ($d) => $d->pluck('kunci')->all() === ['cuti-'.$this->cuti->id]);
     }
 
     public function test_cuti_yang_sudah_lewat_tidak_muncul(): void
@@ -106,23 +120,23 @@ class PenggantiKelolaTest extends TestCase
             ->create(['karyawan_id' => $this->pemohon->id]);
 
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->assertViewHas('daftar', fn ($d) => ! $d->pluck('id')->contains($lewat->id));
+            ->assertViewHas('kartu', fn ($d) => ! $d->pluck('kunci')->contains('cuti-'.$lewat->id));
     }
 
     public function test_rekan_bisa_ajukan_diri(): void
     {
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->call('mulaiAjukan', $this->cuti->id)
+            ->call('mulaiAjukan', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('kirimAjukanDiri');
 
-        $this->assertSame(1, PenggantiCuti::usulan()->where('karyawan_id', $this->c->id)->count());
+        $this->assertSame(1, PenugasanPengganti::usulan()->where('karyawan_id', $this->c->id)->count());
     }
 
     public function test_koordinator_bisa_alihkan(): void
     {
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
-            ->call('mulaiAlih', $this->cuti->id)
+            ->call('mulaiAlih', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('pilihAlih', $this->c->id);
 
@@ -139,7 +153,7 @@ class PenggantiKelolaTest extends TestCase
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
             ->call('tolak', $usulan->id);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
 
         $usulan2 = ProsesPengganti::ajukanDiri(
             $this->cuti->fresh(), $this->c, Carbon::parse($this->t2), $this->userC,
@@ -148,14 +162,14 @@ class PenggantiKelolaTest extends TestCase
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
             ->call('acc', $usulan2->id);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
         $this->assertSame(1, Jadwal::where('karyawan_id', $this->c->id)->salinanPengganti()->count());
     }
 
     public function test_bukan_koordinator_gagal_alihkan(): void
     {
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->call('mulaiAlih', $this->cuti->id)
+            ->call('mulaiAlih', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('pilihAlih', $this->b->id)
             ->assertHasErrors('tanggalAksi');

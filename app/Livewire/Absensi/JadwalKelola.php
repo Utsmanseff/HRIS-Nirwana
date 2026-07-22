@@ -3,6 +3,7 @@
 namespace App\Livewire\Absensi;
 
 use App\Enums\ModeTemplate;
+use App\Enums\StatusKaryawan;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
@@ -10,6 +11,7 @@ use App\Models\PolaJadwal;
 use App\Models\Shift;
 use App\Models\TemplateJadwal;
 use App\Support\JadwalHarian;
+use App\Support\ProsesPengganti;
 use App\Support\TerapkanPola;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -544,6 +546,16 @@ class JadwalKelola extends Component
             return;
         }
 
+        // Anggota nonaktif di pola-pola unit ini SEBELUM penyimpanan. Yang setelah
+        // simpan tak lagi jadi anggota pola mana pun = slotnya diambil orang lain,
+        // jadi lowongannya sudah tertutup.
+        $nonaktifSebelum = Karyawan::query()
+            ->where('status', StatusKaryawan::Nonaktif->value)
+            ->whereIn('id', PolaJadwal::whereIn(
+                'template_id', TemplateJadwal::where('org_unit_id', $this->unitId)->pluck('id')
+            )->distinct()->pluck('karyawan_id'))
+            ->get();
+
         DB::transaction(function () use ($peta, $mingguan, $pola) {
             $pola->update(['tanggal_jangkar' => $this->tplJangkar, 'mode' => $this->tplMode]);
             PolaJadwal::where('template_id', $pola->id)->delete();
@@ -571,6 +583,12 @@ class JadwalKelola extends Component
                 }
             }
         });
+
+        foreach ($nonaktifSebelum as $kar) {
+            if (! PolaJadwal::where('karyawan_id', $kar->id)->exists()) {
+                ProsesPengganti::tutupLowongan($kar, now());
+            }
+        }
 
         session()->flash('sukses', 'Pola disimpan.');
     }
@@ -667,6 +685,9 @@ class JadwalKelola extends Component
                 ]);
             }
         });
+
+        // Sel yang baru diisi bisa milik karyawan nonaktif berlowongan.
+        ProsesPengganti::sinkronSemuaLowongan();
     }
 
     public function terapkanPola(int $polaId): void
@@ -675,6 +696,7 @@ class JadwalKelola extends Component
 
         $pola = TemplateJadwal::where('org_unit_id', $this->unitId)->findOrFail($polaId);
         $jumlah = TerapkanPola::untukPola($pola, $this->tahun, $this->bulan, auth()->id(), timpa: true);
+        ProsesPengganti::sinkronSemuaLowongan();
 
         session()->flash('sukses', "Pola {$pola->nama} diterapkan: {$jumlah} jadwal.");
     }

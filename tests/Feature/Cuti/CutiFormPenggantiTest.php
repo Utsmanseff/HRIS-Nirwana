@@ -8,7 +8,7 @@ use App\Models\Jadwal;
 use App\Models\JenisCuti;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use Database\Seeders\JenisCutiSeeder;
@@ -95,7 +95,7 @@ class CutiFormPenggantiTest extends TestCase
             ->assertHasErrors('penggantiId')
             ->assertSet('penggantiId', null);
 
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 
     public function test_simpan_dengan_pengganti_membuat_rencana(): void
@@ -113,7 +113,7 @@ class CutiFormPenggantiTest extends TestCase
             ->assertHasNoErrors()
             ->call('simpan');
 
-        $this->assertSame(1, PenggantiCuti::where('karyawan_id', $b->id)->count());
+        $this->assertSame(1, PenugasanPengganti::where('karyawan_id', $b->id)->count());
     }
 
     public function test_simpan_tanpa_pengganti_tetap_boleh(): void
@@ -129,6 +129,6 @@ class CutiFormPenggantiTest extends TestCase
             ->call('simpan')
             ->assertHasNoErrors();
 
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 }

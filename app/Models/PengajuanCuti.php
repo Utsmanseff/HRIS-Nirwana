@@ -45,7 +45,7 @@ class PengajuanCuti extends Model
 
     public function pengganti(): HasMany
     {
-        return $this->hasMany(PenggantiCuti::class, 'pengajuan_cuti_id')->orderBy('tanggal_mulai');
+        return $this->hasMany(PenugasanPengganti::class, 'pengajuan_cuti_id')->orderBy('tanggal_mulai');
     }
 
     /** Baris approval aktif = status menunggu dengan urutan terkecil (sequential). */

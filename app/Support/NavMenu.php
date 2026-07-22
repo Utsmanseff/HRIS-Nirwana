@@ -21,7 +21,7 @@ class NavMenu
         return [
             ['id' => 'beranda',  'label' => 'Beranda',        'icon' => 'home',     'route' => 'beranda',        'can' => null, 'group' => null],
             ['id' => 'cuti',     'label' => 'Cuti',           'icon' => 'calendar', 'route' => 'cuti',           'can' => 'ajukan-cuti', 'group' => 'Operasional'],
-            ['id' => 'cuti-pengganti', 'label' => 'Pengganti Cuti', 'icon' => 'users', 'route' => 'cuti.pengganti', 'can' => 'ajukan-cuti', 'group' => 'Operasional'],
+            ['id' => 'pengganti', 'label' => 'Pengganti Jadwal', 'icon' => 'users', 'route' => 'pengganti', 'can' => 'ajukan-cuti', 'group' => 'Operasional'],
             ['id' => 'persetujuan', 'label' => 'Persetujuan Cuti', 'icon' => 'check-circle', 'route' => 'cuti.persetujuan', 'can' => 'approve-cuti', 'group' => 'Operasional'],
             ['id' => 'kelola-cuti', 'label' => 'Kelola Cuti', 'icon' => 'sliders', 'route' => 'cuti.kelola', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
             ['id' => 'laporan-cuti', 'label' => 'Laporan Cuti', 'icon' => 'chart', 'route' => 'cuti.laporan', 'can' => 'kelola-cuti', 'group' => 'Operasional'],
