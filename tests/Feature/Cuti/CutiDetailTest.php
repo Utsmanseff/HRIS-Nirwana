@@ -47,6 +47,41 @@ class CutiDetailTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_panel_cakupan_pengganti_tampil(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create(['pakai_pengganti' => true]);
+        $pemohon = Karyawan::factory()->staffUnit($unit)->create();
+        $b = Karyawan::factory()->staffUnit($unit)->create(['nama_lengkap' => 'Budi Pengganti']);
+        $user = User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $cuti = PengajuanCuti::factory()->rentang('2026-08-01', '2026-08-03', 3)
+            ->create(['karyawan_id' => $pemohon->id]);
+        \App\Models\PenggantiCuti::factory()->create([
+            'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $b->id,
+            'tanggal_mulai' => '2026-08-01', 'tanggal_selesai' => '2026-08-03',
+        ]);
+
+        Livewire::actingAs($user)->test(CutiDetail::class, ['pengajuan' => $cuti])
+            ->assertViewHas('pengganti', fn ($p) => $p->count() === 1)
+            ->assertSee('Budi Pengganti');
+    }
+
+    public function test_usulan_tidak_ditampilkan_sebagai_cakupan(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create(['pakai_pengganti' => true]);
+        $pemohon = Karyawan::factory()->staffUnit($unit)->create();
+        $b = Karyawan::factory()->staffUnit($unit)->create(['nama_lengkap' => 'Calon Usulan']);
+        $user = User::factory()->create(['karyawan_id' => $pemohon->id]);
+        $cuti = PengajuanCuti::factory()->rentang('2026-08-01', '2026-08-03', 3)
+            ->create(['karyawan_id' => $pemohon->id]);
+        \App\Models\PenggantiCuti::factory()->usulan()->create([
+            'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $b->id,
+            'tanggal_mulai' => '2026-08-02', 'tanggal_selesai' => '2026-08-03',
+        ]);
+
+        Livewire::actingAs($user)->test(CutiDetail::class, ['pengajuan' => $cuti])
+            ->assertViewHas('pengganti', fn ($p) => $p->isEmpty());
+    }
+
     public function test_tak_bisa_batal_saat_disetujui(): void
     {
         $kar = Karyawan::factory()->create();

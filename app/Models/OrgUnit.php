@@ -18,11 +18,11 @@ class OrgUnit extends Model
 
     protected $table = 'org_units';
 
-    protected $fillable = ['parent_id', 'nama', 'tipe', 'aktif'];
+    protected $fillable = ['parent_id', 'nama', 'tipe', 'aktif', 'pakai_pengganti'];
 
     protected function casts(): array
     {
-        return ['tipe' => OrgUnitTipe::class, 'aktif' => 'boolean'];
+        return ['tipe' => OrgUnitTipe::class, 'aktif' => 'boolean', 'pakai_pengganti' => 'boolean'];
     }
 
     public function parent(): BelongsTo

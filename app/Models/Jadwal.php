@@ -33,4 +33,15 @@ class Jadwal extends Model
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
     }
+
+    public function penggantiCuti(): BelongsTo
+    {
+        return $this->belongsTo(PenggantiCuti::class, 'pengganti_cuti_id');
+    }
+
+    /** Baris jadwal hasil salinan pengganti cuti (bukan jadwal biasa). */
+    public function scopeSalinanPengganti($q)
+    {
+        return $q->whereNotNull('pengganti_cuti_id');
+    }
 }

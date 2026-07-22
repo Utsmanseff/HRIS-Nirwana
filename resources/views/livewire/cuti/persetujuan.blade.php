@@ -146,6 +146,34 @@
                         </div>
                     </div>
 
+                    @if ($bolehSetPengganti)
+                        <div class="rounded-lg border border-neutral-200 p-3 space-y-2">
+                            <div class="text-sm font-semibold">Pengganti selama cuti</div>
+                            @forelse ($penggantiTinjau as $pg)
+                                <div wire:key="pg-{{ $pg->id }}" class="text-sm flex justify-between">
+                                    <span>{{ $pg->karyawan->nama_lengkap }}</span>
+                                    <span class="text-xs text-neutral-400 tnum">
+                                        {{ $pg->tanggal_mulai->format('d M') }} s/d {{ $pg->tanggal_selesai->format('d M Y') }}
+                                    </span>
+                                </div>
+                            @empty
+                                <p class="text-xs text-neutral-500">Belum ada pengganti.</p>
+                            @endforelse
+
+                            <input type="text" wire:model.live.debounce.400ms="cariPengganti" class="input"
+                                placeholder="Cari nama atau NIP…">
+                            @foreach ($hasilCariPengganti as $kandidat)
+                                <button type="button" wire:key="pgc-{{ $kandidat->id }}"
+                                    wire:click="setPengganti({{ $kandidat->id }})"
+                                    class="w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 text-sm">
+                                    {{ $kandidat->nama_lengkap }}
+                                    <span class="text-xs text-neutral-400">· {{ $kandidat->nip }}</span>
+                                </button>
+                            @endforeach
+                            @error('cariPengganti') <div class="text-xs text-danger-600">{{ $message }}</div> @enderror
+                        </div>
+                    @endif
+
                     <div>
                         <label class="field-label">Catatan <span class="text-neutral-400 font-normal">(wajib bila menolak)</span></label>
                         <textarea wire:model="catatan" class="textarea" rows="2" placeholder="Catatan untuk pemohon…"></textarea>
