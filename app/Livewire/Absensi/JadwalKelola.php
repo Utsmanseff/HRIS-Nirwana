@@ -558,16 +558,52 @@ class JadwalKelola extends Component
         });
     }
 
-    public function terapkanPola(): void
+    public function terapkanPola(int $polaId): void
     {
         abort_unless($this->unitDipimpin()->contains('id', $this->unitId), 403);
 
-        $jumlah = 0;
-        foreach (TemplateJadwal::untukUnit($this->unitId)->get() as $pola) {
-            $jumlah += TerapkanPola::untukPola($pola, $this->tahun, $this->bulan, auth()->id(), timpa: true);
+        $pola = TemplateJadwal::where('org_unit_id', $this->unitId)->findOrFail($polaId);
+        $jumlah = TerapkanPola::untukPola($pola, $this->tahun, $this->bulan, auth()->id(), timpa: true);
+
+        session()->flash('sukses', "Pola {$pola->nama} diterapkan: {$jumlah} jadwal.");
+    }
+
+    /**
+     * Baris grid bulanan dikelompokkan: satu blok per pola (urut anggota sesuai pola),
+     * lalu blok "Tanpa Pola" berisi sisa kelolaan.
+     *
+     * @return array<int, array{pola: ?\App\Models\TemplateJadwal, nama: string, karyawan: \Illuminate\Support\Collection}>
+     */
+    public function blokJadwal(): array
+    {
+        if (! $this->unitId) {
+            return [];
         }
 
-        session()->flash('sukses', "Pola diterapkan: {$jumlah} jadwal.");
+        $kelolaan = auth()->user()->karyawan->karyawanKelolaan()
+            ->with('jabatan')->orderBy('nama_lengkap')->get()->keyBy('id');
+
+        $blok = [];
+        $terpakai = [];
+
+        foreach ($this->daftarPola() as $pola) {
+            // Urutan anggota = urutan penambahan (baris pola paling awal).
+            $anggotaIds = PolaJadwal::where('template_id', $pola->id)
+                ->selectRaw('karyawan_id, MIN(id) as urut')
+                ->groupBy('karyawan_id')->orderBy('urut')->pluck('karyawan_id');
+
+            $anggota = $anggotaIds->map(fn ($id) => $kelolaan[$id] ?? null)->filter()->values();
+            $terpakai = array_merge($terpakai, $anggota->pluck('id')->all());
+
+            $blok[] = ['pola' => $pola, 'nama' => $pola->nama, 'karyawan' => $anggota];
+        }
+
+        $sisa = $kelolaan->reject(fn ($k) => in_array($k->id, $terpakai, true))->values();
+        if ($sisa->isNotEmpty()) {
+            $blok[] = ['pola' => null, 'nama' => 'Tanpa Pola', 'karyawan' => $sisa];
+        }
+
+        return $blok;
     }
 
     /** petaJadwal[karyawan_id][hari] = daftar kode shift (urut jam mulai). */
@@ -610,6 +646,7 @@ class JadwalKelola extends Component
             'polaAktif' => $this->polaAktif(),
             'hasilCariAnggota' => $this->hasilCariAnggota(),
             'polaLainPeta' => $this->polaLainPeta(),
+            'blokJadwal' => $this->blokJadwal(),
             'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
             'petaJadwal' => $this->petaJadwalBulan(),
             'namaBulan' => Carbon::create($this->tahun, $this->bulan, 1)->translatedFormat('F Y'),
