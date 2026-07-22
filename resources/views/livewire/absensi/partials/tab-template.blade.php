@@ -1,7 +1,6 @@
 @php($hari = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'])
 @php($ada = array_keys($polaGrid))
 @php($byId = $kelolaan->keyBy('id'))
-@php($sisa = $kelolaan->reject(fn ($k) => in_array($k->id, $ada)))
 <div class="space-y-5">
     <div class="flex flex-wrap items-center gap-2">
         @foreach($daftarPola as $p)
@@ -106,14 +105,25 @@
         </table>
     </div>
 
-    @if($sisa->isNotEmpty())
-        <div class="flex flex-wrap items-center gap-2">
-            <select class="select w-auto" wire:key="tambah-karyawan" wire:change="tambahKaryawan($event.target.value)">
-                <option value="">+ Tambah karyawan ke pola…</option>
-                @foreach($sisa as $s)
-                    <option value="{{ $s->id }}">{{ $s->nama_lengkap }}{{ $s->jabatan ? ' — '.$s->jabatan->nama : '' }}</option>
+    <div class="space-y-2">
+        <label class="field-label">Tambah karyawan ke pola</label>
+        <input class="input w-full sm:w-80" wire:model.live.debounce.300ms="cariAnggota"
+               placeholder="Cari nama atau NIP…">
+        @if($hasilCariAnggota->isNotEmpty())
+            <div class="border border-neutral-200 rounded-lg divide-y divide-neutral-100 max-w-xl">
+                @foreach($hasilCariAnggota as $c)
+                    <button type="button" wire:key="cari-{{ $c->id }}" wire:click="tambahKaryawan({{ $c->id }})"
+                            class="w-full text-left px-3 py-2 hover:bg-neutral-50">
+                        <span class="text-sm font-semibold">{{ $c->nama_lengkap }}</span>
+                        <span class="text-xs text-neutral-400">· {{ $c->nip }}</span>
+                        @if(isset($polaLainPeta[$c->id]))
+                            <span class="ml-1 text-[11px] font-bold text-warning-600">sudah di {{ $polaLainPeta[$c->id] }} — akan dipindah</span>
+                        @endif
+                    </button>
                 @endforeach
-            </select>
-        </div>
-    @endif
+            </div>
+        @elseif(trim($cariAnggota) !== '')
+            <p class="text-xs text-neutral-400">Tak ada karyawan cocok.</p>
+        @endif
+    </div>
 </div>

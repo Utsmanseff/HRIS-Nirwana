@@ -43,6 +43,7 @@ class JadwalKelola extends Component
     public string $pNama = '';          // nama pola (buat / ubah)
     public bool $formPola = false;      // form buat pola terbuka
     public string $modeFormPola = 'buat';   // buat | ubah
+    public string $cariAnggota = '';
 
     public string $tplMode = 'rotasi';   // rotasi | mingguan
     public string $tplJangkar = '';
@@ -282,6 +283,39 @@ class JadwalKelola extends Component
         $panjang = $this->tplMode === 'mingguan' ? 7 : self::PANJANG_DEFAULT;
         $this->polaGrid[$karyawanId] = array_fill(0, $panjang, '');
         $this->panjangBaris[$karyawanId] = $panjang;
+        $this->cariAnggota = '';
+    }
+
+    /** Hasil pencarian anggota: kelolaan yang belum ada di grid, disaring nama/NIP. */
+    public function hasilCariAnggota()
+    {
+        $kunci = trim($this->cariAnggota);
+        if ($kunci === '' || ! $this->unitId) {
+            return collect();
+        }
+
+        return auth()->user()->karyawan->karyawanKelolaan()
+            ->where(fn ($q) => $q->where('nama_lengkap', 'like', '%'.$kunci.'%')
+                ->orWhere('nip', 'like', '%'.$kunci.'%'))
+            ->whereNotIn('id', array_keys($this->polaGrid) ?: [-1])
+            ->orderBy('nama_lengkap')
+            ->limit(8)
+            ->get();
+    }
+
+    /** peta karyawan_id => nama pola lain yang memuatnya (untuk penanda "sudah di Pola X"). */
+    public function polaLainPeta(): array
+    {
+        if (! $this->unitId) {
+            return [];
+        }
+
+        return PolaJadwal::query()
+            ->join('template_jadwal', 'template_jadwal.id', '=', 'pola_jadwal.template_id')
+            ->where('template_jadwal.org_unit_id', $this->unitId)
+            ->when($this->polaId, fn ($q) => $q->where('template_jadwal.id', '!=', $this->polaId))
+            ->pluck('template_jadwal.nama', 'pola_jadwal.karyawan_id')
+            ->all();
     }
 
     public function hapusBaris(int $karyawanId): void
@@ -539,6 +573,8 @@ class JadwalKelola extends Component
                 : collect(),
             'daftarPola' => $this->daftarPola(),
             'polaAktif' => $this->polaAktif(),
+            'hasilCariAnggota' => $this->hasilCariAnggota(),
+            'polaLainPeta' => $this->polaLainPeta(),
             'jumlahHari' => Carbon::create($this->tahun, $this->bulan, 1)->daysInMonth,
             'petaJadwal' => $this->petaJadwalBulan(),
             'namaBulan' => Carbon::create($this->tahun, $this->bulan, 1)->translatedFormat('F Y'),

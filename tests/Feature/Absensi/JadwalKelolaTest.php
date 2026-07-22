@@ -537,4 +537,67 @@ class JadwalKelolaTest extends TestCase
         $this->assertDatabaseMissing('pola_jadwal', ['template_id' => $pola->id]);
         $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-05 00:00:00', 'shift_id' => $shift->id]);
     }
+
+    public function test_cari_anggota_menyaring_kelolaan_menurut_nama(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        $jab = Jabatan::factory()->create(['org_unit_id' => $unit->id, 'level' => 1]);
+        Karyawan::factory()->create(['org_unit_id' => $unit->id, 'jabatan_id' => $jab->id, 'nama_lengkap' => 'Siti Aminah']);
+        Karyawan::factory()->create(['org_unit_id' => $unit->id, 'jabatan_id' => $jab->id, 'nama_lengkap' => 'Budi Santoso']);
+
+        // tab-jadwal (pane tersembunyi) menampilkan SEMUA kelolaan, jadi assertDontSee
+        // pada HTML bocor. Uji langsung koleksi hasil pencarian yang dirender.
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->set('cariAnggota', 'Siti')
+            ->assertSee('Siti Aminah')
+            ->assertViewHas('hasilCariAnggota', fn ($hasil) => $hasil->pluck('nama_lengkap')->all() === ['Siti Aminah']);
+    }
+
+    public function test_tambah_anggota_yang_sudah_berpola_memindahkannya(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $polaA = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaA->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+        $polaB = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaB->id)
+            ->call('gantiTab', 'template')
+            ->call('tambahKaryawan', $staff->id)
+            ->set("polaGrid.{$staff->id}.0", 'P')
+            ->set('tplJangkar', '2026-07-01')
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        // Hanya satu keanggotaan yang tersisa, dan itu di pola B.
+        $this->assertSame(0, \App\Models\PolaJadwal::where('template_id', $polaA->id)->where('karyawan_id', $staff->id)->count());
+        $this->assertGreaterThan(0, \App\Models\PolaJadwal::where('template_id', $polaB->id)->where('karyawan_id', $staff->id)->count());
+    }
+
+    public function test_anggota_pola_lain_ditandai_saat_dicari(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $staff = $this->staffDi($unit);
+        $staff->update(['nama_lengkap' => 'Siti Aminah']);
+
+        $polaA = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaA->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => null]);
+        $polaB = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaB->id)
+            ->call('gantiTab', 'template')
+            ->set('cariAnggota', 'Siti')
+            ->assertSee('akan dipindah')      // penanda "sudah di Pola A — akan dipindah"
+            ->assertViewHas('polaLainPeta', fn ($peta) => ($peta[$staff->id] ?? null) === 'Pola A');
+    }
 }
