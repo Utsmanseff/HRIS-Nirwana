@@ -2,10 +2,14 @@
 
 namespace App\Support;
 
+use App\Enums\StatusPengganti;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
+use App\Models\PenggantiCuti;
+use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Satu rumah aturan pengganti cuti: siapa boleh menutup shift siapa, kapan
@@ -82,5 +86,45 @@ class ProsesPengganti
 
         return "Jadwal bentrok pada {$b['tanggal']}: shift {$b['shift_pengganti']} pengganti"
             ." beririsan dengan shift {$b['shift_pemohon']} pemohon.";
+    }
+
+    /** Tetapkan pengganti untuk seluruh rentang cuti; ganti baris aktif yang ada. */
+    public static function tetapkan(PengajuanCuti $cuti, Karyawan $pengganti, User $oleh): PenggantiCuti
+    {
+        if ($pengganti->id === $cuti->karyawan_id) {
+            throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
+        }
+
+        $bentrok = self::cekBentrok($pengganti, $cuti);
+        if ($bentrok) {
+            throw new ProsesPenggantiException(self::pesanBentrok($bentrok));
+        }
+
+        return DB::transaction(function () use ($cuti, $pengganti, $oleh) {
+            $lama = $cuti->pengganti()->aktif()->pluck('id')->all();
+            self::hapusJadwalRencana($lama);
+            PenggantiCuti::whereIn('id', $lama)->delete();
+
+            return PenggantiCuti::create([
+                'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_id' => $pengganti->id,
+                'tanggal_mulai' => Carbon::parse($cuti->tanggal_mulai)->toDateString(),
+                'tanggal_selesai' => Carbon::parse($cuti->tanggal_selesai)->toDateString(),
+                'status' => StatusPengganti::Aktif,
+                'dibuat_oleh' => $oleh->id,
+            ]);
+        });
+    }
+
+    /** Hapus baris jadwal hasil salinan milik rencana tertentu (opsional: hanya sejak tanggal). */
+    private static function hapusJadwalRencana(array $ids, ?Carbon $sejak = null): void
+    {
+        if (! $ids) {
+            return;
+        }
+
+        Jadwal::whereIn('pengganti_cuti_id', $ids)
+            ->when($sejak, fn ($q) => $q->whereDate('tanggal', '>=', $sejak->toDateString()))
+            ->delete();
     }
 }
