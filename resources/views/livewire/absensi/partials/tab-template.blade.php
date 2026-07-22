@@ -18,7 +18,11 @@
         @else
             <div class="flex items-center gap-2">
                 <input class="input w-auto" wire:model="pNama" placeholder="Nama pola, mis. Pola CS IGD" maxlength="60">
-                <button type="button" wire:click="buatPola" class="btn btn-primary btn-sm">Simpan</button>
+                @if($modeFormPola === 'ubah')
+                    <button type="button" wire:click="ubahNamaPola" class="btn btn-primary btn-sm">Simpan Nama</button>
+                @else
+                    <button type="button" wire:click="buatPola" class="btn btn-primary btn-sm">Buat Pola</button>
+                @endif
                 <button type="button" wire:click="batalFormPola" class="btn btn-secondary btn-sm">Batal</button>
             </div>
         @endunless
@@ -42,8 +46,13 @@
         @endif
         <button class="btn btn-primary btn-sm" wire:click="simpanTemplate">
             <svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Simpan Template
+            Simpan Pola
         </button>
+        @if($polaAktif)
+            <button type="button" class="btn btn-secondary btn-sm" wire:click="bukaFormUbahNama">Ubah Nama</button>
+            <button type="button" class="btn btn-secondary btn-sm text-danger-600"
+                    x-on:click="$store.konfirmasi.buka({ judul: 'Hapus pola?', pesan: @js('Pola \''.$polaAktif->nama.'\' dihapus. Jadwal yang sudah terbentuk tetap ada.'), varian: 'danger', labelYa: 'Hapus', onConfirm: () => $wire.hapusPola() })">Hapus Pola</button>
+        @endif
         @if(session('sukses'))<span class="text-xs text-success-600 font-semibold self-center">{{ session('sukses') }}</span>@endif
     </div>
     @error('tplJangkar')<p class="text-xs text-danger-600">{{ $message }}</p>@enderror

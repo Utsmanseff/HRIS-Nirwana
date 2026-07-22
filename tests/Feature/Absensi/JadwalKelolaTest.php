@@ -106,8 +106,10 @@ class JadwalKelolaTest extends TestCase
         $unit = $user->karyawan->unitDipimpin()->first();
         $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
         $staff = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
 
         Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
             ->call('gantiTab', 'template')
             ->set('tplMode', 'rotasi')
             ->set('tplJangkar', '2026-07-01')
@@ -143,8 +145,10 @@ class JadwalKelolaTest extends TestCase
         $unit = $user->karyawan->unitDipimpin()->first();
         $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
         $staff = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
 
         Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
             ->call('gantiTab', 'template')
             ->set('tplMode', 'mingguan')
             ->set("polaGrid.{$staff->id}.0", 'P')   // Senin
@@ -164,8 +168,10 @@ class JadwalKelolaTest extends TestCase
         \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
         $a = $this->staffDi($unit);
         $b = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
 
         Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
             ->call('gantiTab', 'template')
             ->set('tplMode', 'rotasi')
             ->set('tplJangkar', '2026-07-01')
@@ -451,5 +457,84 @@ class JadwalKelolaTest extends TestCase
 
         $baru = \App\Models\TemplateJadwal::where('nama', 'Pola CS Poli')->first();
         $komponen->assertSet('polaId', $baru->id);
+    }
+
+    public function test_simpan_pola_menulis_baris_ke_pola_aktif(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->set('tplJangkar', '2026-07-01')
+            ->set("polaGrid.{$staff->id}.0", 'P')
+            ->set("polaGrid.{$staff->id}.1", 'L')
+            ->call('simpanTemplate')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $pola->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+        $this->assertDatabaseHas('pola_jadwal', ['template_id' => $pola->id, 'karyawan_id' => $staff->id, 'posisi' => 1, 'shift_id' => null]);
+    }
+
+    public function test_ganti_pola_memuat_grid_pola_itu(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+
+        $polaA = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        $polaB = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $polaB->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $polaA->id)
+            ->call('gantiTab', 'template')
+            ->assertSet("polaGrid.{$staff->id}", null)
+            ->call('gantiPola', $polaB->id)
+            ->assertSet("polaGrid.{$staff->id}.0", 'P');
+    }
+
+    public function test_ubah_nama_pola(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Lama', 'tanggal_jangkar' => '2026-07-01']);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('bukaFormUbahNama')
+            ->assertSet('pNama', 'Pola Lama')
+            ->assertSet('modeFormPola', 'ubah')
+            ->set('pNama', 'Pola Baru')
+            ->call('ubahNamaPola')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('template_jadwal', ['id' => $pola->id, 'nama' => 'Pola Baru']);
+    }
+
+    public function test_hapus_pola_menyisakan_jadwal_yang_sudah_terbentuk(): void
+    {
+        $user = $this->koordinator();
+        $unit = $user->karyawan->unitDipimpin()->first();
+        $shift = \App\Models\Shift::factory()->create(['org_unit_id' => $unit->id, 'kode' => 'P']);
+        $staff = $this->staffDi($unit);
+        $pola = \App\Models\TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        \App\Models\PolaJadwal::create(['template_id' => $pola->id, 'karyawan_id' => $staff->id, 'posisi' => 0, 'shift_id' => $shift->id]);
+        \App\Models\Jadwal::create(['karyawan_id' => $staff->id, 'tanggal' => '2026-07-05', 'shift_id' => $shift->id]);
+
+        Livewire::actingAs($user)->test(JadwalKelola::class)
+            ->set('polaId', $pola->id)
+            ->call('gantiTab', 'template')
+            ->call('hapusPola');
+
+        $this->assertDatabaseMissing('template_jadwal', ['id' => $pola->id]);
+        $this->assertDatabaseMissing('pola_jadwal', ['template_id' => $pola->id]);
+        $this->assertDatabaseHas('jadwal', ['karyawan_id' => $staff->id, 'tanggal' => '2026-07-05 00:00:00', 'shift_id' => $shift->id]);
     }
 }
