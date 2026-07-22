@@ -66,4 +66,41 @@ class PenggantiCutiModelTest extends TestCase
 
         $this->assertSame(0, PenggantiCuti::count());
     }
+
+    public function test_pengajuan_punya_relasi_pengganti_urut_tanggal(): void
+    {
+        $cuti = PengajuanCuti::factory()->create();
+        PenggantiCuti::factory()->create([
+            'pengajuan_cuti_id' => $cuti->id, 'tanggal_mulai' => '2026-08-05', 'tanggal_selesai' => '2026-08-07',
+        ]);
+        PenggantiCuti::factory()->create([
+            'pengajuan_cuti_id' => $cuti->id, 'tanggal_mulai' => '2026-08-01', 'tanggal_selesai' => '2026-08-04',
+        ]);
+
+        $urut = $cuti->pengganti()->get()->map(fn ($p) => $p->tanggal_mulai->toDateString())->all();
+
+        $this->assertSame(['2026-08-01', '2026-08-05'], $urut);
+    }
+
+    public function test_jadwal_bertanda_pengganti(): void
+    {
+        $rencana = PenggantiCuti::factory()->create();
+        $biasa = \App\Models\Jadwal::factory()->create();
+        $salinan = \App\Models\Jadwal::factory()->create(['pengganti_cuti_id' => $rencana->id]);
+
+        $this->assertNull($biasa->penggantiCuti);
+        $this->assertSame($rencana->id, $salinan->penggantiCuti->id);
+        $this->assertSame([$salinan->id], \App\Models\Jadwal::salinanPengganti()->pluck('id')->all());
+    }
+
+    public function test_org_unit_pakai_pengganti_boolean(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create();
+        // Default kolom ditegakkan DB → baca ulang, bukan instance hasil create().
+        $this->assertFalse($unit->fresh()->pakai_pengganti);
+
+        $unit->update(['pakai_pengganti' => true]);
+
+        $this->assertTrue($unit->fresh()->pakai_pengganti);
+    }
 }

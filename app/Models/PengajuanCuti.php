@@ -43,6 +43,11 @@ class PengajuanCuti extends Model
         return $this->hasMany(ApprovalCuti::class)->orderBy('urutan');
     }
 
+    public function pengganti(): HasMany
+    {
+        return $this->hasMany(PenggantiCuti::class, 'pengajuan_cuti_id')->orderBy('tanggal_mulai');
+    }
+
     /** Baris approval aktif = status menunggu dengan urutan terkecil (sequential). */
     public function tahapAktif(): ?ApprovalCuti
     {
