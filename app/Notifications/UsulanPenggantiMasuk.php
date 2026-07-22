@@ -26,7 +26,7 @@ class UsulanPenggantiMasuk extends Notification
             'jenis' => 'pengganti',
             'pengganti_id' => $this->usulan->id,
             'pesan' => $this->pesan(),
-            'url' => '/cuti/pengganti',
+            'url' => '/pengganti',
         ];
     }
 
@@ -36,7 +36,7 @@ class UsulanPenggantiMasuk extends Notification
             ->title('Usulan '.$this->usulan->tipe->label())
             ->body($this->pesan())
             ->icon('/img/android-chrome-192x192.png')
-            ->data(['url' => '/cuti/pengganti']);
+            ->data(['url' => '/pengganti']);
     }
 
     private function pesan(): string

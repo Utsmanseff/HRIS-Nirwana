@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Cuti;
+namespace App\Livewire\Pengganti;
 
 use App\Enums\StatusPengajuanCuti;
 use App\Models\Karyawan;
@@ -174,7 +174,7 @@ class PenggantiKelola extends Component
 
     public function render()
     {
-        return view('livewire.cuti.pengganti-kelola', [
+        return view('livewire.pengganti.pengganti-kelola', [
             'daftar' => $this->daftar(),
             'hasilCariPengganti' => $this->hasilCariPengganti(),
         ]);

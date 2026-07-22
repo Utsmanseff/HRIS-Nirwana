@@ -3,7 +3,7 @@
 namespace Tests\Feature\Cuti;
 
 use App\Enums\StatusPengajuanCuti;
-use App\Livewire\Cuti\PenggantiKelola;
+use App\Livewire\Pengganti\PenggantiKelola;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
@@ -83,8 +83,22 @@ class PenggantiKelolaTest extends TestCase
         $tanpaKaryawan = User::factory()->create(['karyawan_id' => null]);
 
         // Akun belum tertaut karyawan dicegat middleware klaim (redirect), sebelum gate.
-        $this->actingAs($tanpaKaryawan)->get('/cuti/pengganti')->assertRedirect();
-        $this->actingAs($this->userC)->get('/cuti/pengganti')->assertOk();
+        $this->actingAs($tanpaKaryawan)->get('/pengganti')->assertRedirect();
+        $this->actingAs($this->userC)->get('/pengganti')->assertOk();
+    }
+
+    public function test_rute_baru_terdaftar_dan_rute_lama_hilang(): void
+    {
+        $this->assertSame('/pengganti', route('pengganti', absolute: false));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('cuti.pengganti'));
+    }
+
+    public function test_nav_memuat_item_pengganti_jadwal(): void
+    {
+        $ids = array_column(\App\Support\NavMenu::semua(), 'id');
+
+        $this->assertContains('pengganti', $ids);
+        $this->assertNotContains('cuti-pengganti', $ids);
     }
 
     public function test_daftar_hanya_cuti_berjalan_di_unit_saya(): void

@@ -82,11 +82,13 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:kelola-cuti')->name('cuti.laporan.pengajuan');
     Route::get('/cuti/laporan/saldo', [\App\Http\Controllers\Cuti\LaporanCutiController::class, 'saldo'])
         ->middleware('can:kelola-cuti')->name('cuti.laporan.saldo');
-    Route::get('/cuti/pengganti', \App\Livewire\Cuti\PenggantiKelola::class)
-        ->middleware('can:ajukan-cuti')->name('cuti.pengganti');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
     Route::get('/cuti/{pengajuan}/surat', [\App\Http\Controllers\Cuti\SuratCutiController::class, 'lihat'])->name('cuti.surat');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
+
+    // Pengganti jadwal (cuti + lowongan karyawan nonaktif) — di luar grup Cuti.
+    Route::get('/pengganti', \App\Livewire\Pengganti\PenggantiKelola::class)
+        ->middleware('can:ajukan-cuti')->name('pengganti');
 
     Route::get('/disiplin', UsulDisiplin::class)
         ->middleware('can:usul-disiplin')->name('disiplin');
