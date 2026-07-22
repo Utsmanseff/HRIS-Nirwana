@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Exports\Concerns\KopLaporanExcel;
 use App\Models\OrgUnit;
+use App\Support\LabelPengganti;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -19,8 +20,18 @@ class AbsensiUnitSheet implements FromCollection, ShouldAutoSize, WithEvents, Wi
 
     public function __construct(private OrgUnit $unit, private Collection $baris, private string $keterangan = '') {}
 
+    /** @var array<int,string> absensi_id => label pengganti */
+    private array $labelPengganti = [];
+
+    private bool $labelSiap = false;
+
     public function collection(): Collection
     {
+        if (! $this->labelSiap) {
+            $this->labelPengganti = LabelPengganti::petaAbsensi($this->baris);
+            $this->labelSiap = true;
+        }
+
         return $this->baris;
     }
 
@@ -44,11 +55,13 @@ class AbsensiUnitSheet implements FromCollection, ShouldAutoSize, WithEvents, Wi
 
     protected function kolomLaporan(): array
     {
-        return ['Tanggal', 'Karyawan', 'NIP', 'Shift', 'Masuk', 'Pulang', 'Jam Kerja', 'Telat (mnt)', 'Pulang Cepat (mnt)', 'Status'];
+        return ['Tanggal', 'Karyawan', 'NIP', 'Shift', 'Masuk', 'Pulang', 'Jam Kerja', 'Telat (mnt)', 'Pulang Cepat (mnt)', 'Status', 'Keterangan'];
     }
 
     public function map($a): array
     {
+        $this->collection();   // pastikan peta label terisi bila map dipanggil duluan
+
         return [
             $a->tanggal_kerja->format('Y-m-d'),
             $a->karyawan->nama_lengkap,
@@ -60,6 +73,7 @@ class AbsensiUnitSheet implements FromCollection, ShouldAutoSize, WithEvents, Wi
             $a->telat_menit ?? '',
             $a->pulang_cepat_menit ?? '',
             $a->labelStatus()[0],
+            $this->labelPengganti[$a->id] ?? '',
         ];
     }
 }

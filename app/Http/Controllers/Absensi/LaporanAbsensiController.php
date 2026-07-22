@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Absensi;
 use App\Exports\AbsensiExport;
 use App\Exports\AbsensiPerUnitExport;
 use App\Http\Controllers\Controller;
+use App\Support\LabelPengganti;
 use App\Support\LingkupAbsensi;
 use App\Support\NamaFile;
 use App\Support\RekapAbsensi;
@@ -46,8 +47,11 @@ class LaporanAbsensiController extends Controller
                 return Excel::download(new AbsensiPerUnitExport($filter, $keterangan), NamaFile::laporan('laporan-absensi', $tokens, 'xlsx'));
             }
 
+            $grup = RekapAbsensi::perUnit($filter);
+
             return Pdf::loadView('laporan.pdf.absensi-per-unit', [
-                'grup' => RekapAbsensi::perUnit($filter),
+                'grup' => $grup,
+                'keterangan' => LabelPengganti::petaAbsensi($grup->flatMap(fn (array $g) => $g['baris'])),
                 'keteranganFilter' => $keterangan,
             ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('laporan-absensi', $tokens, 'pdf'));
         }
@@ -56,8 +60,11 @@ class LaporanAbsensiController extends Controller
             return Excel::download(new AbsensiExport($filter, $keterangan), NamaFile::laporan('laporan-absensi', $tokens, 'xlsx'));
         }
 
+        $baris = RekapAbsensi::ambil($filter);
+
         return Pdf::loadView('laporan.pdf.absensi', [
-            'baris' => RekapAbsensi::ambil($filter),
+            'baris' => $baris,
+            'keterangan' => LabelPengganti::petaAbsensi($baris),
             'keteranganFilter' => $keterangan,
         ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('laporan-absensi', $tokens, 'pdf'));
     }

@@ -15,7 +15,7 @@
         <thead>
             <tr>
                 <th>Tanggal</th><th>Karyawan</th><th>NIP</th><th>Shift</th>
-                <th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th>
+                <th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th><th>Keterangan</th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +29,7 @@
                     <td>{{ $a->jam_pulang?->format('H:i') ?? '-' }}</td>
                     <td>{{ $a->totalMenit() ? intdiv($a->totalMenit(), 60).'j '.($a->totalMenit() % 60).'m' : '-' }}</td>
                     <td>{{ $a->labelStatus()[0] }}</td>
+                    <td>{{ $keterangan[$a->id] ?? '' }}</td>
                 </tr>
             @endforeach
         </tbody>
