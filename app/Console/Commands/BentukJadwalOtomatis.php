@@ -17,12 +17,9 @@ class BentukJadwalOtomatis extends Command
         $total = 0;
         $bulanTarget = collect([0, 1, 2])->map(fn ($i) => now()->startOfMonth()->addMonths($i));
 
-        foreach (TemplateJadwal::with('orgUnit')->get() as $tpl) {
-            if (! $tpl->orgUnit) {
-                continue;
-            }
+        foreach (TemplateJadwal::with('baris')->get() as $pola) {
             foreach ($bulanTarget as $bln) {
-                $total += TerapkanPola::generate($tpl->orgUnit, $bln->year, $bln->month, null, timpa: false);
+                $total += TerapkanPola::untukPola($pola, $bln->year, $bln->month, null, timpa: false);
             }
         }
 

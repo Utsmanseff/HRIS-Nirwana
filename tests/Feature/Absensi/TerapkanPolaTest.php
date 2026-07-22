@@ -31,9 +31,9 @@ class TerapkanPolaTest extends TestCase
         $unit = OrgUnit::factory()->create();
         $shift = Shift::factory()->for($unit, 'orgUnit')->create();
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $shift);
+        $tpl = $this->siklusPL($unit, $kar, $shift);
 
-        $jumlah = TerapkanPola::generate($unit, 2026, 7); // Juli 31 hari
+        $jumlah = TerapkanPola::untukPola($tpl, 2026, 7); // Juli 31 hari
 
         // pos genap = Pagi (hari 1,3,5,...,31 = 16 hari), pos ganjil = Libur (15 hari, tak dibuat)
         $this->assertSame(16, $jumlah);
@@ -49,13 +49,13 @@ class TerapkanPolaTest extends TestCase
         $shift = Shift::factory()->for($unit, 'orgUnit')->create();
         $lain = Shift::factory()->for($unit, 'orgUnit')->create();
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $shift);
+        $tpl = $this->siklusPL($unit, $kar, $shift);
 
         // Jadwal manual lama: 1 Juli pakai shift lain, 2 Juli ada (harusnya libur → dihapus)
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $lain->id]);
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-02', 'shift_id' => $lain->id]);
 
-        TerapkanPola::generate($unit, 2026, 7);
+        TerapkanPola::untukPola($tpl, 2026, 7);
 
         $this->assertDatabaseHas('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01 00:00:00', 'shift_id' => $shift->id]);
         $this->assertDatabaseMissing('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-07-02']);
@@ -67,24 +67,26 @@ class TerapkanPolaTest extends TestCase
         $shift = Shift::factory()->for($unit, 'orgUnit')->create();
         $lain = Shift::factory()->for($unit, 'orgUnit')->create();
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $shift);
+        $tpl = $this->siklusPL($unit, $kar, $shift);
 
-        TerapkanPola::generate($unit, 2026, 7);
+        TerapkanPola::untukPola($tpl, 2026, 7);
         // Tukar shift di Juli (edit jadwal aktual, template tak berubah)
         Jadwal::where('karyawan_id', $kar->id)->where('tanggal', '2026-07-01')->update(['shift_id' => $lain->id]);
 
         // Generate Agustus: tetap ikut template (deterministik), tak terpengaruh tukar Juli
-        TerapkanPola::generate($unit, 2026, 8);
+        TerapkanPola::untukPola($tpl, 2026, 8);
         // 1 Agustus: offset dari 1 Juli = 31 hari, 31 mod 2 = 1 → Libur
         $this->assertDatabaseMissing('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-08-01']);
         // 2 Agustus: offset 32 mod 2 = 0 → Pagi
         $this->assertDatabaseHas('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-08-02 00:00:00', 'shift_id' => $shift->id]);
     }
 
-    public function test_generate_tanpa_template_nol(): void
+    public function test_pola_tanpa_baris_nol(): void
     {
         $unit = OrgUnit::factory()->create();
-        $this->assertSame(0, TerapkanPola::generate($unit, 2026, 7));
+        $tpl = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola Kosong', 'tanggal_jangkar' => '2026-07-01']);
+
+        $this->assertSame(0, TerapkanPola::untukPola($tpl, 2026, 7));
     }
 
     public function test_mode_mingguan_ikut_nama_hari(): void
@@ -103,7 +105,7 @@ class TerapkanPolaTest extends TestCase
             PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $kar->id, 'posisi' => $p, 'shift_id' => null]);
         }
 
-        TerapkanPola::generate($unit, 2026, 7);
+        TerapkanPola::untukPola($tpl, 2026, 7);
 
         $rows = \App\Models\Jadwal::where('karyawan_id', $kar->id)->get();
         $this->assertTrue($rows->every(fn ($j) => $j->tanggal->dayOfWeekIso === 1 && (int) $j->shift_id === $shift->id));
@@ -119,13 +121,13 @@ class TerapkanPolaTest extends TestCase
         $shift = Shift::factory()->for($unit, 'orgUnit')->create();
         $lain = Shift::factory()->for($unit, 'orgUnit')->create();
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $shift); // rotasi [P, L], jangkar 1 Jul
+        $tpl = $this->siklusPL($unit, $kar, $shift); // rotasi [P, L], jangkar 1 Jul
 
         // Manual: 1 Jul (pos0=P) diisi $lain; 2 Jul (pos1=libur) diisi $lain.
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $lain->id]);
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-02', 'shift_id' => $lain->id]);
 
-        TerapkanPola::generate($unit, 2026, 7, null, false); // timpa=false (auto)
+        TerapkanPola::untukPola($tpl, 2026, 7, null, false); // timpa=false (auto)
 
         // 1 Jul TETAP $lain (tak ditimpa), 2 Jul (libur) TETAP $lain (tak dihapus)
         $this->assertDatabaseHas('jadwal', ['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01 00:00:00', 'shift_id' => $lain->id]);
@@ -149,7 +151,7 @@ class TerapkanPolaTest extends TestCase
         PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $b->id, 'posisi' => 1, 'shift_id' => $p->id]);
         PolaJadwal::create(['template_id' => $tpl->id, 'karyawan_id' => $b->id, 'posisi' => 2, 'shift_id' => null]);
 
-        TerapkanPola::generate($unit, 2026, 7); // Juli 31 hari, offset = hari-1 (0..30)
+        TerapkanPola::untukPola($tpl, 2026, 7); // Juli 31 hari, offset = hari-1 (0..30)
 
         // A: kerja saat offset%2==0 → 16 hari
         $this->assertSame(16, Jadwal::where('karyawan_id', $a->id)->count());
@@ -163,9 +165,9 @@ class TerapkanPolaTest extends TestCase
         $shift = Shift::factory()->for($unit, 'orgUnit')->create();
         $ikut = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
         $optout = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $ikut, $shift); // hanya $ikut punya baris pola
+        $tpl = $this->siklusPL($unit, $ikut, $shift); // hanya $ikut punya baris pola
 
-        TerapkanPola::generate($unit, 2026, 7);
+        TerapkanPola::untukPola($tpl, 2026, 7);
 
         $this->assertGreaterThan(0, Jadwal::where('karyawan_id', $ikut->id)->count());
         $this->assertSame(0, Jadwal::where('karyawan_id', $optout->id)->count());
@@ -177,7 +179,7 @@ class TerapkanPolaTest extends TestCase
         $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
         $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $pagi);
+        $tpl = $this->siklusPL($unit, $kar, $pagi);
 
         // Dinas ganda manual di 2026-07-01 (posisi pola = Pagi): dua baris sekaligus,
         // supaya jalur "cuma sentuh baris pertama" ketahuan.
@@ -185,7 +187,7 @@ class TerapkanPolaTest extends TestCase
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $sore->id]);
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $malam->id]);
 
-        TerapkanPola::generate($unit, 2026, 7, null, timpa: true);
+        TerapkanPola::untukPola($tpl, 2026, 7, null, timpa: true);
 
         $baris = Jadwal::where('karyawan_id', $kar->id)->whereDate('tanggal', '2026-07-01')->get();
         $this->assertCount(1, $baris);
@@ -198,17 +200,59 @@ class TerapkanPolaTest extends TestCase
         $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
         $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
         $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
-        $this->siklusPL($unit, $kar, $pagi);
+        $tpl = $this->siklusPL($unit, $kar, $pagi);
 
         $malam = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'M', 'jam_mulai' => '00:00:00', 'jam_selesai' => '06:00:00']);
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $sore->id]);
         Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-01', 'shift_id' => $malam->id]);
 
-        TerapkanPola::generate($unit, 2026, 7, null, timpa: false);
+        TerapkanPola::untukPola($tpl, 2026, 7, null, timpa: false);
 
         $baris = Jadwal::where('karyawan_id', $kar->id)->whereDate('tanggal', '2026-07-01')->get();
         $this->assertCount(2, $baris);   // dinas ganda manual utuh, pola tak menambah baris
         $diharapkan = collect([$sore->id, $malam->id])->sort()->values()->all();
         $this->assertSame($diharapkan, $baris->pluck('shift_id')->sort()->values()->all());
+    }
+
+    public function test_untuk_pola_hanya_menyentuh_anggota_pola_itu(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
+
+        $anggotaA = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $anggotaB = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+
+        $polaA = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaA->id, 'karyawan_id' => $anggotaA->id, 'posisi' => 0, 'shift_id' => $pagi->id]);
+
+        $polaB = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaB->id, 'karyawan_id' => $anggotaB->id, 'posisi' => 0, 'shift_id' => $sore->id]);
+
+        TerapkanPola::untukPola($polaB, 2026, 7, null, timpa: true);
+
+        $this->assertSame(31, Jadwal::where('karyawan_id', $anggotaB->id)->count());
+        $this->assertSame(0, Jadwal::where('karyawan_id', $anggotaA->id)->count());
+    }
+
+    public function test_menerapkan_satu_pola_tak_menghapus_jadwal_anggota_pola_lain(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $pagi = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'P', 'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00']);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create(['kode' => 'S', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00']);
+
+        $anggotaA = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $anggotaB = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+
+        $polaA = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola A', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaA->id, 'karyawan_id' => $anggotaA->id, 'posisi' => 0, 'shift_id' => $pagi->id]);
+        $polaB = TemplateJadwal::create(['org_unit_id' => $unit->id, 'nama' => 'Pola B', 'tanggal_jangkar' => '2026-07-01']);
+        PolaJadwal::create(['template_id' => $polaB->id, 'karyawan_id' => $anggotaB->id, 'posisi' => 0, 'shift_id' => $sore->id]);
+
+        TerapkanPola::untukPola($polaA, 2026, 7, null, timpa: true);
+        TerapkanPola::untukPola($polaB, 2026, 7, null, timpa: true);
+
+        $this->assertSame(31, Jadwal::where('karyawan_id', $anggotaA->id)->count());
+        $this->assertSame(31, Jadwal::where('karyawan_id', $anggotaB->id)->count());
     }
 }
