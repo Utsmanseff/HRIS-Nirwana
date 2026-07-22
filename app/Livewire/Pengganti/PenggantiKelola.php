@@ -3,6 +3,7 @@
 namespace App\Livewire\Pengganti;
 
 use App\Enums\StatusPengajuanCuti;
+use App\Enums\TipePengganti;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
@@ -15,19 +16,26 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Layar estafet pengganti cuti. Sengaja terpisah dari CutiDetail: hanya info
- * minimal (pemohon, unit, rentang, cakupan) — alasan & lampiran cuti tak dibuka.
+ * Layar pengganti jadwal: cuti berjalan + lowongan karyawan nonaktif, satu
+ * daftar. Sengaja terpisah dari CutiDetail — hanya info minimal (nama, unit,
+ * rentang, cakupan); alasan & lampiran cuti tak dibuka di sini.
+ *
+ * Kartu dikunci string `cuti-<id>` / `low-<karyawanId>` supaya satu set form
+ * (ajukan diri / alihkan) melayani kedua tipe tanpa cabang di blade.
  */
 #[Layout('components.layouts.app')]
 class PenggantiKelola extends Component
 {
-    public ?int $ajukanId = null;
+    public ?string $ajukanId = null;
 
-    public ?int $alihId = null;
+    public ?string $alihId = null;
 
     public string $tanggalAksi = '';
 
     public string $cariPengganti = '';
+
+    /** karyawan_id lowongan yang menunggu konfirmasi tombol "Selesai". */
+    public ?int $selesaiKaryawanId = null;
 
     private function saya(): Karyawan
     {
@@ -58,48 +66,94 @@ class PenggantiKelola extends Component
             ->get();
     }
 
-    /** Saya koordinator (kepala unit) pemohon cuti ini? */
-    public function sayaKoordinator(PengajuanCuti $cuti): bool
+    /** Kartu gabungan cuti + lowongan, satu bentuk, terurut tanggal mulai. */
+    public function kartu(): Collection
     {
-        return optional($cuti->karyawan->orgUnit?->kepala())->id === $this->saya()->id;
+        $cuti = $this->daftar()->map(fn (PengajuanCuti $c) => [
+            'kunci' => 'cuti-'.$c->id,
+            'tipe' => TipePengganti::Cuti,
+            'digantikan' => $c->karyawan,
+            'judul' => $c->karyawan->nama_lengkap,
+            'sub' => $c->karyawan->orgUnit?->nama.' · '
+                .$c->tanggal_mulai->format('d M').' s/d '.$c->tanggal_selesai->format('d M Y'),
+            'rencana' => $c->pengganti,
+            'urut' => $c->tanggal_mulai->toDateString(),
+        ]);
+
+        $lowongan = ProsesPengganti::lowongan($this->unitTerlihat())->map(function (Karyawan $k) {
+            $rencana = PenugasanPengganti::lowongan()
+                ->where('karyawan_digantikan_id', $k->id)
+                ->with('karyawan')->orderBy('tanggal_mulai')->get();
+
+            return [
+                'kunci' => 'low-'.$k->id,
+                'tipe' => TipePengganti::Lowongan,
+                'digantikan' => $k,
+                'judul' => $k->nama_lengkap,
+                'sub' => $k->orgUnit?->nama.' · Nonaktif sejak '
+                    .($k->tanggal_nonaktif?->format('d M Y') ?? '—')
+                    .' · '.($k->alasan_nonaktif?->value ?? '—'),
+                'rencana' => $rencana,
+                'urut' => $k->tanggal_nonaktif?->toDateString() ?? '9999-12-31',
+            ];
+        });
+
+        return $cuti->concat($lowongan)->sortBy('urut')->values();
     }
 
-    /** Saya rekan satu unit pemohon (dan bukan pemohonnya)? */
-    public function sayaRekan(PengajuanCuti $cuti): bool
+    /** Sumber kasus untuk service, dari kunci kartu. */
+    private function kasusDariKunci(string $kunci): PengajuanCuti|Karyawan
+    {
+        [$tipe, $id] = explode('-', $kunci, 2);
+
+        return $tipe === 'low'
+            ? Karyawan::findOrFail((int) $id)
+            : PengajuanCuti::findOrFail((int) $id);
+    }
+
+    public function sayaKoordinatorUnit(?Karyawan $digantikan): bool
+    {
+        return $digantikan !== null
+            && optional($digantikan->orgUnit?->kepala())->id === $this->saya()->id;
+    }
+
+    /** Saya rekan satu unit yang digantikan (dan bukan orangnya sendiri)? */
+    public function sayaRekanUnit(?Karyawan $digantikan): bool
     {
         $saya = $this->saya();
 
-        return $saya->id !== $cuti->karyawan_id
+        return $digantikan !== null
+            && $saya->id !== $digantikan->id
             && $saya->org_unit_id !== null
-            && $saya->org_unit_id === $cuti->karyawan->org_unit_id;
+            && $saya->org_unit_id === $digantikan->org_unit_id;
     }
 
-    public function mulaiAjukan(int $pengajuanId): void
+    public function mulaiAjukan(string $kunci): void
     {
-        $this->reset(['alihId', 'tanggalAksi', 'cariPengganti']);
-        $this->ajukanId = $pengajuanId;
+        $this->reset(['alihId', 'tanggalAksi', 'cariPengganti', 'selesaiKaryawanId']);
+        $this->ajukanId = $kunci;
         $this->resetErrorBag();
     }
 
-    public function mulaiAlih(int $pengajuanId): void
+    public function mulaiAlih(string $kunci): void
     {
-        $this->reset(['ajukanId', 'tanggalAksi', 'cariPengganti']);
-        $this->alihId = $pengajuanId;
+        $this->reset(['ajukanId', 'tanggalAksi', 'cariPengganti', 'selesaiKaryawanId']);
+        $this->alihId = $kunci;
         $this->resetErrorBag();
     }
 
     public function batal(): void
     {
-        $this->reset(['ajukanId', 'alihId', 'tanggalAksi', 'cariPengganti']);
+        $this->reset(['ajukanId', 'alihId', 'tanggalAksi', 'cariPengganti', 'selesaiKaryawanId']);
     }
 
     public function kirimAjukanDiri(): void
     {
         $this->validate(['tanggalAksi' => ['required', 'date']]);
-        $cuti = PengajuanCuti::findOrFail($this->ajukanId);
+        $kasus = $this->kasusDariKunci($this->ajukanId);
 
         try {
-            ProsesPengganti::ajukanDiri($cuti, $this->saya(), Carbon::parse($this->tanggalAksi), auth()->user());
+            ProsesPengganti::ajukanDiri($kasus, $this->saya(), Carbon::parse($this->tanggalAksi), auth()->user());
             session()->flash('cuti_ok', 'Usulan terkirim, menunggu acc koordinator.');
         } catch (ProsesPenggantiException $e) {
             $this->addError('tanggalAksi', $e->getMessage());
@@ -115,12 +169,14 @@ class PenggantiKelola extends Component
         if ($kunci === '' || ! $this->alihId) {
             return collect();
         }
-        $cuti = PengajuanCuti::find($this->alihId);
+
+        $kasus = $this->kasusDariKunci($this->alihId);
+        $digantikanId = $kasus instanceof PengajuanCuti ? $kasus->karyawan_id : $kasus->id;
 
         return Karyawan::aktif()
             ->where(fn ($q) => $q->where('nama_lengkap', 'like', '%'.$kunci.'%')
                 ->orWhere('nip', 'like', '%'.$kunci.'%'))
-            ->whereKeyNot($cuti?->karyawan_id ?? -1)
+            ->whereKeyNot($digantikanId)
             ->orderBy('nama_lengkap')
             ->limit(8)
             ->get();
@@ -129,9 +185,10 @@ class PenggantiKelola extends Component
     public function pilihAlih(int $karyawanId): void
     {
         $this->validate(['tanggalAksi' => ['required', 'date']]);
-        $cuti = PengajuanCuti::findOrFail($this->alihId);
+        $kasus = $this->kasusDariKunci($this->alihId);
+        $digantikan = $kasus instanceof PengajuanCuti ? $kasus->karyawan : $kasus;
 
-        if (! $this->sayaKoordinator($cuti)) {
+        if (! $this->sayaKoordinatorUnit($digantikan)) {
             $this->addError('tanggalAksi', 'Hanya koordinator unit pemohon yang boleh mengalihkan.');
 
             return;
@@ -139,7 +196,7 @@ class PenggantiKelola extends Component
 
         try {
             ProsesPengganti::alihkan(
-                $cuti, Carbon::parse($this->tanggalAksi), Karyawan::aktif()->findOrFail($karyawanId), auth()->user(),
+                $kasus, Carbon::parse($this->tanggalAksi), Karyawan::aktif()->findOrFail($karyawanId), auth()->user(),
             );
             session()->flash('cuti_ok', 'Cakupan pengganti dialihkan.');
         } catch (ProsesPenggantiException $e) {
@@ -172,10 +229,38 @@ class PenggantiKelola extends Component
         }
     }
 
+    public function mulaiSelesai(int $karyawanId): void
+    {
+        $this->reset(['ajukanId', 'alihId', 'tanggalAksi', 'cariPengganti']);
+        $this->selesaiKaryawanId = $karyawanId;
+        $this->resetErrorBag();
+    }
+
+    public function batalSelesai(): void
+    {
+        $this->selesaiKaryawanId = null;
+    }
+
+    /** Penghapusan data → hanya lewat konfirmasi, dan hanya oleh koordinator unit. */
+    public function konfirmasiSelesai(): void
+    {
+        $kar = Karyawan::findOrFail($this->selesaiKaryawanId);
+
+        if (! $this->sayaKoordinatorUnit($kar)) {
+            $this->addError('selesai', 'Hanya koordinator unit yang boleh menutup lowongan.');
+
+            return;
+        }
+
+        ProsesPengganti::tutupLowongan($kar, now());
+        session()->flash('cuti_ok', 'Lowongan ditutup. Jadwal sisa dan salinannya dilepas.');
+        $this->batalSelesai();
+    }
+
     public function render()
     {
         return view('livewire.pengganti.pengganti-kelola', [
-            'daftar' => $this->daftar(),
+            'kartu' => $this->kartu(),
             'hasilCariPengganti' => $this->hasilCariPengganti(),
         ]);
     }

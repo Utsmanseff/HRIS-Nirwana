@@ -109,7 +109,7 @@ class PenggantiKelolaTest extends TestCase
             ->status(StatusPengajuanCuti::Disetujui)->create(['karyawan_id' => $luar->id]);
 
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->assertViewHas('daftar', fn ($d) => $d->pluck('id')->all() === [$this->cuti->id]);
+            ->assertViewHas('kartu', fn ($d) => $d->pluck('kunci')->all() === ['cuti-'.$this->cuti->id]);
     }
 
     public function test_cuti_yang_sudah_lewat_tidak_muncul(): void
@@ -120,13 +120,13 @@ class PenggantiKelolaTest extends TestCase
             ->create(['karyawan_id' => $this->pemohon->id]);
 
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->assertViewHas('daftar', fn ($d) => ! $d->pluck('id')->contains($lewat->id));
+            ->assertViewHas('kartu', fn ($d) => ! $d->pluck('kunci')->contains('cuti-'.$lewat->id));
     }
 
     public function test_rekan_bisa_ajukan_diri(): void
     {
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->call('mulaiAjukan', $this->cuti->id)
+            ->call('mulaiAjukan', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('kirimAjukanDiri');
 
@@ -136,7 +136,7 @@ class PenggantiKelolaTest extends TestCase
     public function test_koordinator_bisa_alihkan(): void
     {
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
-            ->call('mulaiAlih', $this->cuti->id)
+            ->call('mulaiAlih', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('pilihAlih', $this->c->id);
 
@@ -169,7 +169,7 @@ class PenggantiKelolaTest extends TestCase
     public function test_bukan_koordinator_gagal_alihkan(): void
     {
         Livewire::actingAs($this->userC)->test(PenggantiKelola::class)
-            ->call('mulaiAlih', $this->cuti->id)
+            ->call('mulaiAlih', 'cuti-'.$this->cuti->id)
             ->set('tanggalAksi', $this->t2)
             ->call('pilihAlih', $this->b->id)
             ->assertHasErrors('tanggalAksi');
