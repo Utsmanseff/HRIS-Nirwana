@@ -3,9 +3,11 @@
 namespace App\Livewire\Sdm;
 
 use App\Enums\JenisKontrak;
+use App\Enums\StatusKaryawan;
 use App\Models\Karyawan;
 use App\Support\KompresGambar;
 use App\Support\PengingatKontrak;
+use App\Support\ProsesPengganti;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -188,6 +190,17 @@ class KaryawanDetail extends Component
         return $bytes >= 1048576
             ? number_format($bytes / 1048576, 1).' MB'
             : number_format(max(1, round($bytes / 1024))).' KB';
+    }
+
+    /** Karyawan nonaktif yang jadwalnya belum dibereskan (lowongan masih terbuka). */
+    public function lowonganTerbuka(): bool
+    {
+        if ($this->karyawan->status === StatusKaryawan::Aktif) {
+            return false;
+        }
+
+        return ProsesPengganti::lowongan([$this->karyawan->org_unit_id])
+            ->contains('id', $this->karyawan->id);
     }
 
     public function render()
