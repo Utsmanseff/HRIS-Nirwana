@@ -6,7 +6,7 @@ use App\Enums\StatusPengajuanCuti;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Support\ProsesPengganti;
 use App\Support\ProsesPenggantiException;
 use Illuminate\Support\Carbon;
@@ -152,7 +152,7 @@ class PenggantiKelola extends Component
 
     public function acc(int $usulanId): void
     {
-        $usulan = PenggantiCuti::findOrFail($usulanId);
+        $usulan = PenugasanPengganti::findOrFail($usulanId);
         try {
             ProsesPengganti::accUsulan($usulan, auth()->user());
             session()->flash('cuti_ok', 'Usulan disetujui.');
@@ -163,7 +163,7 @@ class PenggantiKelola extends Component
 
     public function tolak(int $usulanId): void
     {
-        $usulan = PenggantiCuti::findOrFail($usulanId);
+        $usulan = PenugasanPengganti::findOrFail($usulanId);
         try {
             ProsesPengganti::tolakUsulan($usulan, auth()->user());
             session()->flash('cuti_ok', 'Usulan ditolak.');

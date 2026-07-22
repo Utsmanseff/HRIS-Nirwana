@@ -12,7 +12,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\ProsesApproval;
@@ -101,7 +101,7 @@ class ProsesPenggantiHookTest extends TestCase
         ProsesApproval::batalkanOlehHrd($cuti->fresh(), $userHrd, 'Salah input.');
 
         $this->assertSame(0, Jadwal::salinanPengganti()->count());
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 
     public function test_batal_mandiri_pemohon_membersihkan_rencana(): void
@@ -113,6 +113,6 @@ class ProsesPenggantiHookTest extends TestCase
         Livewire::actingAs($userPemohon)->test(CutiDetail::class, ['pengajuan' => $cuti])
             ->call('batalkan');
 
-        $this->assertSame(0, PenggantiCuti::count());
+        $this->assertSame(0, PenugasanPengganti::count());
     }
 }

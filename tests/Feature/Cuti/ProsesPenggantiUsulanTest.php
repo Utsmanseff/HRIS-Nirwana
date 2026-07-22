@@ -8,7 +8,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\UsulanPenggantiMasuk;
@@ -105,7 +105,7 @@ class ProsesPenggantiUsulanTest extends TestCase
 
         ProsesPengganti::accUsulan($usulan->fresh(), $this->userKoor);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
         $this->assertSame(2, Jadwal::where('karyawan_id', $this->b->id)->salinanPengganti()->count());
         $this->assertSame(2, Jadwal::where('karyawan_id', $this->c->id)->salinanPengganti()->count());
     }
@@ -126,7 +126,7 @@ class ProsesPenggantiUsulanTest extends TestCase
 
         ProsesPengganti::tolakUsulan($usulan->fresh(), $this->userKoor);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
         $this->assertSame(4, Jadwal::where('karyawan_id', $this->b->id)->salinanPengganti()->count());
     }
 

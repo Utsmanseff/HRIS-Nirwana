@@ -5,10 +5,11 @@ namespace App\Support;
 use App\Enums\StatusKaryawan;
 use App\Enums\StatusPengajuanCuti;
 use App\Enums\StatusPengganti;
+use App\Enums\TipePengganti;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\User;
 use App\Notifications\DitunjukJadiPengganti;
 use App\Notifications\UsulanPenggantiMasuk;
@@ -40,14 +41,14 @@ class ProsesPengganti
         for ($t = $mulai->copy()->startOfDay(); $t->lte($selesai); $t->addDay()) {
             // Shift asli pemohon (salinan pengganti milik orang lain tak ikut ditutup).
             $shiftPemohon = JadwalHarian::untuk($pemohon, $t)
-                ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_cuti_id === null);
+                ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_id === null);
             if ($shiftPemohon->isEmpty()) {
                 continue; // pemohon libur hari itu
             }
 
             $milikPengganti = JadwalHarian::untuk($pengganti, $t)
                 ->filter(fn (Jadwal $j) => $j->shift !== null
-                    && ! in_array($j->pengganti_cuti_id, $abaikanRencanaIds, true));
+                    && ! in_array($j->pengganti_id, $abaikanRencanaIds, true));
 
             foreach ($shiftPemohon as $sp) {
                 [$m1, $s1] = JadwalHarian::rentang($sp->shift);
@@ -93,7 +94,7 @@ class ProsesPengganti
     }
 
     /** Tetapkan pengganti untuk seluruh rentang cuti; ganti baris aktif yang ada. */
-    public static function tetapkan(PengajuanCuti $cuti, Karyawan $pengganti, User $oleh): PenggantiCuti
+    public static function tetapkan(PengajuanCuti $cuti, Karyawan $pengganti, User $oleh): PenugasanPengganti
     {
         if ($pengganti->id === $cuti->karyawan_id) {
             throw new ProsesPenggantiException('Pemohon tak bisa menjadi pengganti dirinya sendiri.');
@@ -107,10 +108,12 @@ class ProsesPengganti
         return DB::transaction(function () use ($cuti, $pengganti, $oleh) {
             $lama = $cuti->pengganti()->aktif()->pluck('id')->all();
             self::hapusJadwalRencana($lama);
-            PenggantiCuti::whereIn('id', $lama)->delete();
+            PenugasanPengganti::whereIn('id', $lama)->delete();
 
-            $baris = PenggantiCuti::create([
+            $baris = PenugasanPengganti::create([
+                'tipe' => TipePengganti::Cuti,
                 'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_digantikan_id' => $cuti->karyawan_id,
                 'karyawan_id' => $pengganti->id,
                 'tanggal_mulai' => Carbon::parse($cuti->tanggal_mulai)->toDateString(),
                 'tanggal_selesai' => Carbon::parse($cuti->tanggal_selesai)->toDateString(),
@@ -144,7 +147,7 @@ class ProsesPengganti
 
             for ($t = $mulai->copy()->startOfDay(); $t->lte($selesai); $t->addDay()) {
                 $shiftPemohon = JadwalHarian::untuk($cuti->karyawan, $t)
-                    ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_cuti_id === null);
+                    ->filter(fn (Jadwal $j) => $j->shift !== null && $j->pengganti_id === null);
 
                 foreach ($shiftPemohon as $j) {
                     // Lewati bila pengganti sudah punya baris shift itu (idempoten +
@@ -162,7 +165,7 @@ class ProsesPengganti
                         'tanggal' => $t->toDateString(),
                         'shift_id' => $j->shift_id,
                         'dibuat_oleh' => $rencana->dibuat_oleh,
-                        'pengganti_cuti_id' => $rencana->id,
+                        'pengganti_id' => $rencana->id,
                     ]);
                     $dibuat++;
                 }
@@ -194,7 +197,7 @@ class ProsesPengganti
 
         DB::transaction(function () use ($cuti, $mulaiBaru, $penggantiBaru, $oleh, $akhir) {
             $beririsan = $cuti->pengganti()->aktif()->get()
-                ->filter(fn (PenggantiCuti $p) => Carbon::parse($p->tanggal_selesai)->gte($mulaiBaru));
+                ->filter(fn (PenugasanPengganti $p) => Carbon::parse($p->tanggal_selesai)->gte($mulaiBaru));
 
             foreach ($beririsan as $p) {
                 if (Carbon::parse($p->tanggal_mulai)->lt($mulaiBaru)) {
@@ -206,8 +209,10 @@ class ProsesPengganti
                 }
             }
 
-            PenggantiCuti::create([
+            PenugasanPengganti::create([
+                'tipe' => TipePengganti::Cuti,
                 'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_digantikan_id' => $cuti->karyawan_id,
                 'karyawan_id' => $penggantiBaru->id,
                 'tanggal_mulai' => $mulaiBaru->toDateString(),
                 'tanggal_selesai' => $akhir->toDateString(),
@@ -220,7 +225,7 @@ class ProsesPengganti
     }
 
     /** Jalur-2: rekan satu unit pemohon mengajukan diri menutup [$mulai, akhir cuti]. */
-    public static function ajukanDiri(PengajuanCuti $cuti, Karyawan $pengaju, Carbon $mulai, User $oleh): PenggantiCuti
+    public static function ajukanDiri(PengajuanCuti $cuti, Karyawan $pengaju, Carbon $mulai, User $oleh): PenugasanPengganti
     {
         self::pastikanBisaEstafet($cuti, $mulai);
 
@@ -242,8 +247,10 @@ class ProsesPengganti
         }
 
         return DB::transaction(function () use ($cuti, $pengaju, $mulai, $akhir, $oleh) {
-            $usulan = PenggantiCuti::create([
+            $usulan = PenugasanPengganti::create([
+                'tipe' => TipePengganti::Cuti,
                 'pengajuan_cuti_id' => $cuti->id,
+                'karyawan_digantikan_id' => $cuti->karyawan_id,
                 'karyawan_id' => $pengaju->id,
                 'tanggal_mulai' => $mulai->toDateString(),
                 'tanggal_selesai' => $akhir->toDateString(),
@@ -258,7 +265,7 @@ class ProsesPengganti
     }
 
     /** Koordinator menyetujui usulan → baris usulan gugur, estafet dijalankan. */
-    public static function accUsulan(PenggantiCuti $usulan, User $koordinator): void
+    public static function accUsulan(PenugasanPengganti $usulan, User $koordinator): void
     {
         $cuti = $usulan->pengajuan;
         self::pastikanKoordinator($cuti, $koordinator);
@@ -276,7 +283,7 @@ class ProsesPengganti
     }
 
     /** Koordinator menolak usulan → baris dibuang, cakupan tak berubah. */
-    public static function tolakUsulan(PenggantiCuti $usulan, User $koordinator): void
+    public static function tolakUsulan(PenugasanPengganti $usulan, User $koordinator): void
     {
         self::pastikanKoordinator($usulan->pengajuan, $koordinator);
         if ($usulan->status !== StatusPengganti::Usulan) {
@@ -311,7 +318,7 @@ class ProsesPengganti
         DB::transaction(function () use ($cuti) {
             $ids = $cuti->pengganti()->pluck('id')->all();
             self::hapusJadwalRencana($ids);
-            PenggantiCuti::whereIn('id', $ids)->delete();
+            PenugasanPengganti::whereIn('id', $ids)->delete();
         });
     }
 
@@ -322,7 +329,7 @@ class ProsesPengganti
             return;
         }
 
-        Jadwal::whereIn('pengganti_cuti_id', $ids)
+        Jadwal::whereIn('pengganti_id', $ids)
             ->when($sejak, fn ($q) => $q->whereDate('tanggal', '>=', $sejak->toDateString()))
             ->delete();
     }

@@ -7,7 +7,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\DitunjukJadiPengganti;
@@ -65,9 +65,9 @@ class ProsesPenggantiGenerateTest extends TestCase
      * Rencana dibuat LANGSUNG lewat factory (bukan `tetapkan`) supaya test ini
      * murni menguji generate — `tetapkan` sendiri memanggil generate.
      */
-    private function rencana(PengajuanCuti $cuti, string $mulai, string $selesai): PenggantiCuti
+    private function rencana(PengajuanCuti $cuti, string $mulai, string $selesai): PenugasanPengganti
     {
-        return PenggantiCuti::factory()->create([
+        return PenugasanPengganti::factory()->create([
             'pengajuan_cuti_id' => $cuti->id,
             'karyawan_id' => $this->b->id,
             'tanggal_mulai' => $mulai,
@@ -86,7 +86,7 @@ class ProsesPenggantiGenerateTest extends TestCase
         $this->assertSame(3, $dibuat);
         $salinan = Jadwal::where('karyawan_id', $this->b->id)->salinanPengganti()->get();
         $this->assertCount(3, $salinan);
-        $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->pengganti_cuti_id === $rencana->id));
+        $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->pengganti_id === $rencana->id));
         $this->assertTrue($salinan->every(fn (Jadwal $j) => $j->shift_id === $this->pagi->id));
     }
 
@@ -158,7 +158,7 @@ class ProsesPenggantiGenerateTest extends TestCase
     {
         $cuti = $this->cutiDisetujui();
         $this->jadwalPemohon(['2026-08-01']);
-        PenggantiCuti::factory()->usulan()->create([
+        PenugasanPengganti::factory()->usulan()->create([
             'pengajuan_cuti_id' => $cuti->id, 'karyawan_id' => $this->b->id,
             'tanggal_mulai' => '2026-08-01', 'tanggal_selesai' => '2026-08-03',
         ]);

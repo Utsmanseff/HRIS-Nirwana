@@ -8,7 +8,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\ProsesPengganti;
@@ -116,7 +116,7 @@ class PenggantiKelolaTest extends TestCase
             ->set('tanggalAksi', $this->t2)
             ->call('kirimAjukanDiri');
 
-        $this->assertSame(1, PenggantiCuti::usulan()->where('karyawan_id', $this->c->id)->count());
+        $this->assertSame(1, PenugasanPengganti::usulan()->where('karyawan_id', $this->c->id)->count());
     }
 
     public function test_koordinator_bisa_alihkan(): void
@@ -139,7 +139,7 @@ class PenggantiKelolaTest extends TestCase
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
             ->call('tolak', $usulan->id);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
 
         $usulan2 = ProsesPengganti::ajukanDiri(
             $this->cuti->fresh(), $this->c, Carbon::parse($this->t2), $this->userC,
@@ -148,7 +148,7 @@ class PenggantiKelolaTest extends TestCase
         Livewire::actingAs($this->userKoor)->test(PenggantiKelola::class)
             ->call('acc', $usulan2->id);
 
-        $this->assertSame(0, PenggantiCuti::usulan()->count());
+        $this->assertSame(0, PenugasanPengganti::usulan()->count());
         $this->assertSame(1, Jadwal::where('karyawan_id', $this->c->id)->salinanPengganti()->count());
     }
 

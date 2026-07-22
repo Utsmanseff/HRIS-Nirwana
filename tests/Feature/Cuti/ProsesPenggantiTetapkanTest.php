@@ -7,7 +7,7 @@ use App\Models\Jadwal;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
 use App\Models\PengajuanCuti;
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\ProsesPengganti;
@@ -68,7 +68,7 @@ class ProsesPenggantiTetapkanTest extends TestCase
     public function test_baris_usulan_tidak_ikut_terhapus(): void
     {
         $b = Karyawan::factory()->staffUnit($this->unit)->create();
-        PenggantiCuti::factory()->usulan()->create([
+        PenugasanPengganti::factory()->usulan()->create([
             'pengajuan_cuti_id' => $this->cuti->id, 'karyawan_id' => $b->id,
         ]);
 

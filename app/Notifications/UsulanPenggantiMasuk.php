@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\PenggantiCuti;
+use App\Models\PenugasanPengganti;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
@@ -12,7 +12,7 @@ class UsulanPenggantiMasuk extends Notification
 {
     use Queueable;
 
-    public function __construct(public PenggantiCuti $usulan) {}
+    public function __construct(public PenugasanPengganti $usulan) {}
 
     public function via(object $notifiable): array
     {
