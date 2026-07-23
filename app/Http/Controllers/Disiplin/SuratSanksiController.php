@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Disiplin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\SanksiDisiplin;
+use App\Support\NamaFile;
 use Illuminate\Support\Facades\Storage;
 
 class SuratSanksiController extends Controller
@@ -22,6 +23,19 @@ class SuratSanksiController extends Controller
 
         abort_unless($boleh && $sanksi->surat_path, 403);
 
-        return Storage::disk('local')->response($sanksi->surat_path);
+        return Storage::disk('local')->response($sanksi->surat_path, self::namaBerkas($sanksi));
+    }
+
+    /** Nama baku: surat-{peringatan|teguran}_{tingkat}_{nama}_{tanggal terbit}.pdf */
+    private static function namaBerkas(SanksiDisiplin $sanksi): string
+    {
+        $jenis = $sanksi->tingkat->jenis() === 'sp' ? 'surat-peringatan' : 'surat-teguran';
+
+        return NamaFile::surat(
+            $jenis,
+            [$sanksi->tingkat->label(), $sanksi->karyawan->nama_lengkap],
+            $sanksi->tanggal_terbit,
+            'pdf',
+        );
     }
 }

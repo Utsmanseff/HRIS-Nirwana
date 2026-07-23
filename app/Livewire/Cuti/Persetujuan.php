@@ -3,12 +3,16 @@
 namespace App\Livewire\Cuti;
 
 use App\Enums\KodeJenisCuti;
+use App\Enums\PeranApproval;
 use App\Enums\Role;
 use App\Enums\StatusApproval;
 use App\Enums\StatusPengajuanCuti;
+use App\Models\Karyawan;
 use App\Models\PengajuanCuti;
 use App\Support\ProsesApproval;
 use App\Support\ProsesApprovalException;
+use App\Support\ProsesPengganti;
+use App\Support\ProsesPenggantiException;
 use App\Support\SaldoCuti;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -38,6 +42,8 @@ class Persetujuan extends Component
     public ?int $batalId = null;
 
     public string $alasanBatal = '';
+
+    public string $cariPengganti = '';
 
     public function tinjau(int $id): void
     {
@@ -102,6 +108,54 @@ class Persetujuan extends Component
             return;
         }
         $this->tutup();
+    }
+
+    /** Koordinator tahap aktif pada unit ber-flag boleh menentukan pengganti. */
+    private function bolehSetPengganti(?PengajuanCuti $p): bool
+    {
+        if (! $p || ! $p->karyawan->orgUnit?->pakai_pengganti) {
+            return false;
+        }
+        $step = $p->tahapAktif();
+
+        return $step
+            && $step->approver_id === auth()->user()->karyawan_id
+            && $step->peran === PeranApproval::Koordinator;
+    }
+
+    public function hasilCariPengganti()
+    {
+        $kunci = trim($this->cariPengganti);
+        $p = $this->tinjauId ? PengajuanCuti::find($this->tinjauId) : null;
+        if ($kunci === '' || ! $this->bolehSetPengganti($p)) {
+            return collect();
+        }
+
+        return Karyawan::aktif()
+            ->where(fn ($q) => $q->where('nama_lengkap', 'like', '%'.$kunci.'%')
+                ->orWhere('nip', 'like', '%'.$kunci.'%'))
+            ->whereKeyNot($p->karyawan_id)
+            ->orderBy('nama_lengkap')
+            ->limit(8)
+            ->get();
+    }
+
+    public function setPengganti(int $karyawanId): void
+    {
+        $p = $this->tinjauId ? PengajuanCuti::find($this->tinjauId) : null;
+        if (! $this->bolehSetPengganti($p)) {
+            return;
+        }
+
+        try {
+            ProsesPengganti::tetapkan($p, Karyawan::aktif()->findOrFail($karyawanId), auth()->user());
+            session()->flash('cuti_ok', 'Pengganti ditetapkan.');
+        } catch (ProsesPenggantiException $e) {
+            $this->addError('cariPengganti', $e->getMessage());
+
+            return;
+        }
+        $this->cariPengganti = '';
     }
 
     private function bolehSemua(): bool
@@ -205,6 +259,9 @@ class Persetujuan extends Component
             'jenisOpsi' => \App\Models\JenisCuti::orderBy('nama')->get(),
             'tinjauan' => $tinjauan,
             'saldoTinjau' => $this->saldoTinjau($tinjauan),
+            'bolehSetPengganti' => $this->bolehSetPengganti($tinjauan),
+            'hasilCariPengganti' => $this->hasilCariPengganti(),
+            'penggantiTinjau' => $tinjauan ? $tinjauan->pengganti()->aktif()->with('karyawan')->get() : collect(),
         ]);
     }
 }

@@ -32,11 +32,15 @@ class CutiDetail extends Component
             'alasan_batal' => 'Dibatalkan oleh pemohon.',
         ]);
 
+        \App\Support\ProsesPengganti::bersihkanSaatBatal($this->pengajuan);
+
         return $this->redirectRoute('cuti');
     }
 
     public function render()
     {
-        return view('livewire.cuti.cuti-detail');
+        return view('livewire.cuti.cuti-detail', [
+            'pengganti' => $this->pengajuan->pengganti()->aktif()->with('karyawan')->get(),
+        ]);
     }
 }

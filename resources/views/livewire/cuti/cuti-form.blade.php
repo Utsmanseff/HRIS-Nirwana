@@ -86,6 +86,36 @@
             </div>
         @endif
 
+        {{-- Pengganti selama cuti (hanya unit yang memakai mekanisme ini) --}}
+        @if ($pakaiPengganti)
+            <div class="card card-pad space-y-3">
+                <div class="card-title">Pengganti (opsional)</div>
+                <p class="text-xs text-neutral-500">Rekan yang akan menjalankan shift Anda selama cuti. Boleh dikosongkan — koordinator dapat menentukan saat menyetujui.</p>
+
+                @if ($penggantiId)
+                    <div class="flex items-center justify-between gap-2 rounded-md border border-neutral-200 px-3 py-2">
+                        <span class="text-sm font-semibold">{{ $penggantiNama }}</span>
+                        <button type="button" wire:click="hapusPengganti" class="btn btn-ghost btn-sm">Hapus</button>
+                    </div>
+                @else
+                    <input type="text" wire:model.live.debounce.400ms="cariPengganti" class="input"
+                        placeholder="Cari nama atau NIP rekan…">
+                    <div class="space-y-1">
+                        @foreach ($hasilCariPengganti as $kandidat)
+                            <button type="button" wire:key="cand-{{ $kandidat->id }}"
+                                wire:click="pilihPengganti({{ $kandidat->id }})"
+                                class="w-full text-left px-3 py-2 rounded-md hover:bg-neutral-100 text-sm">
+                                {{ $kandidat->nama_lengkap }}
+                                <span class="text-xs text-neutral-400">· {{ $kandidat->nip }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+
+                @error('penggantiId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+            </div>
+        @endif
+
         {{-- Preview alur persetujuan --}}
         @if ($rantai->isNotEmpty())
             <div class="card !bg-transparent border-dashed">

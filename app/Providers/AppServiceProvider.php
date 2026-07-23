@@ -25,9 +25,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn ($user, $ability) => $user->hasRole(Role::AdminSistem->value) ? true : null);
 
         // Kemampuan struktural (derived dari struktur org + jabatan.level), bukan role.
-        Gate::define('ajukan-cuti', fn ($user) => $user->karyawan !== null);
+        Gate::define('ajukan-cuti', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
         Gate::define('approve-cuti', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
-        Gate::define('usul-disiplin', fn ($user) => (bool) $user->karyawan?->punyaBawahan());
+        Gate::define('usul-disiplin', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() && ! $user->karyawan->adalahDirektur()));
         Gate::define('kelola-cuti', fn ($user) => $user->hasRole(Role::Hrd->value));
         Gate::define('kelola-disiplin', fn ($user) => $user->hasRole(Role::Hrd->value));
         Gate::define('approve-disiplin', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
@@ -37,9 +37,20 @@ class AppServiceProvider extends ServiceProvider
 
         // Absensi.
         Gate::define('absen', fn ($user) => $user->karyawan !== null);
-        Gate::define('kelola-jadwal', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2);
-        // Laporan absensi: HRD, Staff HR, dan Admin Sistem (via Gate::before). Koordinator TIDAK.
-        Gate::define('lihat-rekap-absensi', fn ($user) => $user->hasRole(Role::Hrd->value) || $user->hasRole(Role::StaffHr->value));
+        Gate::define('kelola-jadwal', fn ($user) => ($user->karyawan?->jabatan?->level?->value ?? 0) >= 2 && ! $user->karyawan->adalahDirektur());
+        // Layanan mandiri — Direktur tak ikut alur cuti/sanksi/jadwal pegawai.
+        // Predikatnya sama dengan 'ajukan-cuti'; sengaja dipisah agar nama di call site jelas.
+        Gate::define('lihat-sanksi-sendiri', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
+        Gate::define('lihat-jadwal-sendiri', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
+        // Laporan absensi: HRD, Staff HR, Admin Sistem (via Gate::before), dan
+        // pemimpin unit — dibatasi subtree lewat LingkupAbsensi, layar MAUPUN ekspor.
+        // Predikat "memimpin unit" sengaja sama dengan sumber pembatasan itu, supaya
+        // yang lolos gate dijamin punya data untuk dilihat. Direktur ikut lolos:
+        // rekap dianggap informasi baca-saja setingkat pimpinan (beda dari
+        // 'lihat-jadwal-sendiri'/'ajukan-cuti' yang mengecualikan Direktur).
+        Gate::define('lihat-rekap-absensi', fn ($user) => $user->hasRole(Role::Hrd->value)
+            || $user->hasRole(Role::StaffHr->value)
+            || (bool) $user->karyawan?->unitDipimpin()->isNotEmpty());
         Gate::define('kelola-pengaturan-absensi', fn ($user) => false); // Admin-only via Gate::before
     }
 }

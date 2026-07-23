@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SuratSanksiControllerTest extends TestCase
@@ -58,5 +59,20 @@ class SuratSanksiControllerTest extends TestCase
         $lain = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
 
         $this->actingAs($lain)->get(route('disiplin.surat', $sanksi))->assertForbidden();
+    }
+
+    public function test_nama_file_unduhan_baku(): void
+    {
+        $sanksi = $this->sanksiTerbit();
+        $user = User::factory()->create(['karyawan_id' => $sanksi->karyawan_id]);
+
+        $res = $this->actingAs($user)->get(route('disiplin.surat', $sanksi));
+
+        $res->assertOk();
+        $this->assertStringContainsString(
+            'surat-peringatan_sp-1_'.Str::slug($sanksi->karyawan->nama_lengkap).'_'
+                .$sanksi->tanggal_terbit->format('Ymd').'.pdf',
+            $res->headers->get('content-disposition'),
+        );
     }
 }

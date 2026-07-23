@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // WITA (UTC+8) — RSU Nirwana, Kalimantan Selatan. Absen/jadwal/scheduler pakai jam lokal.
+    'timezone' => env('APP_TIMEZONE', 'Asia/Makassar'),
 
     /*
     |--------------------------------------------------------------------------

@@ -83,7 +83,7 @@
     {{-- Tabel --}}
     <div class="card overflow-x-auto">
         <table class="table">
-            <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Shift</th><th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th></tr></thead>
+            <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Shift</th><th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th><th>Keterangan</th></tr></thead>
             <tbody>
                 @forelse ($baris as $a)
                     @php [$label, $kelas] = $a->labelStatus(); @endphp
@@ -109,9 +109,10 @@
                         <td class="tnum">{{ $a->jam_pulang?->format('H:i') ?? '—' }}</td>
                         <td class="tnum">{{ $a->jamKerjaLabel() }}</td>
                         <td><span class="badge {{ $kelas }}"><span class="dot"></span>{{ $label }}</span></td>
+                        <td class="text-xs text-neutral-500">{{ $keterangan[$a->id] ?? '' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-center text-neutral-400 py-8">Tak ada data pada filter ini.</td></tr>
+                    <tr><td colspan="8" class="text-center text-neutral-400 py-8">Tak ada data pada filter ini.</td></tr>
                 @endforelse
             </tbody>
         </table>

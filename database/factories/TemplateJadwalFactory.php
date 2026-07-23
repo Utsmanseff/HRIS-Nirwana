@@ -14,6 +14,7 @@ class TemplateJadwalFactory extends Factory
     {
         return [
             'org_unit_id' => OrgUnit::factory(),
+            'nama' => 'Pola '.$this->faker->unique()->numerify('###'),
             'tanggal_jangkar' => now()->startOfMonth()->toDateString(),
             'mode' => \App\Enums\ModeTemplate::Rotasi->value,
         ];

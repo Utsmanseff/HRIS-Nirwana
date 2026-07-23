@@ -15,8 +15,13 @@
             @endif
         </span>
     </span>
+    @if ($unit->pakai_pengganti)
+        <span class="badge badge-success" title="Unit memakai mekanisme pengganti cuti">Pengganti</span>
+    @endif
     <span class="badge badge-neutral">{{ $unit->karyawan_count }}</span>
     <span class="opacity-0 group-hover:opacity-100 flex gap-1 transition">
+        <button wire:click="togglePengganti({{ $unit->id }})" class="btn btn-ghost btn-sm"
+            title="Pakai pengganti cuti">{{ $unit->pakai_pengganti ? 'Pengganti: on' : 'Pengganti: off' }}</button>
         <button wire:click="bukaSetKepala({{ $unit->id }})" class="btn btn-ghost btn-sm" title="Set kepala">Kepala</button>
         <button wire:click="bukaJabatan({{ $unit->id }})" class="btn btn-ghost btn-sm" title="Kelola jabatan">Jabatan</button>
         <button wire:click="baru({{ $unit->id }})" class="btn btn-ghost btn-sm" title="Tambah anak">+</button>

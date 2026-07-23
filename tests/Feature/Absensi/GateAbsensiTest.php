@@ -38,7 +38,7 @@ class GateAbsensiTest extends TestCase
         $this->assertTrue($koor->can('kelola-jadwal'));
     }
 
-    public function test_lihat_rekap_hanya_hrd_staffhr_admin(): void
+    public function test_lihat_rekap_untuk_hrd_staffhr_admin_dan_pemimpin_unit(): void
     {
         $hrd = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
         $hrd->assignRole(Role::Hrd->value);
@@ -46,11 +46,15 @@ class GateAbsensiTest extends TestCase
         $staffHr = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
         $staffHr->assignRole(Role::StaffHr->value);
 
-        $koor = $this->userLevel(2); // koordinator murni, tanpa role
+        // Sejak E2 koordinator ikut lolos, tapi datanya dibatasi subtree yang
+        // dipimpin (lihat GateRekapPemimpinTest). Staff biasa tetap ditolak.
+        $koor = $this->userLevel(2);
+        $staff = $this->userLevel(1);
 
         $this->assertTrue($hrd->can('lihat-rekap-absensi'));
         $this->assertTrue($staffHr->can('lihat-rekap-absensi'));
-        $this->assertFalse($koor->can('lihat-rekap-absensi')); // koordinator TIDAK
+        $this->assertTrue($koor->can('lihat-rekap-absensi'));
+        $this->assertFalse($staff->can('lihat-rekap-absensi'));
     }
 
     private function userLevel(int $level): User

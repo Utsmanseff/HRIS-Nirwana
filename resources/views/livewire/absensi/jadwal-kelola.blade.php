@@ -3,7 +3,7 @@
         <div class="px-4 flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100">
             <div class="flex gap-1">
                 <button type="button" class="tab-btn @if($tab==='shift') on @endif" wire:click="gantiTab('shift')">Shift Unit</button>
-                <button type="button" class="tab-btn @if($tab==='template') on @endif" wire:click="gantiTab('template')">Template Pola</button>
+                <button type="button" class="tab-btn @if($tab==='template') on @endif" wire:click="gantiTab('template')">Pola</button>
                 <button type="button" class="tab-btn @if($tab==='jadwal') on @endif" wire:click="gantiTab('jadwal')">Jadwal Bulanan</button>
             </div>
             @if($unitList->count() > 1)

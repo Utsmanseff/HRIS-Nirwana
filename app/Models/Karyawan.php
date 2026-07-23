@@ -84,6 +84,12 @@ class Karyawan extends Model
         return null;
     }
 
+    /** True bila karyawan ini menjabat Direktur (level tertinggi struktur org). */
+    public function adalahDirektur(): bool
+    {
+        return $this->jabatan?->level === JabatanLevel::Direktur;
+    }
+
     /** True bila karyawan ini kepala unit dan ada anggota lain di unit/turunannya. */
     public function punyaBawahan(): bool
     {
@@ -134,6 +140,16 @@ class Karyawan extends Model
     public function kontrak(): HasMany
     {
         return $this->hasMany(Kontrak::class);
+    }
+
+    public function jadwal(): HasMany
+    {
+        return $this->hasMany(Jadwal::class);
+    }
+
+    public function polaJadwal(): HasMany
+    {
+        return $this->hasMany(PolaJadwal::class);
     }
 
     public function pengajuanCuti(): HasMany

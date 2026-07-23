@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\TemplateJadwal;
+use App\Support\ProsesPengganti;
 use App\Support\TerapkanPola;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -17,16 +18,17 @@ class BentukJadwalOtomatis extends Command
         $total = 0;
         $bulanTarget = collect([0, 1, 2])->map(fn ($i) => now()->startOfMonth()->addMonths($i));
 
-        foreach (TemplateJadwal::with('orgUnit')->get() as $tpl) {
-            if (! $tpl->orgUnit) {
-                continue;
-            }
+        foreach (TemplateJadwal::with('baris')->get() as $pola) {
             foreach ($bulanTarget as $bln) {
-                $total += TerapkanPola::generate($tpl->orgUnit, $bln->year, $bln->month, null, timpa: false);
+                $total += TerapkanPola::untukPola($pola, $bln->year, $bln->month, null, timpa: false);
             }
         }
 
-        $this->info("Selesai. {$total} jadwal terbentuk.");
+        // Lowongan terbuka: jadwal si nonaktif yang baru lahir harus ikut disalin
+        // ke penggantinya. Idempoten, jadi aman dipanggil tiap kali.
+        $salinan = ProsesPengganti::sinkronSemuaLowongan();
+
+        $this->info("Selesai. {$total} jadwal terbentuk, {$salinan} salinan pengganti.");
 
         return self::SUCCESS;
     }

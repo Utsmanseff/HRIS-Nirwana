@@ -28,11 +28,16 @@ Route::get('/', function () {
 Route::view('/styleguide', 'styleguide')->name('styleguide');
 
 // Publik — verifikasi QR surat sanksi. Di luar auth; signature yang melindungi.
-// Referensi controller pakai ::class (tak meng-autoload) — controller dibuat di Task 2.
 Route::get('/verifikasi/sanksi/{sanksi}/{sumber}', [\App\Http\Controllers\VerifikasiSanksiController::class, 'tampil'])
     ->whereIn('sumber', ['penerbit', 'pengusul', 'kabid'])
     ->middleware('signed')
     ->name('verifikasi.sanksi');
+
+// Publik — verifikasi QR surat cuti. Di luar auth; signature yang melindungi.
+Route::get('/verifikasi/cuti/{pengajuan}/{sumber}', [\App\Http\Controllers\VerifikasiCutiController::class, 'tampil'])
+    ->whereIn('sumber', ['pemohon', 'koordinator', 'kabid', 'hrd', 'direktur'])
+    ->middleware('signed')
+    ->name('verifikasi.cuti');
 
 // --- Auth: guest-only routes ---
 Route::middleware('guest')->group(function () {
@@ -65,8 +70,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/riwayat', \App\Livewire\Riwayat::class)->name('riwayat');
     Route::get('/profil', Profil::class)->name('profil');
 
-    Route::get('/cuti', CutiIndex::class)->name('cuti');
-    Route::get('/cuti/ajukan', CutiForm::class)->name('cuti.ajukan');
+    Route::get('/cuti', CutiIndex::class)->middleware('can:ajukan-cuti')->name('cuti');
+    Route::get('/cuti/ajukan', CutiForm::class)->middleware('can:ajukan-cuti')->name('cuti.ajukan');
     Route::get('/cuti/persetujuan', \App\Livewire\Cuti\Persetujuan::class)
         ->middleware('can:approve-cuti')->name('cuti.persetujuan');
     Route::get('/cuti/kelola', \App\Livewire\Cuti\KelolaCuti::class)
@@ -78,7 +83,12 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/cuti/laporan/saldo', [\App\Http\Controllers\Cuti\LaporanCutiController::class, 'saldo'])
         ->middleware('can:kelola-cuti')->name('cuti.laporan.saldo');
     Route::get('/cuti/{pengajuan}/lampiran', [LampiranController::class, 'lihat'])->name('cuti.lampiran');
+    Route::get('/cuti/{pengajuan}/surat', [\App\Http\Controllers\Cuti\SuratCutiController::class, 'lihat'])->name('cuti.surat');
     Route::get('/cuti/{pengajuan}', CutiDetail::class)->name('cuti.detail');
+
+    // Pengganti jadwal (cuti + lowongan karyawan nonaktif) — di luar grup Cuti.
+    Route::get('/pengganti', \App\Livewire\Pengganti\PenggantiKelola::class)
+        ->middleware('can:ajukan-cuti')->name('pengganti');
 
     Route::get('/disiplin', UsulDisiplin::class)
         ->middleware('can:usul-disiplin')->name('disiplin');
@@ -86,7 +96,8 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         ->middleware('can:approve-disiplin')->name('disiplin.persetujuan');
     Route::get('/disiplin/kelola', \App\Livewire\Disiplin\KelolaDisiplin::class)
         ->middleware('can:buat-sanksi')->name('disiplin.kelola');
-    Route::get('/disiplin/saya', \App\Livewire\Disiplin\SanksiSaya::class)->name('disiplin.saya');
+    Route::get('/disiplin/saya', \App\Livewire\Disiplin\SanksiSaya::class)
+        ->middleware('can:lihat-sanksi-sendiri')->name('disiplin.saya');
     Route::get('/disiplin/laporan', \App\Livewire\Disiplin\LaporanDisiplin::class)
         ->middleware('can:kelola-disiplin')->name('disiplin.laporan');
     Route::get('/disiplin/laporan/sanksi', [\App\Http\Controllers\Disiplin\LaporanDisiplinController::class, 'sanksi'])
@@ -97,7 +108,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
     Route::get('/absensi', \App\Livewire\Absensi\AbsenSwipe::class)
         ->middleware('can:absen')->name('absensi');
     Route::get('/absensi/jadwal-saya', \App\Livewire\Absensi\JadwalSaya::class)
-        ->middleware('can:absen')->name('absensi.jadwal-saya');
+        ->middleware('can:lihat-jadwal-sendiri')->name('absensi.jadwal-saya');
     Route::get('/absensi/foto/{absensi}/{sesi}', [\App\Http\Controllers\Absensi\LampiranController::class, 'lihat'])
         ->whereIn('sesi', ['masuk', 'pulang'])->name('absensi.foto');
     Route::get('/absensi/jadwal', \App\Livewire\Absensi\JadwalKelola::class)

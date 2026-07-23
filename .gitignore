@@ -32,5 +32,8 @@ Thumbs.db
 # Local project docs (specs, plans, mockups) — kept out of the repo
 /docs
 
+# Brainstorming visual companion scratch output
+/.superpowers
+
 # Local SQLite (dev scaffold only; project targets MySQL 8)
 /database/*.sqlite

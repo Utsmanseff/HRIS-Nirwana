@@ -82,6 +82,13 @@ class OrgStruktur extends Component
         $this->batal();
     }
 
+    /** Nyalakan/matikan mekanisme pengganti cuti untuk sebuah unit. */
+    public function togglePengganti(int $unitId): void
+    {
+        $unit = OrgUnit::findOrFail($unitId);
+        $unit->update(['pakai_pengganti' => ! $unit->pakai_pengganti]);
+    }
+
     public function bukaSetKepala(int $unitId): void
     {
         $this->reset(['cariKaryawan', 'tcNip', 'tcNama', 'tcTanggalMasuk']);

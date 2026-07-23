@@ -13,7 +13,9 @@ use App\Notifications\CutiDibatalkan;
 use App\Notifications\CutiDisetujui;
 use App\Notifications\CutiDitolak;
 use App\Notifications\CutiPerluPersetujuan;
+use App\Support\ProsesPengganti;
 use App\Support\SaldoCuti;
+use App\Support\SuratCuti;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -46,10 +48,14 @@ class ProsesApproval
                 return;
             }
 
-            // Tahap terakhir → final.
+            // Tahap terakhir → final. Status dulu, baru generate: surat harus dibikin dari
+            // pengajuan yang statusnya sudah Disetujui (pola sama dgn ProsesSanksi::terbit).
             self::pastikanJatahCukup($pengajuan);
             $pengajuan->update(['status' => StatusPengajuanCuti::Disetujui]);
+            $pengajuan->update(['surat_path' => SuratCuti::generate($pengajuan->fresh())]);
             $pengajuan->karyawan->user?->notify(new CutiDisetujui($pengajuan));
+            // Cuti final → salinan jadwal untuk pengganti (no-op bila tak ada rencana).
+            ProsesPengganti::sinkronKasus($pengajuan->fresh());
         });
     }
 
@@ -137,6 +143,7 @@ class ProsesApproval
                 'alasan_batal' => $alasan,
             ]);
             $terkunci->karyawan->user?->notify(new CutiDibatalkan($terkunci, $alasan));
+            ProsesPengganti::bersihkanSaatBatal($terkunci);
         });
     }
 }

@@ -7,7 +7,7 @@ use App\Exports\SaldoCutiExport;
 use App\Http\Controllers\Controller;
 use App\Models\JenisCuti;
 use App\Models\OrgUnit;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\RekapCuti;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -30,14 +30,14 @@ class LaporanCutiController extends Controller
         if ($request->query('format') === 'xlsx') {
             return Excel::download(
                 new PengajuanCutiExport($filter, $keterangan),
-                NamaFileLaporan::buat('rekap-pengajuan-cuti', $tokens, 'xlsx'),
+                NamaFile::laporan('rekap-pengajuan-cuti', $tokens, 'xlsx'),
             );
         }
 
         return Pdf::loadView('laporan.pdf.pengajuan-cuti', [
             'pengajuan' => RekapCuti::daftarPengajuan($filter),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('rekap-pengajuan-cuti', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('rekap-pengajuan-cuti', $tokens, 'pdf'));
     }
 
     public function saldo(Request $request)
@@ -53,14 +53,14 @@ class LaporanCutiController extends Controller
         if ($request->query('format') === 'xlsx') {
             return Excel::download(
                 new SaldoCutiExport($unitId, $keterangan),
-                NamaFileLaporan::buat('saldo-cuti', $tokens, 'xlsx'),
+                NamaFile::laporan('saldo-cuti', $tokens, 'xlsx'),
             );
         }
 
         return Pdf::loadView('laporan.pdf.saldo-cuti', [
             'saldo' => RekapCuti::saldoKaryawan($unitId),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('saldo-cuti', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('saldo-cuti', $tokens, 'pdf'));
     }
 
     /** @return array<int,string> */

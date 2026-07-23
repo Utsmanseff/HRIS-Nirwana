@@ -52,15 +52,18 @@
             @if (! empty($bisaAbsen) && \Illuminate\Support\Facades\Route::has('absensi'))
                 <a href="{{ route('absensi') }}" class="card card-pad block hover:shadow-md transition"
                    style="border-color:var(--brand-200)">
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
                         <div class="field-label text-brand-700">Absensi Hari Ini</div>
-                        @if (! empty($shiftHariIni))
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded"
-                                  style="background:{{ $shiftHariIni->warna }}1a;color:{{ $shiftHariIni->warna }}">
-                                <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $shiftHariIni->warna }}"></span>
-                                {{ $shiftHariIni->nama }} · {{ \Illuminate\Support\Str::substr($shiftHariIni->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($shiftHariIni->jam_selesai, 0, 5) }}
-                            </span>
-                        @endif
+                        <div class="flex flex-wrap items-center gap-1">
+                            @foreach ($shiftHariIni as $s)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded"
+                                      wire:key="chip-shift-{{ $s->id }}"
+                                      style="background:{{ $s->warna }}1a;color:{{ $s->warna }}">
+                                    <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $s->warna }}"></span>
+                                    {{ $s->nama }} · {{ \Illuminate\Support\Str::substr($s->jam_mulai, 0, 5) }}–{{ \Illuminate\Support\Str::substr($s->jam_selesai, 0, 5) }}
+                                </span>
+                            @endforeach
+                        </div>
                     </div>
                     <div class="text-2xl font-bold tnum text-brand-700">{{ $absenAksi }}</div>
                     <div class="text-xs text-neutral-500 mt-1">

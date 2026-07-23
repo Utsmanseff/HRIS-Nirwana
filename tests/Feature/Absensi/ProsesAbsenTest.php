@@ -91,4 +91,27 @@ class ProsesAbsenTest extends TestCase
         ProsesAbsen::masuk($kar, $this->dataAbsen(Carbon::parse('2026-07-09 08:00:00')));
         $this->assertInstanceOf(Absensi::class, ProsesAbsen::sesiAktif($kar));
     }
+
+    public function test_dua_sesi_sehari_memakai_snapshot_shift_masing_masing(): void
+    {
+        $unit = \App\Models\OrgUnit::factory()->create();
+        $kar = Karyawan::factory()->create(['org_unit_id' => $unit->id]);
+        $malam = Shift::factory()->for($unit, 'orgUnit')->create([
+            'kode' => 'M', 'nama' => 'Malam', 'jam_mulai' => '00:00:00', 'jam_selesai' => '08:00:00', 'toleransi_telat' => 10,
+        ]);
+        $sore = Shift::factory()->for($unit, 'orgUnit')->create([
+            'kode' => 'S', 'nama' => 'Sore', 'jam_mulai' => '16:00:00', 'jam_selesai' => '00:00:00', 'toleransi_telat' => 10,
+        ]);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-20', 'shift_id' => $malam->id]);
+        Jadwal::create(['karyawan_id' => $kar->id, 'tanggal' => '2026-07-20', 'shift_id' => $sore->id]);
+
+        $sesi1 = ProsesAbsen::masuk($kar, $this->dataAbsen(Carbon::parse('2026-07-20 00:05:00')));
+        ProsesAbsen::pulang($kar, $this->dataAbsen(Carbon::parse('2026-07-20 08:00:00')));
+        $sesi2 = ProsesAbsen::masuk($kar, $this->dataAbsen(Carbon::parse('2026-07-20 16:20:00')));
+
+        $this->assertSame($malam->id, $sesi1->shift_id);
+        $this->assertSame(0, $sesi1->telat_menit);          // dalam toleransi 10 menit
+        $this->assertSame($sore->id, $sesi2->shift_id);
+        $this->assertSame(20, $sesi2->telat_menit);         // 16:20 vs mulai 16:00
+    }
 }

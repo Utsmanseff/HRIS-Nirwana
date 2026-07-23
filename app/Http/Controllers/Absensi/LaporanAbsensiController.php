@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Absensi;
 use App\Exports\AbsensiExport;
 use App\Exports\AbsensiPerUnitExport;
 use App\Http\Controllers\Controller;
+use App\Support\LabelPengganti;
 use App\Support\LingkupAbsensi;
-use App\Support\NamaFileLaporan;
+use App\Support\NamaFile;
 use App\Support\RekapAbsensi;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -43,22 +44,28 @@ class LaporanAbsensiController extends Controller
             $tokens[] = 'per-unit';
 
             if ($request->query('format') === 'xlsx') {
-                return Excel::download(new AbsensiPerUnitExport($filter, $keterangan), NamaFileLaporan::buat('laporan-absensi', $tokens, 'xlsx'));
+                return Excel::download(new AbsensiPerUnitExport($filter, $keterangan), NamaFile::laporan('laporan-absensi', $tokens, 'xlsx'));
             }
 
+            $grup = RekapAbsensi::perUnit($filter);
+
             return Pdf::loadView('laporan.pdf.absensi-per-unit', [
-                'grup' => RekapAbsensi::perUnit($filter),
+                'grup' => $grup,
+                'keterangan' => LabelPengganti::petaAbsensi($grup->flatMap(fn (array $g) => $g['baris'])),
                 'keteranganFilter' => $keterangan,
-            ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('laporan-absensi', $tokens, 'pdf'));
+            ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('laporan-absensi', $tokens, 'pdf'));
         }
 
         if ($request->query('format') === 'xlsx') {
-            return Excel::download(new AbsensiExport($filter, $keterangan), NamaFileLaporan::buat('laporan-absensi', $tokens, 'xlsx'));
+            return Excel::download(new AbsensiExport($filter, $keterangan), NamaFile::laporan('laporan-absensi', $tokens, 'xlsx'));
         }
 
+        $baris = RekapAbsensi::ambil($filter);
+
         return Pdf::loadView('laporan.pdf.absensi', [
-            'baris' => RekapAbsensi::ambil($filter),
+            'baris' => $baris,
+            'keterangan' => LabelPengganti::petaAbsensi($baris),
             'keteranganFilter' => $keterangan,
-        ])->setPaper('a4', 'landscape')->download(NamaFileLaporan::buat('laporan-absensi', $tokens, 'pdf'));
+        ])->setPaper('a4', 'landscape')->download(NamaFile::laporan('laporan-absensi', $tokens, 'pdf'));
     }
 }

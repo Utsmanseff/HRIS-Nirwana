@@ -40,6 +40,16 @@
         </div>
     </div>
 
+    @if ($this->lowonganTerbuka())
+        <div class="rounded-md px-3 py-2 text-sm flex flex-wrap items-center justify-between gap-2"
+             style="background:var(--warning-50);color:var(--warning-700)">
+            <span>Jadwal belum dialihkan — masih ada shift terjadwal atas nama karyawan ini.</span>
+            @if (\Illuminate\Support\Facades\Route::has('pengganti'))
+                <a href="{{ route('pengganti') }}" class="btn btn-secondary btn-sm">Atur di Pengganti Jadwal</a>
+            @endif
+        </div>
+    @endif
+
     @if ($showNonaktif)
         <div class="card card-pad space-y-3" style="border-color:var(--danger-100)">
             <div class="card-title">Nonaktifkan Karyawan</div>

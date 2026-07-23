@@ -33,4 +33,15 @@ class Jadwal extends Model
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
     }
+
+    public function penugasan(): BelongsTo
+    {
+        return $this->belongsTo(PenugasanPengganti::class, 'pengganti_id');
+    }
+
+    /** Baris jadwal hasil salinan penugasan pengganti (bukan jadwal biasa). */
+    public function scopeSalinanPengganti($q)
+    {
+        return $q->whereNotNull('pengganti_id');
+    }
 }
