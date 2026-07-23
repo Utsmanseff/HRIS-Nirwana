@@ -25,7 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
+/agents
 # Local Claude Code tooling (launch config, local settings) — not for the repo
 /.claude
 
