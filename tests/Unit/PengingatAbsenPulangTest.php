@@ -80,4 +80,40 @@ class PengingatAbsenPulangTest extends TestCase
         // Pukul 05:40 hari berikutnya: 05:00 + jeda 30 = 05:30, sudah lewat.
         $this->assertCount(1, PengingatAbsen::pulangTerlewat(Carbon::parse('2026-08-11 05:40:00')));
     }
+
+    public function test_mode_catat_belum_lewat_ambang_jam(): void
+    {
+        $this->sesiTerbuka([
+            'shift_nama' => null, 'shift_mulai' => null, 'shift_selesai' => null,
+            'shift_toleransi' => null,
+            'jam_masuk' => Carbon::parse('2026-08-10 08:00:00'),
+        ]);
+
+        // Ambang 12 jam sejak 08:00 = 20:00. Pukul 18:00 masih diam.
+        $this->assertCount(0, PengingatAbsen::pulangTerlewat(Carbon::parse('2026-08-10 18:00:00')));
+    }
+
+    public function test_mode_catat_lewat_ambang_jam_diingatkan(): void
+    {
+        $sesi = $this->sesiTerbuka([
+            'shift_nama' => null, 'shift_mulai' => null, 'shift_selesai' => null,
+            'shift_toleransi' => null,
+            'jam_masuk' => Carbon::parse('2026-08-10 08:00:00'),
+        ]);
+
+        $hasil = PengingatAbsen::pulangTerlewat(Carbon::parse('2026-08-10 20:30:00'));
+
+        $this->assertCount(1, $hasil);
+        $this->assertSame($sesi->id, $hasil->first()->id);
+    }
+
+    public function test_sesi_terlalu_tua_diabaikan(): void
+    {
+        $this->sesiTerbuka([
+            'tanggal_kerja' => '2026-08-01',
+            'jam_masuk' => Carbon::parse('2026-08-01 07:00:00'),
+        ]);
+
+        $this->assertCount(0, PengingatAbsen::pulangTerlewat(Carbon::parse('2026-08-10 10:00:00')));
+    }
 }
