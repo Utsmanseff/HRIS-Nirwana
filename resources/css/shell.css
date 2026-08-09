@@ -7,7 +7,7 @@
    membuat transisi macet; --sb-track sebagai <length> beres.) inherits:true agar nilai
    yang sedang beranimasi diwarisi .sidebar (width:var) → kolom & sidebar bergerak seiring. */
 @property --sb-track{ syntax:'<length>'; inherits:true; initial-value:264px; }
-.app-shell{ --sb-track:264px; display:grid; grid-template-columns:var(--sb-track) 1fr; min-height:100vh;
+.app-shell{ --sb-track:264px; display:grid; grid-template-columns:var(--sb-track) 1fr; min-height:100dvh;
   transition:--sb-track .24s cubic-bezier(.4,0,.2,1); }
 .sidebar{ background:#0d1413; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; width:var(--sb-track); z-index:40;
   transition:width .24s cubic-bezier(.4,0,.2,1), box-shadow .24s ease; }
@@ -30,7 +30,9 @@
 @media (max-width:640px){ .content{ padding:1rem; } .topbar{ padding:.65rem 1rem; } }
 @media (max-width:1024px){
   .app-shell{ grid-template-columns:1fr; }
-  .sidebar{ position:fixed; z-index:50; width:264px; transform:translateX(-100%); transition:transform .25s; }
+  /* padding-top safe-area: drawer menutupi layar penuh termasuk area status bar. */
+  .sidebar{ position:fixed; z-index:50; width:264px; transform:translateX(-100%); transition:transform .25s;
+    padding-top:env(safe-area-inset-top); }
   body.sb-open .sidebar{ transform:translateX(0); }
   body.sb-open::after{ content:''; position:fixed; inset:0; background:rgba(20,26,28,.45); z-index:40; }
 }

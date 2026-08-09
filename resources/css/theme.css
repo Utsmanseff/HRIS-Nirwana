@@ -267,6 +267,15 @@ table.sched{ border-collapse:separate; border-spacing:0; font-size:.8rem; }
     border-top:1px solid var(--border); margin:0 -1rem -1rem; z-index:20; }
 }
 
+/* Kontainer peta Leaflet.
+   Leaflet memberi pane-nya z-index 400–1000 (marker 600, popup 700, kontrol 800).
+   Kontainer petanya sendiri position:relative TANPA z-index, jadi tak membentuk
+   stacking context — angka-angka itu bertanding langsung di root dan mengalahkan
+   chrome aplikasi (.m-appbar/.m-nav z-index:30), bikin bottom-nav tertimbun peta
+   saat digulir. isolation:isolate + z-index:0 mengurung pane di dalam kontainer,
+   bukan menaikkan nav (nav harus tetap di bawah overlay drawer z-index:40). */
+.peta{ position:relative; isolation:isolate; z-index:0; }
+
 /* Avatar */
 .avatar { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-full);
   background:var(--brand-100); color:var(--brand-700); font-weight:700; overflow:hidden; flex:none; }

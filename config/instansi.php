@@ -11,9 +11,9 @@ return [
     'telp' => 'Telp. 0511-674 9272 / 0821 5084 1882',
     'email_web' => 'Email: official@rsunirwana.id | Website: https://rsunirwana.id',
     'logo' => 'img/RSU22Nirwana.png', // relatif public/, khusus kop
-    // TODO: logo akreditasi belum ada filenya — taruh di public/img/ lalu isi path di sini.
-    // Selagi null, layout PDF render kotak placeholder bergaris di kanan header.
-    'logo_akreditasi' => null,
+    // Lambang akreditasi LARS (kanan header). Bila di-null-kan, layout PDF kembali
+    // merender kotak placeholder bergaris di posisi ini.
+    'logo_akreditasi' => 'img/akreditasi.png',
 
     // Surat sanksi disiplin — ketentuan potongan penghasilan (SK Direktur).
     'sanksi_potongan_persen' => 10,

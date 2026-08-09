@@ -5,8 +5,14 @@
 .phone{ max-width:440px; margin:0 auto; min-height:100vh; background:var(--bg-app); position:relative;
   display:flex; flex-direction:column; box-shadow:0 0 0 1px var(--border); }
 @media (min-width:480px){ .phone{ min-height:100vh; } body.is-mobile-shell{ background:var(--neutral-100); } }
-.m-appbar{ position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:.6rem; padding:.85rem 1rem;
-  min-height:56px; background:var(--bg-surface); border-bottom:1px solid var(--border); }
+/* padding-top ikut safe-area: layout memakai viewport-fit=cover + status-bar-style
+   black-translucent, jadi iOS menggambar konten SAMPAI ke belakang status bar dan
+   kitalah yang wajib menyisakan ruangnya. Tanpa ini band brand tertimpa jam/baterai
+   begitu PWA dipasang ke Home Screen (di tab Safari tak kelihatan karena chrome
+   browser sudah memakan area itu). */
+.m-appbar{ position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:.6rem;
+  padding:calc(.85rem + env(safe-area-inset-top)) 1rem .85rem;
+  min-height:calc(56px + env(safe-area-inset-top)); background:var(--bg-surface); border-bottom:1px solid var(--border); }
 .m-appbar.brand{ background:var(--panel-glow),var(--panel-grad); border:0; }
 .m-main{ flex:1; padding:1rem; padding-bottom:88px; }
 .m-nav{ position:sticky; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(4,1fr);

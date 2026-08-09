@@ -44,7 +44,10 @@ document.addEventListener('click', async (e) => {
 
     const vapid = document.querySelector('meta[name="vapid-public-key"]')?.content;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-    if (!vapid || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    // Tiga sebab berbeda, tiga pesan berbeda. Menggabungkannya jadi satu
+    // "browser tidak mendukung" pernah menyesatkan: server yang belum diisi kunci
+    // VAPID dilaporkan sebagai kesalahan perangkat, jadi tak ada yang memeriksa server.
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         // iOS di tab Safari: push-nya DIDUKUNG, tapi hanya setelah dipasang ke Home
         // Screen. Bilang "tidak didukung" di sini menyesatkan dan bikin orang menyerah.
         if (adalahIos() && !adalahStandalone()) {
@@ -55,6 +58,16 @@ document.addEventListener('click', async (e) => {
         } else {
             beritahu('Notifikasi tidak didukung', 'Browser ini tidak mendukung notifikasi push.');
         }
+
+        return;
+    }
+
+    // Perangkatnya sanggup, servernya yang belum siap: kunci VAPID kosong di .env.
+    if (!vapid) {
+        beritahu(
+            'Notifikasi belum aktif di server',
+            'Perangkat Anda sudah mendukung notifikasi, tetapi kunci notifikasi di server belum disiapkan. Hubungi Admin Sistem untuk mengaktifkannya.',
+        );
 
         return;
     }
