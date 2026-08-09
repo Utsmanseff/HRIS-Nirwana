@@ -110,9 +110,16 @@
                         @php $atasan = $karyawan->atasanDerived(); @endphp
                         <div><dt class="text-neutral-500 text-xs">Atasan Langsung</dt><dd class="font-semibold">{{ $atasan?->nama_lengkap ?? '—' }}@if ($atasan?->jabatan) · {{ $atasan->jabatan->nama }}@endif</dd></div>
                         <div><dt class="text-neutral-500 text-xs">Level Jabatan</dt><dd class="font-semibold">L{{ $karyawan->jabatan->level->value }} · {{ ucfirst($karyawan->jabatan->level->name) }}</dd></div>
-                        @if ($karyawan->sip_nomor)
-                            <div><dt class="text-neutral-500 text-xs">Nomor SIP</dt><dd class="font-mono font-semibold">{{ $karyawan->sip_nomor }}</dd></div>
-                            <div><dt class="text-neutral-500 text-xs">Masa Berlaku SIP</dt><dd class="font-semibold tnum">{{ $karyawan->sip_berlaku_mulai?->translatedFormat('j M Y') }} → {{ $karyawan->sip_berlaku_akhir?->translatedFormat('j M Y') }}</dd></div>
+                        @if ($karyawan->izin->isNotEmpty())
+                            @php $izinBerlaku = $karyawan->izin->first(); @endphp
+                            <div>
+                                <dt class="text-neutral-500 text-xs">{{ $izinBerlaku->jenis->nama }}</dt>
+                                <dd class="font-mono font-semibold">{{ $izinBerlaku->nomor ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-neutral-500 text-xs">Berlaku Sampai</dt>
+                                <dd class="font-semibold tnum">{{ $izinBerlaku->berlaku_akhir->translatedFormat('j M Y') }}</dd>
+                            </div>
                         @endif
                     </dl>
                 </div>

@@ -35,13 +35,6 @@ class KaryawanForm extends Component
 
     public string $pendidikan = '';
 
-    // SIP (nakes, opsional)
-    public string $sipNomor = '';
-
-    public string $sipMulai = '';
-
-    public string $sipAkhir = '';
-
     // Kontak
     public string $noHp = '';
 
@@ -83,9 +76,6 @@ class KaryawanForm extends Component
         $this->agama = $karyawan->agama ?? '';
         $this->statusNikah = $karyawan->status_nikah?->value ?? '';
         $this->pendidikan = $karyawan->pendidikan_terakhir ?? '';
-        $this->sipNomor = $karyawan->sip_nomor ?? '';
-        $this->sipMulai = $karyawan->sip_berlaku_mulai?->format('Y-m-d') ?? '';
-        $this->sipAkhir = $karyawan->sip_berlaku_akhir?->format('Y-m-d') ?? '';
         $this->noHp = $karyawan->no_hp ?? '';
         $this->email = $karyawan->email ?? '';
         $this->alamat = $karyawan->alamat ?? '';
@@ -123,9 +113,6 @@ class KaryawanForm extends Component
             'agama' => ['nullable', 'string', 'max:30'],
             'statusNikah' => ['nullable', 'in:belum,menikah,cerai'],
             'pendidikan' => ['nullable', 'string', 'max:100'],
-            'sipNomor' => ['nullable', 'string', 'max:100'],
-            'sipMulai' => ['nullable', 'date', 'required_with:sipNomor'],
-            'sipAkhir' => ['nullable', 'date', 'required_with:sipNomor', 'after:sipMulai'],
             'noHp' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
             'alamat' => ['nullable', 'string', 'max:500'],
@@ -156,9 +143,6 @@ class KaryawanForm extends Component
             'agama' => $opsional($this->agama),
             'status_nikah' => $opsional($this->statusNikah),
             'pendidikan_terakhir' => $opsional($this->pendidikan),
-            'sip_nomor' => $opsional($this->sipNomor),
-            'sip_berlaku_mulai' => $opsional($this->sipMulai),
-            'sip_berlaku_akhir' => $opsional($this->sipAkhir),
             'no_hp' => $opsional($this->noHp),
             'email' => $opsional($this->email),
             'alamat' => $opsional($this->alamat),

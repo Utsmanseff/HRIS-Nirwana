@@ -43,22 +43,6 @@
             </div>
             <div class="sm:col-span-3"><label class="field-label">Pendidikan Terakhir</label><input wire:model="pendidikan" class="input" placeholder="mis. S1 Keperawatan"></div>
         </div>
-        <div class="grid sm:grid-cols-3 gap-3 pt-1 border-t border-neutral-100">
-            <div>
-                <label class="field-label">Nomor SIP (nakes)</label>
-                <input wire:model="sipNomor" class="input" placeholder="kosongkan bila bukan nakes">
-            </div>
-            <div>
-                <label class="field-label">SIP Berlaku Mulai</label>
-                <input type="date" wire:model="sipMulai" class="input @error('sipMulai') input-error @enderror">
-                @error('sipMulai') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="field-label">SIP Berlaku Akhir</label>
-                <input type="date" wire:model="sipAkhir" class="input @error('sipAkhir') input-error @enderror">
-                @error('sipAkhir') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
-            </div>
-        </div>
     </div>
 
     {{-- Kontak --}}
