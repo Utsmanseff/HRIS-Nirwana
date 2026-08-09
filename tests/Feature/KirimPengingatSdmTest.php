@@ -26,7 +26,7 @@ class KirimPengingatSdmTest extends TestCase
         return $hrd;
     }
 
-    public function test_kirim_notif_kontrak_dan_sip_ke_hrd(): void
+    public function test_kirim_notif_kontrak_ke_hrd(): void
     {
         $hrd = $this->buatHrd();
 
@@ -35,14 +35,10 @@ class KirimPengingatSdmTest extends TestCase
             'jenis' => JenisKontrak::Pkwt, 'tanggal_mulai' => now()->subYear(),
             'tanggal_akhir' => now()->addDays(20),
         ]);
-        Karyawan::factory()->create([
-            'status' => StatusKaryawan::Aktif,
-            'sip_nomor' => 'SIP/1/2026', 'sip_berlaku_akhir' => now()->addDays(10),
-        ]);
 
         $this->artisan('sdm:kirim-pengingat')->assertSuccessful();
 
-        $this->assertSame(2, $hrd->notifications()->count()); // 1 kontrak + 1 sip
+        $this->assertSame(1, $hrd->notifications()->count());
     }
 
     public function test_dedup_tidak_kirim_ulang_severity_sama(): void
@@ -63,10 +59,12 @@ class KirimPengingatSdmTest extends TestCase
     public function test_tanpa_hrd_tidak_error(): void
     {
         // tidak ada user HRD
-        Karyawan::factory()->create([
-            'status' => StatusKaryawan::Aktif,
-            'sip_nomor' => 'SIP/9/2026', 'sip_berlaku_akhir' => now()->addDays(5),
+        $kar = Karyawan::factory()->create(['status' => StatusKaryawan::Aktif]);
+        Kontrak::factory()->for($kar)->create([
+            'jenis' => JenisKontrak::Pkwt, 'tanggal_mulai' => now()->subYear(),
+            'tanggal_akhir' => now()->addDays(5),
         ]);
+
         $this->artisan('sdm:kirim-pengingat')->assertSuccessful();
         $this->assertSame(0, DatabaseNotification::count());
     }

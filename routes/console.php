@@ -17,5 +17,9 @@ Schedule::command('inventaris:kirim-pengingat')->dailyAt('07:05')->withoutOverla
 // Auto-bentuk jadwal (non-destruktif) bulan berjalan + 2 depan dari template pola.
 Schedule::command('absensi:bentuk-jadwal')->dailyAt('07:10')->withoutOverlapping();
 
+// Pengingat absen masuk/pulang. Tiap 10 menit supaya jeda dari ambang tak terasa;
+// withoutOverlapping mencegah tumpukan bila pengiriman push melambat.
+Schedule::command('absensi:kirim-pengingat')->everyTenMinutes()->withoutOverlapping();
+
 // Retensi foto absensi: hapus foto > 3 bulan (baris absensi tetap untuk laporan/penggajian).
 Schedule::command('absensi:bersihkan-foto')->dailyAt('02:30')->withoutOverlapping();

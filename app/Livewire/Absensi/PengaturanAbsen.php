@@ -13,6 +13,10 @@ class PengaturanAbsen extends Component
     public ?float $officeLong = null;
     public ?int $radiusM = null;
     public ?int $maxAkurasiM = null;
+    public bool $pengingatAktif = true;
+    public ?int $jedaMasukMenit = null;
+    public ?int $jedaPulangMenit = null;
+    public ?int $ambangNyangkutJam = null;
 
     public function mount(): void
     {
@@ -21,9 +25,13 @@ class PengaturanAbsen extends Component
         $this->officeLong = (float) $p->office_long;
         $this->radiusM = $p->radius_m;
         $this->maxAkurasiM = $p->max_akurasi_m;
+        $this->pengingatAktif = (bool) $p->pengingat_aktif;
+        $this->jedaMasukMenit = $p->jeda_masuk_menit;
+        $this->jedaPulangMenit = $p->jeda_pulang_menit;
+        $this->ambangNyangkutJam = $p->ambang_nyangkut_jam;
     }
 
-    public function simpan(): void
+    public function simpanLokasi(): void
     {
         $data = $this->validate([
             'officeLat' => ['required', 'numeric', 'between:-90,90'],
@@ -40,6 +48,26 @@ class PengaturanAbsen extends Component
         ]);
 
         session()->flash('ok', 'Pengaturan lokasi absen disimpan.');
+    }
+
+    /** Terpisah dari simpanLokasi supaya koordinat tak valid tak memblokir setelan pengingat. */
+    public function simpanPengingat(): void
+    {
+        $data = $this->validate([
+            'pengingatAktif' => ['boolean'],
+            'jedaMasukMenit' => ['required', 'integer', 'min:0', 'max:240'],
+            'jedaPulangMenit' => ['required', 'integer', 'min:0', 'max:240'],
+            'ambangNyangkutJam' => ['required', 'integer', 'min:4', 'max:24'],
+        ]);
+
+        PengaturanAbsensi::ambil()->update([
+            'pengingat_aktif' => $data['pengingatAktif'],
+            'jeda_masuk_menit' => $data['jedaMasukMenit'],
+            'jeda_pulang_menit' => $data['jedaPulangMenit'],
+            'ambang_nyangkut_jam' => $data['ambangNyangkutJam'],
+        ]);
+
+        session()->flash('ok', 'Pengaturan pengingat absen disimpan.');
     }
 
     public function render()

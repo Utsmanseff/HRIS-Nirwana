@@ -46,13 +46,13 @@ class KaryawanDetailTest extends TestCase
             ->assertSee('081223456789');
     }
 
-    public function test_detail_menampilkan_sip_bila_ada(): void
+    public function test_detail_menampilkan_izin_bila_ada(): void
     {
-        $kar = Karyawan::factory()->withSip()->create();
+        $kar = Karyawan::factory()->withIzinSip()->create();
 
         $this->actingAs($this->userSdm())->get('/sdm/karyawan/'.$kar->id)
             ->assertOk()
-            ->assertSee($kar->sip_nomor);
+            ->assertSee($kar->izin->first()->nomor);
     }
 
     public function test_tanpa_permission_ditolak(): void

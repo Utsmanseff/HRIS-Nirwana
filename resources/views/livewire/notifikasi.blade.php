@@ -20,11 +20,12 @@
             @forelse ($daftar as $n)
                 @php
                     $type = class_basename($n->type ?? '');
-                    $ic = str_contains($type, 'Cuti') ? 'calendar'
+                    $ic = str_contains($type, 'Absen') ? 'clock'
+                        : (str_contains($type, 'Cuti') ? 'calendar'
                         : (str_contains($type, 'Sanksi') ? 'gavel'
                         : (str_contains($type, 'Kontrak') ? 'doc'
                         : (str_contains($type, 'Pemeliharaan') ? 'box'
-                        : (str_contains($type, 'Tiket') ? 'ticket' : 'bell'))));
+                        : (str_contains($type, 'Tiket') ? 'ticket' : 'bell')))));
                     $belum = $n->read_at === null;
                 @endphp
                 <a href="{{ $n->data['url'] ?? '#' }}" wire:click="tandaiDibaca('{{ $n->id }}')"

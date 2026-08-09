@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,   // harus duluan: DemoSdmSeeder pakai assignRole
             JenisCutiSeeder::class,
+            JenisIzinSeeder::class,
             DemoSdmSeeder::class,
             DemoAbsensiSeeder::class, // setelah DemoSdmSeeder: butuh org_unit + karyawan
             DemoInventarisSeeder::class, // setelah DemoSdmSeeder: butuh org_unit

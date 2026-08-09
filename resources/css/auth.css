@@ -25,7 +25,9 @@
   /* padding-top ikut safe-area — sama alasannya dengan .m-appbar (viewport-fit=cover). */
   .auth-brand{ padding:calc(3.25rem + env(safe-area-inset-top)) 1.5rem 2.25rem; justify-content:flex-start; }
   .auth-hero,.auth-foot,.auth-sub{ display:none; }
-  .auth-id{ flex-direction:column; align-items:flex-start; gap:1.25rem; }
+  /* Semua identitas bertumpuk rata tengah — konsisten dengan splash PWA.
+     align-items mengatur kotak logo, text-align mengatur wordmark & tagline. */
+  .auth-id{ flex-direction:column; align-items:center; text-align:center; gap:1rem; }
   .auth-mark{ width:4rem; height:4rem; border-radius:1rem; }
   .auth-mark img{ width:34px !important; height:34px !important; }
   .auth-word{ font-size:1.5rem; }

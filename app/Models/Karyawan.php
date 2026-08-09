@@ -29,7 +29,6 @@ class Karyawan extends Model
     {
         return [
             'tanggal_lahir' => 'date', 'tanggal_masuk' => 'date', 'tanggal_nonaktif' => 'date',
-            'sip_berlaku_mulai' => 'date', 'sip_berlaku_akhir' => 'date',
             'jenis_kelamin' => JenisKelamin::class, 'status_nikah' => StatusNikah::class,
             'status' => StatusKaryawan::class, 'alasan_nonaktif' => AlasanNonaktif::class,
         ];
@@ -140,6 +139,12 @@ class Karyawan extends Model
     public function kontrak(): HasMany
     {
         return $this->hasMany(Kontrak::class);
+    }
+
+    /** Riwayat perizinan (STR/SIP/SIK/sertifikat), terbaru dulu. */
+    public function izin(): HasMany
+    {
+        return $this->hasMany(IzinKaryawan::class)->orderByDesc('berlaku_akhir');
     }
 
     public function jadwal(): HasMany

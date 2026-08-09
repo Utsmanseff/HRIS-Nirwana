@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\NotificationBell;
 use App\Models\User;
-use App\Notifications\SipAkanBerakhir;
+use App\Notifications\IzinAkanBerakhir;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Str;
@@ -19,7 +19,7 @@ class NotificationBellTest extends TestCase
     {
         return $user->notifications()->create(array_merge([
             'id' => (string) Str::uuid(),
-            'type' => SipAkanBerakhir::class,
+            'type' => IzinAkanBerakhir::class,
             'data' => ['pesan' => 'SIP Budi berakhir 10 hari', 'url' => '/x'],
             'read_at' => null,
         ], $overrides));

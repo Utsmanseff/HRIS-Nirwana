@@ -3,18 +3,18 @@
 namespace App\Notifications;
 
 use App\Enums\SeverityPengingat;
-use App\Models\Karyawan;
+use App\Models\IzinKaryawan;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class SipAkanBerakhir extends Notification
+class IzinAkanBerakhir extends Notification
 {
     use Queueable;
 
     public function __construct(
-        public Karyawan $karyawan,
+        public IzinKaryawan $izin,
         public SeverityPengingat $severity,
         public int $sisaHari,
     ) {}
@@ -27,30 +27,43 @@ class SipAkanBerakhir extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'jenis' => 'sip',
-            'karyawan_id' => $this->karyawan->id,
+            'jenis' => 'izin',
+            'kode_izin' => $this->izin->jenis->kode->value,
+            'karyawan_id' => $this->izin->karyawan_id,
             'severity' => $this->severity->value,
             'sisa_hari' => $this->sisaHari,
             'pesan' => $this->pesan(),
-            'url' => '/sdm/karyawan/'.$this->karyawan->id,
+            'url' => $this->url($notifiable),
         ];
     }
 
     public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
         return (new WebPushMessage)
-            ->title('Pengingat SIP')
+            ->title('Pengingat Perizinan')
             ->body($this->pesan())
             ->icon('/img/android-chrome-192x192.png')
-            ->data(['url' => '/sdm/karyawan/'.$this->karyawan->id]);
+            ->data(['url' => $this->url($notifiable)]);
+    }
+
+    /**
+     * Detail karyawan untuk HRD, profil sendiri untuk karyawan ybs — rute /sdm/karyawan
+     * ada di grup gate kelola-sdm, jadi menautkannya ke karyawan biasa berujung 403.
+     */
+    private function url(object $notifiable): string
+    {
+        return ($notifiable->karyawan_id ?? null) === $this->izin->karyawan_id
+            ? '/profil'
+            : '/sdm/karyawan/'.$this->izin->karyawan_id;
     }
 
     private function pesan(): string
     {
-        $nama = $this->karyawan->nama_lengkap;
+        $label = $this->izin->jenis->nama;
+        $nama = $this->izin->karyawan->nama_lengkap;
 
         return $this->severity === SeverityPengingat::Terlewat
-            ? "SIP {$nama} sudah terlewat ".abs($this->sisaHari).' hari.'
-            : "SIP {$nama} berakhir dalam {$this->sisaHari} hari.";
+            ? "{$label} {$nama} sudah terlewat ".abs($this->sisaHari).' hari.'
+            : "{$label} {$nama} berakhir dalam {$this->sisaHari} hari.";
     }
 }

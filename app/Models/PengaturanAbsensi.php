@@ -17,6 +17,10 @@ class PengaturanAbsensi extends Model
             'office_long' => 'decimal:7',
             'radius_m' => 'integer',
             'max_akurasi_m' => 'integer',
+            'pengingat_aktif' => 'boolean',
+            'jeda_masuk_menit' => 'integer',
+            'jeda_pulang_menit' => 'integer',
+            'ambang_nyangkut_jam' => 'integer',
         ];
     }
 
@@ -28,6 +32,10 @@ class PengaturanAbsensi extends Model
             'office_long' => 107.6098100,
             'radius_m' => 100,
             'max_akurasi_m' => 30,
+            'pengingat_aktif' => true,
+            'jeda_masuk_menit' => 15,
+            'jeda_pulang_menit' => 30,
+            'ambang_nyangkut_jam' => 12,
         ]);
     }
 }
