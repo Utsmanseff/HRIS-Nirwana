@@ -5,6 +5,7 @@
 namespace App\Support;
 
 use App\Enums\StatusKaryawan;
+use App\Models\Absensi;
 use App\Models\Jadwal;
 use App\Models\PengaturanAbsensi;
 use Illuminate\Support\Carbon;
@@ -44,9 +45,32 @@ class PengingatAbsen
             })
             ->get();
 
-        return $jadwal->filter(function (Jadwal $j) use ($sekarang, $p) {
+        if ($jadwal->isEmpty()) {
+            return collect();
+        }
+
+        $karyawanIds = $jadwal->pluck('karyawan_id')->unique()->all();
+
+        // Satu query untuk semua; kunci menyertakan shift_id supaya dinas ganda tak saling
+        // membungkam. whereDate lagi — tanggal_kerja kena bug penyimpanan yang sama.
+        $sudahAbsen = Absensi::whereIn('karyawan_id', $karyawanIds)
+            ->where(function ($q) use ($tanggal) {
+                foreach ($tanggal as $t) {
+                    $q->orWhereDate('tanggal_kerja', $t);
+                }
+            })
+            ->get(['karyawan_id', 'tanggal_kerja', 'shift_id'])
+            ->map(fn (Absensi $a) => $a->karyawan_id.'|'.$a->tanggal_kerja->toDateString().'|'.$a->shift_id)
+            ->flip();
+
+        return $jadwal->filter(function (Jadwal $j) use ($sekarang, $p, $sudahAbsen) {
             $kar = $j->karyawan;
             if (! $kar || $kar->status !== StatusKaryawan::Aktif || ! $kar->user) {
+                return false;
+            }
+
+            $kunci = $j->karyawan_id.'|'.$j->tanggal->toDateString().'|'.$j->shift_id;
+            if ($sudahAbsen->has($kunci)) {
                 return false;
             }
 
