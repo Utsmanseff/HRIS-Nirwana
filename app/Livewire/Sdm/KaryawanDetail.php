@@ -4,6 +4,8 @@ namespace App\Livewire\Sdm;
 
 use App\Enums\JenisKontrak;
 use App\Enums\StatusKaryawan;
+use App\Models\IzinKaryawan;
+use App\Models\JenisIzin;
 use App\Models\Karyawan;
 use App\Support\KompresGambar;
 use App\Support\PengingatKontrak;
@@ -46,9 +48,21 @@ class KaryawanDetail extends Component
 
     public string $tanggalNonaktif = '';
 
+    // Perizinan (STR/SIP/SIK/sertifikat)
+    public ?int $izJenisId = null;
+
+    public string $izNomor = '';
+
+    public string $izMulai = '';
+
+    public string $izAkhir = '';
+
     public function mount(Karyawan $karyawan): void
     {
-        $this->karyawan = $karyawan->load(['orgUnit.parent', 'jabatan', 'kontrak', 'dokumen', 'user.roles', 'sanksiDisiplin.pengusul']);
+        $this->karyawan = $karyawan->load([
+            'orgUnit.parent', 'jabatan', 'kontrak', 'dokumen', 'user.roles',
+            'sanksiDisiplin.pengusul', 'izin.jenis',
+        ]);
     }
 
     public function inisial(): string
@@ -165,6 +179,35 @@ class KaryawanDetail extends Component
         $this->reset(['berkas', 'tipeDokumen']);
     }
 
+    public function simpanIzin(): void
+    {
+        $data = $this->validate([
+            'izJenisId' => ['required', 'exists:jenis_izin,id'],
+            'izNomor' => ['nullable', 'string', 'max:100'],
+            'izMulai' => ['nullable', 'date'],
+            'izAkhir' => ['required', 'date', 'after:izMulai'],
+        ]);
+
+        IzinKaryawan::create([
+            'karyawan_id' => $this->karyawan->id,
+            'jenis_izin_id' => $data['izJenisId'],
+            'nomor' => $data['izNomor'] ?: null,
+            'berlaku_mulai' => $data['izMulai'] ?: null,
+            'berlaku_akhir' => $data['izAkhir'],
+        ]);
+
+        $this->reset(['izJenisId', 'izNomor', 'izMulai', 'izAkhir']);
+        $this->karyawan->load('izin.jenis');
+        session()->flash('ok', 'Izin ditambahkan.');
+    }
+
+    public function hapusIzin(int $id): void
+    {
+        // Dikunci ke karyawan yang sedang dibuka — id dari klien tak boleh dipercaya.
+        IzinKaryawan::where('karyawan_id', $this->karyawan->id)->whereKey($id)->delete();
+        $this->karyawan->load('izin.jenis');
+    }
+
     /** Kontrak urut terbaru→terlama untuk timeline. */
     public function riwayatKontrak(): Collection
     {
@@ -205,6 +248,8 @@ class KaryawanDetail extends Component
 
     public function render()
     {
-        return view('livewire.sdm.karyawan-detail');
+        return view('livewire.sdm.karyawan-detail', [
+            'jenisIzin' => JenisIzin::aktif()->orderBy('nama')->get(),
+        ]);
     }
 }

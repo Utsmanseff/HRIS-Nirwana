@@ -34,7 +34,7 @@
             </div>
         </div>
         <div class="px-4 sm:px-6 flex gap-1 border-t border-neutral-100 overflow-x-auto whitespace-nowrap">
-            @foreach (['profil' => 'Profil', 'kontrak' => 'Kontrak & Pengingat', 'dokumen' => 'Dokumen', 'sanksi' => 'Sanksi', 'akun' => 'Akun & Role'] as $id => $labelTab)
+            @foreach (['profil' => 'Profil', 'kontrak' => 'Kontrak & Pengingat', 'izin' => 'Perizinan', 'dokumen' => 'Dokumen', 'sanksi' => 'Sanksi', 'akun' => 'Akun & Role'] as $id => $labelTab)
                 <button wire:click="$set('tab', '{{ $id }}')" class="tab-btn shrink-0 {{ $tab === $id ? 'on' : '' }}">{{ $labelTab }}</button>
             @endforeach
         </div>
@@ -202,6 +202,62 @@
                         @endforeach
                     </div>
                 @endif
+            </div>
+        </div>
+    @endif
+
+    {{-- TAB: Perizinan --}}
+    @if ($tab === 'izin')
+        <div class="space-y-4">
+            <div class="card card-pad">
+                <h3 class="font-extrabold tracking-tight mb-3">Tambah Izin</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                        <label class="field-label">Jenis *</label>
+                        <select wire:model="izJenisId" class="input @error('izJenisId') input-error @enderror">
+                            <option value="">— pilih —</option>
+                            @foreach ($jenisIzin as $j)
+                                <option value="{{ $j->id }}" wire:key="ji-{{ $j->id }}">{{ $j->nama }}</option>
+                            @endforeach
+                        </select>
+                        @error('izJenisId') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="field-label">Nomor</label>
+                        <input wire:model="izNomor" class="input">
+                    </div>
+                    <div>
+                        <label class="field-label">Berlaku Mulai</label>
+                        <input type="date" wire:model="izMulai" class="input">
+                    </div>
+                    <div>
+                        <label class="field-label">Berlaku Sampai *</label>
+                        <input type="date" wire:model="izAkhir" class="input @error('izAkhir') input-error @enderror">
+                        @error('izAkhir') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+                <button wire:click="simpanIzin" class="btn btn-primary mt-3">Simpan Izin</button>
+            </div>
+
+            <div class="card overflow-hidden">
+                <div class="divide-y divide-neutral-100">
+                    @forelse ($karyawan->izin as $iz)
+                        <div class="px-4 py-3 flex items-center justify-between gap-3" wire:key="izin-{{ $iz->id }}">
+                            <div class="min-w-0">
+                                <div class="font-semibold text-sm">{{ $iz->jenis->nama }}
+                                    <span class="font-mono text-neutral-500">{{ $iz->nomor ?? '—' }}</span>
+                                </div>
+                                <div class="text-xs text-neutral-500 tnum">
+                                    {{ $iz->berlaku_mulai?->translatedFormat('j M Y') ?? '—' }}
+                                    → {{ $iz->berlaku_akhir->translatedFormat('j M Y') }}
+                                </div>
+                            </div>
+                            <button wire:click="hapusIzin({{ $iz->id }})" class="btn btn-secondary btn-sm">Hapus</button>
+                        </div>
+                    @empty
+                        <div class="px-4 py-8 text-center text-sm text-neutral-400">Belum ada data perizinan.</div>
+                    @endforelse
+                </div>
             </div>
         </div>
     @endif
