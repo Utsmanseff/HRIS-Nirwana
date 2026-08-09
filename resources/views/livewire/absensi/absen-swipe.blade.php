@@ -87,7 +87,7 @@
 
     {{-- Peta lokasi (sekunder — di bawah tombol) --}}
     <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">Peta Lokasi</div>
-    <div x-ref="peta" class="w-full h-40 rounded-lg overflow-hidden mb-1 bg-neutral-100"></div>
+    <div x-ref="peta" class="peta w-full h-40 rounded-lg overflow-hidden mb-1 bg-neutral-100"></div>
     <p class="text-[11px] text-neutral-400 mb-5">
         Titik hijau = kantor + radius. Titik biru = posisi Anda.
         Peta butuh internet (ubin online); cek radius tetap jalan tanpa peta.
