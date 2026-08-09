@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Enums\Role;
 use App\Models\User;
+use App\Notifications\IzinAkanBerakhir;
 use App\Notifications\KontrakAkanBerakhir;
-use App\Notifications\SipAkanBerakhir;
+use App\Support\PengingatIzin;
 use App\Support\PengingatKontrak;
-use App\Support\PengingatSip;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 
 #[Signature('sdm:kirim-pengingat')]
-#[Description('Kirim notifikasi pengingat kontrak & SIP yang mendekati/terlewat ke HRD')]
+#[Description('Kirim notifikasi pengingat kontrak & perizinan yang mendekati/terlewat')]
 class KirimPengingatSdm extends Command
 {
     public function handle(): int
@@ -41,12 +41,19 @@ class KirimPengingatSdm extends Command
             );
         }
 
-        foreach (PengingatSip::semua() as $p) {
+        foreach (PengingatIzin::semua() as $p) {
+            // Penerima izin = HRD + karyawan ybs (dialah yang mengurus perpanjangan).
+            $penerima = $hrdSemua->all();
+            $userKaryawan = $p->izin->karyawan->user;
+            if ($userKaryawan) {
+                $penerima[] = $userKaryawan;
+            }
+
             $terkirim += $this->kirim(
-                $hrdSemua,
-                SipAkanBerakhir::class,
-                new SipAkanBerakhir($p->karyawan, $p->severity, $p->sisaHari),
-                $p->karyawan->id,
+                collect($penerima),
+                IzinAkanBerakhir::class,
+                new IzinAkanBerakhir($p->izin, $p->severity, $p->sisaHari),
+                $p->izin->karyawan_id,
                 $p->severity->value,
             );
         }
@@ -56,20 +63,27 @@ class KirimPengingatSdm extends Command
         return self::SUCCESS;
     }
 
-    /** Kirim ke tiap HRD yang belum punya notif tipe+karyawan+severity yang sama (dedup). */
-    private function kirim(Collection $hrdSemua, string $type, Notification $notification, int $karyawanId, string $severity): int
+    /** Kirim ke tiap penerima yang belum punya notif tipe+karyawan+severity yang sama (dedup). */
+    private function kirim(Collection $penerima, string $type, Notification $notification, int $karyawanId, string $severity): int
     {
         $terkirim = 0;
-        foreach ($hrdSemua as $hrd) {
-            $sudahAda = $hrd->notifications()
+        foreach ($penerima as $user) {
+            $kueri = $user->notifications()
                 ->where('type', $type)
                 ->where('data->karyawan_id', $karyawanId)
-                ->where('data->severity', $severity)
-                ->exists();
-            if ($sudahAda) {
+                ->where('data->severity', $severity);
+
+            // Satu karyawan bisa punya STR & SIP sekaligus dengan severity sama —
+            // tanpa kunci jenis, notif kedua tertelan dedup.
+            if ($notification instanceof IzinAkanBerakhir) {
+                $kueri->where('data->kode_izin', $notification->izin->jenis->kode->value);
+            }
+
+            if ($kueri->exists()) {
                 continue;
             }
-            $hrd->notify($notification);
+
+            $user->notify($notification);
             $terkirim++;
         }
 
