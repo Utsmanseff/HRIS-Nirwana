@@ -129,6 +129,7 @@ Route::middleware(['auth', 'aktif', 'claimed'])->group(function () {
         Route::get('/sdm/dokumen/{dokumen}', [DokumenController::class, 'unduh'])->name('sdm.dokumen.unduh');
         Route::get('/sdm/dokumen/{dokumen}/lihat', [DokumenController::class, 'lihat'])->name('sdm.dokumen.lihat');
         Route::get('/sdm/struktur', OrgStruktur::class)->name('sdm.struktur');
+        Route::get('/sdm/jenis-izin', \App\Livewire\Sdm\JenisIzinKelola::class)->name('sdm.jenis-izin');
         Route::get('/sdm/laporan/karyawan', [LaporanSdmController::class, 'karyawan'])->name('sdm.laporan.karyawan');
         Route::get('/sdm/laporan/pengingat-kontrak', [LaporanSdmController::class, 'pengingatKontrak'])->name('sdm.laporan.pengingat');
     });

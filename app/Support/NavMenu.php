@@ -39,6 +39,7 @@ class NavMenu
             ['id' => 'laporan-disiplin', 'label' => 'Laporan Sanksi', 'icon' => 'chart', 'route' => 'disiplin.laporan', 'can' => 'kelola-disiplin', 'group' => 'Operasional'],
             ['id' => 'karyawan', 'label' => 'Karyawan',       'icon' => 'users',    'route' => 'sdm.karyawan',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
+            ['id' => 'jenis-izin', 'label' => 'Jenis Izin',   'icon' => 'sliders',  'route' => 'sdm.jenis-izin', 'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],
             ['id' => 'riwayat',  'label' => 'Riwayat',        'icon' => 'history',  'route' => 'riwayat',        'can' => null, 'group' => null],
             ['id' => 'notif',    'label' => 'Notifikasi',     'icon' => 'bell',     'route' => 'notifikasi',     'can' => null, 'group' => null],
