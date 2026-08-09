@@ -29,6 +29,10 @@ class PengingatAbsen
         $sekarang = $sekarang ? $sekarang->copy() : now();
         $p = PengaturanAbsensi::ambil();
 
+        if (! $p->pengingat_aktif) {
+            return collect();
+        }
+
         $tanggal = [
             $sekarang->copy()->subDay()->toDateString(),
             $sekarang->toDateString(),
@@ -118,6 +122,10 @@ class PengingatAbsen
     {
         $sekarang = $sekarang ? $sekarang->copy() : now();
         $p = PengaturanAbsensi::ambil();
+
+        if (! $p->pengingat_aktif) {
+            return collect();
+        }
 
         // Dibatasi 3 hari agar query tetap kecil. Sesi yang nyangkut lebih lama dari itu
         // tak akan pernah ditutup pemiliknya — mengingatkan pun percuma.
