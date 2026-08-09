@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /** Pengingat pemeliharaan derived (tanpa kolom status). Satu per jadwal AKTIF pada aset
- *  non-afkir yang berikutnya dalam/melewati ambang H-14. Pola PengingatSip. */
+ *  non-afkir yang berikutnya dalam/melewati ambang H-14. Pola PengingatIzin. */
 class PengingatPemeliharaan
 {
     private const AMBANG_HARI = 14;
