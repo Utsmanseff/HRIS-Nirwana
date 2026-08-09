@@ -34,16 +34,35 @@ class PengingatIzinTest extends TestCase
         $this->assertSame(SeverityPengingat::AkanBerakhir, $list->first()->severity);
     }
 
-    public function test_sip_60_hari_lagi_belum_diingatkan(): void
+    public function test_di_luar_ambang_belum_diingatkan(): void
     {
         $kar = Karyawan::factory()->create(['status' => 'aktif']);
         IzinKaryawan::factory()->create([
             'karyawan_id' => $kar->id,
             'jenis_izin_id' => $this->jenis(KodeJenisIzin::Sip)->id,
-            'berlaku_akhir' => now()->addDays(60),   // ambang SIP cuma 30
+            'berlaku_akhir' => now()->addDays(120),   // ambang default 90
         ]);
 
         $this->assertCount(0, PengingatIzin::semua());
+    }
+
+    public function test_ambang_kustom_per_jenis_dihormati(): void
+    {
+        // HRD boleh menyetel ambang per jenis; yang dibaca ambang jenisnya, bukan konstanta.
+        $kar = Karyawan::factory()->create(['status' => 'aktif']);
+        $sik = $this->jenis(KodeJenisIzin::Sik);
+        $sik->update(['ambang_hari' => 30]);
+
+        IzinKaryawan::factory()->create([
+            'karyawan_id' => $kar->id,
+            'jenis_izin_id' => $sik->id,
+            'berlaku_akhir' => now()->addDays(60),   // di dalam 90, di luar 30
+        ]);
+
+        $this->assertCount(0, PengingatIzin::semua());
+
+        $sik->update(['ambang_hari' => 90]);
+        $this->assertCount(1, PengingatIzin::semua());
     }
 
     public function test_hanya_baris_terbaru_per_jenis_dievaluasi(): void

@@ -56,7 +56,7 @@ class KaryawanFactory extends Factory
         return $this->afterCreating(function (Karyawan $kar) {
             $sip = JenisIzin::firstOrCreate(
                 ['kode' => KodeJenisIzin::Sip->value],
-                ['nama' => 'SIP', 'ambang_hari' => 30, 'aktif' => true],
+                ['nama' => 'SIP', 'ambang_hari' => 90, 'aktif' => true],
             );
 
             IzinKaryawan::factory()->create([

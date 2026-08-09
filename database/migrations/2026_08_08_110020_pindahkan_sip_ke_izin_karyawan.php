@@ -13,8 +13,8 @@ return new class extends Migration
         // Master di-seed di dalam migrasi supaya penyalinan punya jenis_izin_id yang sah
         // tanpa bergantung urutan seeder.
         $now = now();
-        foreach ([[KodeJenisIzin::Str, 'STR', 90], [KodeJenisIzin::Sip, 'SIP', 30],
-            [KodeJenisIzin::Sik, 'SIK', 30], [KodeJenisIzin::Sertifikat, 'Sertifikat Kompetensi', 30]] as [$kode, $nama, $ambang]) {
+        foreach ([[KodeJenisIzin::Str, 'STR', 90], [KodeJenisIzin::Sip, 'SIP', 90],
+            [KodeJenisIzin::Sik, 'SIK', 90], [KodeJenisIzin::Sertifikat, 'Sertifikat Kompetensi', 90]] as [$kode, $nama, $ambang]) {
             $ada = DB::table('jenis_izin')->where('kode', $kode->value)->exists();
             if (! $ada) {
                 DB::table('jenis_izin')->insert([

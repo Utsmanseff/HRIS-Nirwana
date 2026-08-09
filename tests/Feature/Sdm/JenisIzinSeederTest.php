@@ -18,7 +18,7 @@ class JenisIzinSeederTest extends TestCase
 
         $this->assertSame(4, JenisIzin::count());
         $this->assertSame(90, JenisIzin::where('kode', KodeJenisIzin::Str->value)->value('ambang_hari'));
-        $this->assertSame(30, JenisIzin::where('kode', KodeJenisIzin::Sip->value)->value('ambang_hari'));
+        $this->assertSame(90, JenisIzin::where('kode', KodeJenisIzin::Sip->value)->value('ambang_hari'));
     }
 
     public function test_seeder_idempoten_dan_tak_menimpa_ambang_kustom(): void
