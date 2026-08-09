@@ -32,6 +32,32 @@
         <p class="px-4 pb-3 text-[11px] text-neutral-400">Data pribadi &amp; kepegawaian dikelola SDM. Untuk koreksi, hubungi bagian SDM.</p>
     </div>
 
+    {{-- Perizinan sendiri (read-only; dikelola SDM) --}}
+    @if ($karyawan->izin->isNotEmpty())
+        <div class="card">
+            <div class="card-header"><div class="card-title">Perizinan Saya</div></div>
+            <div class="card-pad space-y-3">
+                @foreach ($karyawan->izin as $iz)
+                    @php $p = \App\Support\PengingatIzin::untuk($iz); @endphp
+                    <div class="flex items-center justify-between gap-2" wire:key="izin-{{ $iz->id }}">
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold">{{ $iz->jenis->nama }}
+                                <span class="font-mono text-neutral-500">{{ $iz->nomor ?? '—' }}</span>
+                            </div>
+                            <div class="text-xs text-neutral-400">Berlaku sampai <span class="tnum">{{ $iz->berlaku_akhir->translatedFormat('j M Y') }}</span></div>
+                        </div>
+                        @if ($p?->sisaHari < 0)
+                            <span class="badge badge-danger">Habis</span>
+                        @elseif ($p)
+                            <span class="badge badge-warning">H-{{ $p->sisaHari }}</span>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            <p class="px-4 pb-3 text-[11px] text-neutral-400">Perpanjangan diurus sendiri; serahkan berkas terbaru ke SDM untuk diperbarui di sistem.</p>
+        </div>
+    @endif
+
     {{-- Kontak (editable) --}}
     <div class="card">
         <div class="card-header"><div class="card-title">Kontak</div></div>

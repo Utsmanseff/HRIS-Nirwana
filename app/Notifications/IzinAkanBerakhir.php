@@ -33,7 +33,7 @@ class IzinAkanBerakhir extends Notification
             'severity' => $this->severity->value,
             'sisa_hari' => $this->sisaHari,
             'pesan' => $this->pesan(),
-            'url' => '/sdm/karyawan/'.$this->izin->karyawan_id,
+            'url' => $this->url($notifiable),
         ];
     }
 
@@ -43,7 +43,18 @@ class IzinAkanBerakhir extends Notification
             ->title('Pengingat Perizinan')
             ->body($this->pesan())
             ->icon('/img/android-chrome-192x192.png')
-            ->data(['url' => '/sdm/karyawan/'.$this->izin->karyawan_id]);
+            ->data(['url' => $this->url($notifiable)]);
+    }
+
+    /**
+     * Detail karyawan untuk HRD, profil sendiri untuk karyawan ybs — rute /sdm/karyawan
+     * ada di grup gate kelola-sdm, jadi menautkannya ke karyawan biasa berujung 403.
+     */
+    private function url(object $notifiable): string
+    {
+        return ($notifiable->karyawan_id ?? null) === $this->izin->karyawan_id
+            ? '/profil'
+            : '/sdm/karyawan/'.$this->izin->karyawan_id;
     }
 
     private function pesan(): string
