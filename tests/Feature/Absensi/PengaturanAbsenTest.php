@@ -44,7 +44,7 @@ class PengaturanAbsenTest extends TestCase
             ->set('officeLong', 106.8)
             ->set('radiusM', 150)
             ->set('maxAkurasiM', 50)
-            ->call('simpan')
+            ->call('simpanLokasi')
             ->assertHasNoErrors();
 
         $p = PengaturanAbsensi::ambil();
@@ -61,7 +61,7 @@ class PengaturanAbsenTest extends TestCase
         Livewire::actingAs($user)->test(\App\Livewire\Absensi\PengaturanAbsen::class)
             ->set('officeLat', null)
             ->set('radiusM', 0)
-            ->call('simpan')
+            ->call('simpanLokasi')
             ->assertHasErrors(['officeLat', 'radiusM']);
     }
 }
