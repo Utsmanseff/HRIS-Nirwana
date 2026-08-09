@@ -6,7 +6,7 @@
    CATATAN: media query WAJIB di bawah rule dasar — specificity sama,
    rule belakangan yang menang (dulu kebalik → mobile tampil panel full).
    ============================================================ */
-.auth{ display:grid; grid-template-columns:1fr 1fr; min-height:100vh; }
+.auth{ display:grid; grid-template-columns:1fr 1fr; min-height:100dvh; }
 .auth-brand{ position:relative; overflow:hidden; background:var(--panel-grad); color:#fff;
   display:flex; flex-direction:column; justify-content:space-between; padding:3rem; }
 .auth-brand::before{ content:''; position:absolute; inset:0;
@@ -22,7 +22,8 @@
 @media (max-width:900px){
   .auth{ grid-template-columns:1fr; }
   /* Band compact: hanya identitas (logo + wordmark + tagline) */
-  .auth-brand{ padding:3.25rem 1.5rem 2.25rem; justify-content:flex-start; }
+  /* padding-top ikut safe-area — sama alasannya dengan .m-appbar (viewport-fit=cover). */
+  .auth-brand{ padding:calc(3.25rem + env(safe-area-inset-top)) 1.5rem 2.25rem; justify-content:flex-start; }
   .auth-hero,.auth-foot,.auth-sub{ display:none; }
   .auth-id{ flex-direction:column; align-items:flex-start; gap:1.25rem; }
   .auth-mark{ width:4rem; height:4rem; border-radius:1rem; }
