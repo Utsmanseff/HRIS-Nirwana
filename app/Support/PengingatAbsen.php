@@ -108,4 +108,53 @@ class PengingatAbsen
 
         return $sekarang->gte($mulai) && $sekarang->lte($selesai);
     }
+
+    /**
+     * Sesi absensi terbuka yang sudah waktunya ditutup.
+     *
+     * @return Collection<int, Absensi>
+     */
+    public static function pulangTerlewat(?Carbon $sekarang = null): Collection
+    {
+        $sekarang = $sekarang ? $sekarang->copy() : now();
+        $p = PengaturanAbsensi::ambil();
+
+        // Dibatasi 3 hari agar query tetap kecil. Sesi yang nyangkut lebih lama dari itu
+        // tak akan pernah ditutup pemiliknya — mengingatkan pun percuma.
+        return Absensi::with('karyawan.user')
+            ->whereNull('jam_pulang')
+            ->where('jam_masuk', '>=', $sekarang->copy()->subDays(3))
+            ->get()
+            ->filter(function (Absensi $a) use ($sekarang, $p) {
+                $kar = $a->karyawan;
+                if (! $kar || $kar->status !== StatusKaryawan::Aktif || ! $kar->user) {
+                    return false;
+                }
+
+                return $sekarang->gte(self::ambangPulang($a, $p));
+            })->values();
+    }
+
+    private static function ambangPulang(Absensi $a, PengaturanAbsensi $p): Carbon
+    {
+        if (! $a->shift_selesai) {
+            return $a->jam_masuk->copy()->addHours($p->ambang_nyangkut_jam);
+        }
+
+        $mulai = self::menit($a->shift_mulai);
+        $selesai = self::menit($a->shift_selesai);
+        if ($selesai <= $mulai) {
+            $selesai += 1440;   // shift lintas tengah malam
+        }
+
+        return $a->tanggal_kerja->copy()->startOfDay()
+            ->addMinutes($selesai + $p->jeda_pulang_menit);
+    }
+
+    private static function menit(string $jam): int
+    {
+        [$h, $m] = array_map('intval', array_slice(explode(':', $jam), 0, 2));
+
+        return $h * 60 + $m;
+    }
 }
