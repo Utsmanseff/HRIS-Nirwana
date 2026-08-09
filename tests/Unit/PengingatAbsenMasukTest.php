@@ -2,9 +2,12 @@
 
 namespace Tests\Unit;
 
+use App\Enums\StatusPengajuanCuti;
 use App\Models\Absensi;
+use App\Models\HariLibur;
 use App\Models\Jadwal;
 use App\Models\Karyawan;
+use App\Models\PengajuanCuti;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\PengingatAbsen;
@@ -99,5 +102,82 @@ class PengingatAbsenMasukTest extends TestCase
 
         $this->assertCount(1, $hasil);
         $this->assertSame($jadwalSore->id, $hasil->first()->id);
+    }
+
+    public function test_sedang_cuti_disetujui_tidak_ditagih(): void
+    {
+        $jadwal = $this->jadwalPagi();
+        PengajuanCuti::factory()->create([
+            'karyawan_id' => $jadwal->karyawan_id,
+            'status' => StatusPengajuanCuti::Disetujui,
+            'tanggal_mulai' => '2026-08-09',
+            'tanggal_selesai' => '2026-08-11',
+        ]);
+
+        $this->assertCount(0, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
+    }
+
+    /**
+     * Jebakan `whereBetween`: kolom tanggal ter-cast datetime dan tersimpan 'Y-m-d 00:00:00',
+     * sehingga batas 'Y-m-d' polos membuang hari terakhir. Kalau salah, gejalanya cuma
+     * "kadang orang cuti ditagih absen" — sangat susah dilacak dari laporan.
+     */
+    public function test_hari_terakhir_cuti_tetap_dilewati(): void
+    {
+        $jadwal = $this->jadwalPagi();
+        PengajuanCuti::factory()->create([
+            'karyawan_id' => $jadwal->karyawan_id,
+            'status' => StatusPengajuanCuti::Disetujui,
+            'tanggal_mulai' => '2026-08-08',
+            'tanggal_selesai' => '2026-08-10',   // hari terakhir = hari jadwal
+        ]);
+
+        $this->assertCount(0, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
+    }
+
+    public function test_cuti_ditolak_tetap_ditagih(): void
+    {
+        $jadwal = $this->jadwalPagi();
+        PengajuanCuti::factory()->create([
+            'karyawan_id' => $jadwal->karyawan_id,
+            'status' => StatusPengajuanCuti::Ditolak,
+            'tanggal_mulai' => '2026-08-09',
+            'tanggal_selesai' => '2026-08-11',
+        ]);
+
+        $this->assertCount(1, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
+    }
+
+    public function test_karyawan_nonaktif_dilewati(): void
+    {
+        $jadwal = $this->jadwalPagi();
+        $jadwal->karyawan->update(['status' => 'nonaktif']);
+
+        $this->assertCount(0, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
+    }
+
+    public function test_karyawan_tanpa_akun_user_dilewati(): void
+    {
+        $kar = Karyawan::factory()->create(['status' => 'aktif']); // tanpa User
+        $shift = Shift::factory()->create([
+            'jam_mulai' => '07:00:00', 'jam_selesai' => '14:00:00', 'toleransi_telat' => 10,
+        ]);
+        Jadwal::factory()->create([
+            'karyawan_id' => $kar->id, 'shift_id' => $shift->id, 'tanggal' => '2026-08-10',
+        ]);
+
+        $this->assertCount(0, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
+    }
+
+    /**
+     * Rumah sakit jalan terus: dijadwalkan di tanggal merah = tetap harus absen.
+     * Test ini menjaga agar tak ada yang "membantu" dengan menambahkan filter hari_libur.
+     */
+    public function test_hari_libur_tetap_ditagih(): void
+    {
+        $this->jadwalPagi();
+        HariLibur::create(['tanggal' => '2026-08-10', 'nama' => 'Uji Libur']);
+
+        $this->assertCount(1, PengingatAbsen::masukTerlewat(Carbon::parse('2026-08-10 07:30:00')));
     }
 }

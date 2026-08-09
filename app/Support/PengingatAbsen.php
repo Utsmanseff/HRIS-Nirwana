@@ -5,8 +5,10 @@
 namespace App\Support;
 
 use App\Enums\StatusKaryawan;
+use App\Enums\StatusPengajuanCuti;
 use App\Models\Absensi;
 use App\Models\Jadwal;
+use App\Models\PengajuanCuti;
 use App\Models\PengaturanAbsensi;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -63,7 +65,15 @@ class PengingatAbsen
             ->map(fn (Absensi $a) => $a->karyawan_id.'|'.$a->tanggal_kerja->toDateString().'|'.$a->shift_id)
             ->flip();
 
-        return $jadwal->filter(function (Jadwal $j) use ($sekarang, $p, $sudahAbsen) {
+        // whereDate di KEDUA sisi — kolom tanggal ter-cast datetime dan tersimpan
+        // 'Y-m-d 00:00:00'; whereBetween dengan batas 'Y-m-d' polos membuang hari terakhir.
+        $cuti = PengajuanCuti::where('status', StatusPengajuanCuti::Disetujui)
+            ->whereIn('karyawan_id', $karyawanIds)
+            ->whereDate('tanggal_mulai', '<=', $tanggal[1])
+            ->whereDate('tanggal_selesai', '>=', $tanggal[0])
+            ->get(['karyawan_id', 'tanggal_mulai', 'tanggal_selesai']);
+
+        return $jadwal->filter(function (Jadwal $j) use ($sekarang, $p, $sudahAbsen, $cuti) {
             $kar = $j->karyawan;
             if (! $kar || $kar->status !== StatusKaryawan::Aktif || ! $kar->user) {
                 return false;
@@ -71,6 +81,16 @@ class PengingatAbsen
 
             $kunci = $j->karyawan_id.'|'.$j->tanggal->toDateString().'|'.$j->shift_id;
             if ($sudahAbsen->has($kunci)) {
+                return false;
+            }
+
+            $tgl = $j->tanggal;
+            $sedangCuti = $cuti->contains(
+                fn (PengajuanCuti $c) => $c->karyawan_id === $j->karyawan_id
+                    && $c->tanggal_mulai->lte($tgl)
+                    && $c->tanggal_selesai->gte($tgl),
+            );
+            if ($sedangCuti) {
                 return false;
             }
 
