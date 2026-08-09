@@ -34,12 +34,17 @@ class OrgStruktur extends Component
 
     public string $tcTanggalMasuk = '';
 
-    // Panel Kelola Jabatan Staff
+    // Panel Kelola Jabatan
     public ?int $jabatanUnitId = null;
 
     public string $jNama = '';
 
     public ?int $editJabatanId = null;
+
+    // Jabatan pimpinan unit — hanya boleh di-rename (level & jumlah terkunci).
+    public string $jpNama = '';
+
+    public ?int $editPimpinanId = null;
 
     public function baru(?int $parentId = null): void
     {
@@ -135,22 +140,60 @@ class OrgStruktur extends Component
 
     public function bukaJabatan(int $unitId): void
     {
-        $this->reset(['jNama', 'editJabatanId']);
+        $this->reset(['jNama', 'editJabatanId', 'jpNama', 'editPimpinanId']);
         $this->jabatanUnitId = $unitId;
         $this->setKepalaUnitId = null;
         $this->showForm = false;
+
+        // Materialkan jabatan pimpinan supaya bisa di-rename walau unit belum punya kepala.
+        OrgUnit::findOrFail($unitId)->jabatanPimpinan();
     }
 
     public function tutupJabatan(): void
     {
-        $this->reset(['jabatanUnitId', 'jNama', 'editJabatanId']);
+        $this->reset(['jabatanUnitId', 'jNama', 'editJabatanId', 'jpNama', 'editPimpinanId']);
     }
 
     public function editJabatanStaff(int $id): void
     {
-        $jab = Jabatan::findOrFail($id);
+        $jab = Jabatan::where('org_unit_id', $this->jabatanUnitId)->staff()->find($id);
+        if (! $jab) {
+            return; // jabatan pimpinan / unit lain tak boleh lewat jalur staff
+        }
         $this->editJabatanId = $jab->id;
         $this->jNama = $jab->nama;
+    }
+
+    public function editJabatanPimpinan(int $id): void
+    {
+        $jab = $this->jabatanPimpinanUnit();
+        if (! $jab || $jab->id !== $id) {
+            return;
+        }
+        $this->editPimpinanId = $jab->id;
+        $this->jpNama = $jab->nama;
+    }
+
+    /** Rename saja — level, unit, dan jumlah (1 per unit) terkunci. */
+    public function simpanJabatanPimpinan(): void
+    {
+        $jab = $this->jabatanPimpinanUnit();
+        if (! $this->editPimpinanId || ! $jab || $jab->id !== $this->editPimpinanId) {
+            return;
+        }
+
+        $data = $this->validate(['jpNama' => ['required', 'string', 'max:120']]);
+
+        $jab->update(['nama' => $data['jpNama']]);
+
+        $this->reset(['jpNama', 'editPimpinanId']);
+    }
+
+    private function jabatanPimpinanUnit(): ?Jabatan
+    {
+        return $this->jabatanUnitId
+            ? Jabatan::where('org_unit_id', $this->jabatanUnitId)->pimpinan()->orderByDesc('level')->first()
+            : null;
     }
 
     public function simpanJabatanStaff(): void
@@ -192,6 +235,7 @@ class OrgStruktur extends Component
             'tipeOptions' => OrgUnitTipe::cases(),
             'hasilCari' => $hasilCari,
             'jabatanUnit' => $jabatanUnit,
+            'jabatanPimpinan' => $this->jabatanPimpinanUnit(),
         ]);
     }
 }

@@ -4,6 +4,7 @@
 
 namespace App\Models;
 
+use App\Enums\JabatanLevel;
 use App\Enums\OrgUnitTipe;
 use App\Enums\StatusKaryawan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,14 +58,47 @@ class OrgUnit extends Model
             ->first();
     }
 
+    /**
+     * Ikutkan nama jabatan turunan saat unit di-rename — tapi HANYA bila namanya
+     * masih persis nama default lama (belum pernah di-rename manual oleh SDM).
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $unit) {
+            if (! $unit->wasChanged('nama')) {
+                return;
+            }
+
+            $namaLama = $unit->getOriginal('nama');
+            $tipeLama = $unit->getOriginal('tipe');
+            $tipeLama = $tipeLama instanceof OrgUnitTipe ? $tipeLama : OrgUnitTipe::from($tipeLama);
+
+            Jabatan::where('org_unit_id', $unit->id)
+                ->where('level', $tipeLama->levelPimpinan()->value)
+                ->where('nama', static::namaPimpinanUntuk($tipeLama, $namaLama))
+                ->update(['nama' => $unit->namaPimpinan()]);
+
+            // Kunci jabatanStaffDefault() ikut nama unit → tanpa ini rename bikin baris dobel.
+            Jabatan::where('org_unit_id', $unit->id)
+                ->where('level', JabatanLevel::Staff->value)
+                ->where('nama', 'Staff '.$namaLama)
+                ->update(['nama' => 'Staff '.$unit->nama]);
+        });
+    }
+
     /** Nama default jabatan pimpinan untuk unit ini (editable setelah dibuat). */
     public function namaPimpinan(): string
     {
-        return match ($this->tipe) {
+        return static::namaPimpinanUntuk($this->tipe, $this->nama);
+    }
+
+    public static function namaPimpinanUntuk(OrgUnitTipe $tipe, string $nama): string
+    {
+        return match ($tipe) {
             OrgUnitTipe::Direktur => 'Direktur',
-            OrgUnitTipe::Bidang => 'Kabid '.$this->nama,
-            OrgUnitTipe::Bagian => 'Kabag '.$this->nama,
-            OrgUnitTipe::Unit => 'Koordinator '.$this->nama,
+            OrgUnitTipe::Bidang => 'Kabid '.$nama,
+            OrgUnitTipe::Bagian => 'Kabag '.$nama,
+            OrgUnitTipe::Unit => 'Koordinator '.$nama,
         };
     }
 

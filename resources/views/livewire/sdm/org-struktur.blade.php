@@ -90,9 +90,36 @@
     @if ($jabatanUnitId)
         <div class="card card-pad space-y-3">
             <div class="flex items-center justify-between">
-                <div class="card-title">Kelola Jabatan Staff</div>
+                <div class="card-title">Kelola Jabatan</div>
                 <button wire:click="tutupJabatan" class="btn btn-ghost btn-sm">Tutup</button>
             </div>
+
+            @if ($jabatanPimpinan)
+                <div class="space-y-2">
+                    <div class="text-xs font-semibold text-neutral-500">Jabatan pimpinan unit</div>
+                    @if ($editPimpinanId === $jabatanPimpinan->id)
+                        <div class="flex items-end gap-2">
+                            <div class="flex-1">
+                                <label class="field-label">Ubah nama jabatan pimpinan</label>
+                                <input wire:model="jpNama" class="input @error('jpNama') input-error @enderror"
+                                    placeholder="mis. Ketua SPI">
+                                @error('jpNama') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                            </div>
+                            <button wire:click="simpanJabatanPimpinan" class="btn btn-primary btn-sm">Simpan</button>
+                        </div>
+                    @else
+                        <div class="flex items-center justify-between px-3 py-2 border border-neutral-200 rounded-lg">
+                            <span class="text-sm font-semibold">{{ $jabatanPimpinan->nama }}
+                                <span class="badge badge-neutral">{{ $jabatanPimpinan->level->label() }}</span></span>
+                            <button wire:click="editJabatanPimpinan({{ $jabatanPimpinan->id }})"
+                                class="btn btn-ghost btn-sm">Ubah nama</button>
+                        </div>
+                    @endif
+                    <p class="text-xs text-neutral-400">Hanya nama yang bisa diubah — level dan jumlah (1 per unit) terkunci.</p>
+                </div>
+            @endif
+
+            <div class="text-xs font-semibold text-neutral-500 pt-2 border-t border-neutral-100">Jabatan staff</div>
             @if ($jabatanUnit->isNotEmpty())
                 <div class="divide-y divide-neutral-100 border border-neutral-200 rounded-lg">
                     @foreach ($jabatanUnit as $j)
