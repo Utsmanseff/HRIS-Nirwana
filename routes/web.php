@@ -20,9 +20,9 @@ use App\Livewire\Disiplin\UsulDisiplin;
 use App\Livewire\Sistem\PenggunaKelola;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Root diarahkan ke login; middleware `guest` di /login memantul user yang sudah masuk
+// ke /beranda. View welcome.blade.php sengaja dibiarkan untuk kebutuhan halaman publik nanti.
+Route::redirect('/', '/login');
 
 // Design-system styleguide — living reference of ported tokens & components.
 Route::view('/styleguide', 'styleguide')->name('styleguide');
