@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\KodeJenisIzin;
 use App\Enums\Permission;
+use App\Models\IzinKaryawan;
+use App\Models\JenisIzin;
 use App\Models\Karyawan;
 use App\Models\Kontrak;
 use App\Models\User;
@@ -65,17 +68,19 @@ class BerandaTest extends TestCase
             ->assertSeeInOrder(['Sudah Lewat', 'Akan Berakhir']);
     }
 
-    public function test_kartu_sip_tampil_bila_ada_yang_hampir_habis(): void
+    public function test_kartu_perizinan_tampil_bila_ada_yang_hampir_habis(): void
     {
         $user = $this->userSdm();
-        Karyawan::factory()->withSip()->create([
-            'nama_lengkap' => 'Perawat Sip',
-            'sip_berlaku_akhir' => now()->addDays(12),
+        $kar = Karyawan::factory()->create(['nama_lengkap' => 'Perawat Sip']);
+        IzinKaryawan::factory()->create([
+            'karyawan_id' => $kar->id,
+            'jenis_izin_id' => JenisIzin::where('kode', KodeJenisIzin::Sip->value)->value('id'),
+            'berlaku_akhir' => now()->addDays(12),
         ]);
 
         $this->actingAs($user)->get('/beranda')
             ->assertOk()
-            ->assertSee('Pengingat SIP')
+            ->assertSee('Pengingat Perizinan')
             ->assertSee('Perawat Sip');
     }
 

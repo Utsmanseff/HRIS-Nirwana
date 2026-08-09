@@ -229,15 +229,15 @@
                     </div>
                 </div>
 
-                @if ($pengingatSip->isNotEmpty())
+                @if ($pengingatIzin->isNotEmpty())
                     <div class="card h-fit">
-                        <div class="card-header"><div class="card-title">Pengingat SIP</div></div>
+                        <div class="card-header"><div class="card-title">Pengingat Perizinan</div></div>
                         <div class="card-pad space-y-3">
-                            @foreach ($pengingatSip as $p)
-                                <div class="flex items-center justify-between gap-2">
+                            @foreach ($pengingatIzin as $p)
+                                <div class="flex items-center justify-between gap-2" wire:key="izin-{{ $p->izin->id }}">
                                     <div>
-                                        <a href="{{ route('sdm.karyawan.detail', $p->karyawan) }}" class="text-sm font-semibold hover:underline">{{ $p->karyawan->nama_lengkap }}</a>
-                                        <div class="text-xs text-neutral-400 font-mono">{{ $p->karyawan->sip_berlaku_akhir->translatedFormat('j M Y') }}</div>
+                                        <a href="{{ route('sdm.karyawan.detail', $p->izin->karyawan_id) }}?tab=izin" class="text-sm font-semibold hover:underline">{{ $p->izin->karyawan->nama_lengkap }}</a>
+                                        <div class="text-xs text-neutral-400">{{ $p->izin->jenis->nama }} · <span class="font-mono">{{ $p->izin->berlaku_akhir->translatedFormat('j M Y') }}</span></div>
                                     </div>
                                     @if ($p->sisaHari < 0)
                                         <span class="badge badge-danger">Habis</span>

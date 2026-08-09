@@ -7,7 +7,7 @@ use App\Enums\StatusKaryawan;
 use App\Models\Karyawan;
 use App\Support\NavMenu;
 use App\Support\PengingatKontrak;
-use App\Support\PengingatSip;
+use App\Support\PengingatIzin;
 use App\Support\RekapCuti;
 use App\Support\SaldoCuti;
 use Livewire\Component;
@@ -22,7 +22,7 @@ class Beranda extends Component
 
         if ($bisaSdm) {
             $pengingatKontrak = PengingatKontrak::semua()->sortBy('sisaHari')->values();
-            $pengingatSip = PengingatSip::semua()->sortBy('sisaHari')->values();
+            $pengingatIzin = PengingatIzin::semua()->sortBy('sisaHari')->values();
             $data += [
                 'jumlahAktif' => Karyawan::where('status', StatusKaryawan::Aktif->value)->count(),
                 'jumlahAkanBerakhir' => $pengingatKontrak->where('sisaHari', '>=', 0)->count(),
@@ -31,8 +31,8 @@ class Beranda extends Component
                     ->whereHas('kontrakTerbaru', fn ($q) => $q->where('jenis', '!=', JenisKontrak::Tetap->value))
                     ->count(),
                 'pengingatKontrak' => $pengingatKontrak->take(8),
-                'pengingatSip' => $pengingatSip->take(5),
-                'totalPerhatian' => $pengingatKontrak->count() + $pengingatSip->count(),
+                'pengingatIzin' => $pengingatIzin->take(5),
+                'totalPerhatian' => $pengingatKontrak->count() + $pengingatIzin->count(),
             ];
         }
 
