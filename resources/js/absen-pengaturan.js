@@ -22,6 +22,11 @@ document.addEventListener('alpine:init', () => {
             const radius = Number(this.$wire.get('radiusM')) || 100;
 
             this.$nextTick(() => {
+                // Penjaga HARUS di dalam $nextTick, bukan di awal init(): dua panggilan init()
+                // yang beruntun sama-sama lolos pemeriksaan sebelum salah satunya sempat
+                // mengisi this.peta, jadi penjaga di luar sini tak menangkap apa pun.
+                if (this.peta) return;
+
                 this.peta = L.map(this.$refs.peta).setView([lat, long], 16);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(this.peta);
 

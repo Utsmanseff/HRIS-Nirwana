@@ -1,6 +1,7 @@
+{{-- Tanpa x-init: Alpine sudah memanggil init() milik x-data sendiri. Menulis keduanya
+     membuat init() jalan dua kali → L.map() dua kali di kontainer yang sama. --}}
 <div class="max-w-3xl mx-auto"
-     x-data="petaPengaturan()"
-     x-init="init()">
+     x-data="petaPengaturan()">
     <div class="mb-5">
         <h1 class="text-2xl font-extrabold tracking-tight">Pengaturan Absensi</h1>
         <p class="text-neutral-500 text-sm mt-1">
