@@ -5,6 +5,7 @@
 namespace App\Models;
 
 use App\Enums\JabatanLevel;
+use App\Enums\RutePengawas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,11 +17,11 @@ class Jabatan extends Model
 
     protected $table = 'jabatan';
 
-    protected $fillable = ['nama', 'level', 'org_unit_id', 'aktif'];
+    protected $fillable = ['nama', 'level', 'org_unit_id', 'aktif', 'rute_pengawas'];
 
     protected function casts(): array
     {
-        return ['level' => JabatanLevel::class, 'aktif' => 'boolean'];
+        return ['level' => JabatanLevel::class, 'aktif' => 'boolean', 'rute_pengawas' => RutePengawas::class];
     }
 
     public function orgUnit(): BelongsTo
@@ -31,6 +32,12 @@ class Jabatan extends Model
     public function karyawan(): HasMany
     {
         return $this->hasMany(Karyawan::class, 'jabatan_id');
+    }
+
+    /** Jabatan ini berwenang mengusulkan sanksi untuk seluruh karyawan. */
+    public function adalahPengawas(): bool
+    {
+        return $this->rute_pengawas !== null;
     }
 
     public function scopePimpinan($q)

@@ -96,6 +96,14 @@ class KelolaDisiplin extends Component
         $pengusul = auth()->user()->karyawan()->firstOrFail();
         $tingkat = TingkatSanksi::from((int) $this->tingkat);
 
+        // Lihat catatan yang sama di UsulDisiplin: tanpa pemegang role HRD/Direktur,
+        // rantainya kosong dan sanksi tersimpan tanpa penyetuju maupun notifikasi.
+        if (RantaiSanksi::susun($pengusul, Karyawan::find($this->karyawanId))->isEmpty()) {
+            $this->addError('karyawanId', 'Belum ada pemegang peran HRD/Direktur, sanksi tak punya penyetuju. Hubungi Admin Sistem.');
+
+            return null;
+        }
+
         try {
             DB::transaction(function () use ($pengusul, $tingkat) {
                 $sanksi = SanksiDisiplin::create([

@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\JabatanLevel;
 use App\Enums\PeranApproval;
 use App\Enums\Role;
+use App\Enums\RutePengawas;
 use App\Enums\StatusApproval;
 use App\Models\ApprovalSanksi;
 use App\Models\Karyawan;
@@ -18,9 +19,13 @@ class RantaiSanksi
      * Susun rantai approver dari PENGUSUL naik: ...→HRD→Direktur (final).
      * Direktur/HRD pengusul → rantai pendek (Direktur self-terbit; HRD→[Direktur]).
      *
+     * $terdakwa hanya dipakai bila pengusul memegang jabatan pengawas — jabatan yang
+     * boleh mengusulkan SP untuk seluruh karyawan, sehingga rantainya tak bisa lagi
+     * dihitung dari garis komando pengusul sendiri. Lihat RutePengawas.
+     *
      * @return Collection<int, array{urutan:int, approver:Karyawan, peran:PeranApproval}>
      */
-    public static function susun(Karyawan $pengusul): Collection
+    public static function susun(Karyawan $pengusul, ?Karyawan $terdakwa = null): Collection
     {
         $lvl = $pengusul->jabatan?->level?->value ?? 0;
 
@@ -32,26 +37,21 @@ class RantaiSanksi
         }
 
         $steps = collect();
+        $rute = $pengusul->jabatan?->rute_pengawas;
 
         // HRD buat-langsung → tanpa approver unit; langsung ke Direktur.
         if (! $pengusul->user?->hasRole(Role::Hrd->value)) {
-            // Pengusul di bawah Kabid → naik sampai Kabid (inklusif).
-            if ($lvl < JabatanLevel::Kabid->value) {
-                $current = $pengusul->atasanDerived();
-                while ($current) {
-                    $clvl = $current->jabatan?->level?->value ?? 0;
-                    if ($clvl >= JabatanLevel::Direktur->value) {
-                        break; // Direktur tak jadi approver via jalur unit
-                    }
-                    $steps->push([
-                        'approver' => $current,
-                        'peran' => $clvl >= JabatanLevel::Kabid->value ? PeranApproval::Kabid : PeranApproval::Koordinator,
-                    ]);
-                    if ($clvl >= JabatanLevel::Kabid->value) {
-                        break;
-                    }
-                    $current = $current->atasanDerived();
-                }
+            if ($rute === RutePengawas::LangsungHrd) {
+                // Pola SPI: sengaja tanpa jalur unit sama sekali, berapa pun levelnya.
+            } elseif ($rute === RutePengawas::LewatAtasan && $terdakwa) {
+                // Pola supervisor: usulan masuk lewat garis komando karyawan yang
+                // diusulkan, bukan garis komando pengusul. Pengusul dilewati bila dia
+                // sendiri kebetulan atasan si terdakwa — tak boleh jadi penyetuju
+                // usulannya sendiri.
+                $steps = self::jalurUnit($terdakwa->atasanDerived(), $pengusul);
+            } elseif ($lvl < JabatanLevel::Kabid->value) {
+                // Pengusul di bawah Kabid → naik sampai Kabid (inklusif).
+                $steps = self::jalurUnit($pengusul->atasanDerived());
             }
 
             // Append HRD (antara).
@@ -70,10 +70,43 @@ class RantaiSanksi
         return self::beriUrutan($steps);
     }
 
+    /**
+     * Naik dari $mulai sampai Kabid (inklusif); Direktur tak ikut lewat jalur unit.
+     * $lewati dikeluarkan dari rantai tapi penelusurannya tetap lanjut ke atasannya.
+     *
+     * @return Collection<int, array{approver:Karyawan, peran:PeranApproval}>
+     */
+    private static function jalurUnit(?Karyawan $mulai, ?Karyawan $lewati = null): Collection
+    {
+        $steps = collect();
+        $current = $mulai;
+
+        while ($current) {
+            $clvl = $current->jabatan?->level?->value ?? 0;
+            if ($clvl >= JabatanLevel::Direktur->value) {
+                break;
+            }
+
+            if (! $lewati || $current->id !== $lewati->id) {
+                $steps->push([
+                    'approver' => $current,
+                    'peran' => $clvl >= JabatanLevel::Kabid->value ? PeranApproval::Kabid : PeranApproval::Koordinator,
+                ]);
+                if ($clvl >= JabatanLevel::Kabid->value) {
+                    break;
+                }
+            }
+
+            $current = $current->atasanDerived();
+        }
+
+        return $steps;
+    }
+
     /** Tulis rantai approval untuk sebuah sanksi (mengganti baris lama bila ada). */
     public static function bangunUntuk(SanksiDisiplin $sanksi): void
     {
-        $steps = self::susun($sanksi->pengusul);
+        $steps = self::susun($sanksi->pengusul, $sanksi->karyawan);
 
         DB::transaction(function () use ($sanksi, $steps) {
             ApprovalSanksi::where('sanksi_id', $sanksi->id)->delete();

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Disiplin;
 
+use App\Enums\JabatanLevel;
 use App\Enums\StatusKaryawan;
 use App\Enums\StatusSanksi;
 use App\Enums\TingkatSanksi;
@@ -41,18 +42,30 @@ class UsulDisiplin extends Component
         return auth()->user()->karyawan()->firstOrFail();
     }
 
-    /** Query bawahan = aktif dalam turunan unit pengusul, kecuali diri. */
+    /**
+     * Karyawan yang boleh diusulkan.
+     *
+     * Pemegang jabatan pengawas menjangkau SELURUH karyawan aktif — termasuk sesama
+     * pengawas — kecuali dirinya sendiri dan Direktur (pemutus akhir rantai; janggal
+     * bila jadi terusul). Selain itu: hanya turunan unitnya sendiri, seperti semula.
+     */
     protected function bawahanQuery()
     {
         $pengusul = $this->pengusul();
+
+        $q = Karyawan::query()
+            ->where('status', StatusKaryawan::Aktif->value)
+            ->where('id', '!=', $pengusul->id);
+
+        if ($pengusul->jabatan?->adalahPengawas()) {
+            return $q->whereDoesntHave('jabatan', fn ($j) => $j->where('level', '>=', JabatanLevel::Direktur->value));
+        }
+
         if (! $pengusul->org_unit_id) {
             return Karyawan::query()->whereRaw('1 = 0');
         }
 
-        return Karyawan::query()
-            ->whereIn('org_unit_id', OrgUnit::denganTurunan($pengusul->org_unit_id))
-            ->where('status', StatusKaryawan::Aktif->value)
-            ->where('id', '!=', $pengusul->id);
+        return $q->whereIn('org_unit_id', OrgUnit::denganTurunan($pengusul->org_unit_id));
     }
 
     public function pilihKaryawan(int $id): void
@@ -82,13 +95,23 @@ class UsulDisiplin extends Component
         ]);
 
         if (! $this->bawahanQuery()->whereKey($this->karyawanId)->exists()) {
-            $this->addError('karyawanId', 'Karyawan bukan bawahan Anda.');
+            $this->addError('karyawanId', 'Karyawan di luar jangkauan usulan Anda.');
 
             return null;
         }
 
         $pengusul = $this->pengusul();
+        $terdakwa = Karyawan::findOrFail($this->karyawanId);
         $tingkat = TingkatSanksi::from((int) $this->tingkat);
+
+        // Rantai kosong terjadi bila belum ada pemegang role HRD & Direktur. Tanpa
+        // penjagaan ini usulan tetap tersimpan tapi nol penyetuju dan nol notifikasi —
+        // buntu tanpa tanda apa pun.
+        if (RantaiSanksi::susun($pengusul, $terdakwa)->isEmpty()) {
+            $this->addError('karyawanId', 'Belum ada pemegang peran HRD/Direktur, usulan tak punya penyetuju. Hubungi Admin Sistem.');
+
+            return null;
+        }
 
         DB::transaction(function () use ($pengusul, $tingkat) {
             $sanksi = SanksiDisiplin::create([
@@ -126,7 +149,7 @@ class UsulDisiplin extends Component
             'sanksiAktif' => $this->karyawanId ? EskalasiSanksi::sanksiAktif(Karyawan::find($this->karyawanId)) : collect(),
             'saran' => $this->karyawanId ? EskalasiSanksi::sarankan(Karyawan::find($this->karyawanId)) : null,
             'tingkatOpsi' => TingkatSanksi::cases(),
-            'rantai' => RantaiSanksi::susun($pengusul),
+            'rantai' => RantaiSanksi::susun($pengusul, $this->karyawanId ? Karyawan::find($this->karyawanId) : null),
         ]);
     }
 }
