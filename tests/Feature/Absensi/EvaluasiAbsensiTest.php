@@ -22,6 +22,20 @@ class EvaluasiAbsensiTest extends TestCase
         $this->assertSame(0, $telat);
     }
 
+    public function test_telat_shift_malam_saat_masuk_lewat_tengah_malam(): void
+    {
+        // Shift mulai 21:00, toleransi 15m, baru masuk 00:30 keesokan harinya → telat 210m.
+        // Sebelum diperbaiki hasilnya 0 karena patokannya meleset ke 21:00 malam berikutnya.
+        $telat = EvaluasiAbsensi::telatMenit(Carbon::parse('2026-07-10 00:30:00'), '21:00:00', 15);
+        $this->assertSame(210, $telat);
+    }
+
+    public function test_datang_lebih_awal_pada_shift_malam_tidak_telat(): void
+    {
+        $telat = EvaluasiAbsensi::telatMenit(Carbon::parse('2026-07-09 20:30:00'), '21:00:00', 15);
+        $this->assertSame(0, $telat);
+    }
+
     public function test_pulang_cepat_menit(): void
     {
         // shift 07:00–14:00, pulang 13:40 → pulang cepat 20m
@@ -76,27 +90,46 @@ class EvaluasiAbsensiTest extends TestCase
         $this->assertSame(2, $pc);
     }
 
-    public function test_datang_telat_lalu_pulang_tepat_waktu_bukan_pulang_cepat(): void
+    public function test_datang_telat_wajib_pulang_mundur_sepanjang_shift(): void
     {
-        // Masuk 09:10 (telat, sudah tercatat di telat_menit), pulang 16:00 tepat jam selesai.
-        // Kekurangan 10 menit murni akibat telat → jangan dihitung dobel jadi pulang cepat.
+        // Masuk 09:10, pulang 16:00 → kerja 6j50m dari 7 jam → kurang 10m.
+        // Kewajibannya panjang shift, jadi telat menggeser jam pulang, bukan dimaafkan.
         $pc = EvaluasiAbsensi::pulangCepatMenit(
             Carbon::parse('2026-07-09 09:10:00'),
             Carbon::parse('2026-07-09 16:00:00'),
             '09:00:00', '16:00:00'
         );
-        $this->assertSame(0, $pc);
+        $this->assertSame(10, $pc);
     }
 
-    public function test_telat_lalu_pulang_lebih_awal_hanya_menghitung_selisih_pulangnya(): void
+    public function test_telat_lalu_pulang_lebih_awal_menjumlah_dua_kekurangan(): void
     {
-        // Masuk 09:10, pulang 15:50 → kurang 20 menit, 10 di antaranya akibat telat → 10m.
+        // Masuk 09:10, pulang 15:50 → kerja 6j40m dari 7 jam → kurang 20m.
         $pc = EvaluasiAbsensi::pulangCepatMenit(
             Carbon::parse('2026-07-09 09:10:00'),
             Carbon::parse('2026-07-09 15:50:00'),
             '09:00:00', '16:00:00'
         );
-        $this->assertSame(10, $pc);
+        $this->assertSame(20, $pc);
+    }
+
+    public function test_shift_malam_masuk_lewat_tengah_malam(): void
+    {
+        // Shift 21:00-07:00 (10 jam), baru masuk 00:30 tgl 10, pulang 07:00 → kerja 6j30m
+        // → kurang 3j30m. Rumus lama menempelkan jam shift ke tanggal jam_masuk sehingga
+        // patokannya meleset sehari dan hasilnya kacau.
+        $pc = EvaluasiAbsensi::pulangCepatMenit(
+            Carbon::parse('2026-07-10 00:30:00'),
+            Carbon::parse('2026-07-10 07:00:00'),
+            '21:00:00', '07:00:00'
+        );
+        $this->assertSame(210, $pc);
+    }
+
+    public function test_durasi_shift_lintas_hari_dihitung_tanpa_tanggal(): void
+    {
+        $this->assertSame(420, EvaluasiAbsensi::durasiShiftMenit('09:00:00', '16:00:00'));
+        $this->assertSame(600, EvaluasiAbsensi::durasiShiftMenit('21:00:00', '07:00:00'));
     }
 
     public function test_masuk_awal_tapi_kurang_jam_tetap_pulang_cepat(): void
