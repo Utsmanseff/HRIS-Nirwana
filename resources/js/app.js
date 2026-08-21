@@ -2,6 +2,7 @@
 
 import './absen.js';
 import './antrian-gambar.js';
+import './papan-ketik.js';
 import './absen-pengaturan.js';
 import './konfirmasi.js';
 
