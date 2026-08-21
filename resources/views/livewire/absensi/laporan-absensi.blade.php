@@ -139,7 +139,7 @@
             </tbody>
         </table>
         <div class="p-3 text-center text-xs text-neutral-400 border-t border-neutral-100">
-            Evaluasi by jadwal: punya shift → deteksi telat/pulang cepat; tanpa shift → catat saja + total jam. Sesi nyangkut (anomali) ditandai, tidak dikoreksi otomatis.
+            Evaluasi by jadwal: punya shift → deteksi telat/pulang cepat; tanpa shift → catat saja + total jam. Sesi nyangkut, durasi tak wajar, dan sesi kilat (&lt; 5 menit, biasanya salah pencet) ditandai anomali — tidak dikoreksi otomatis.
         </div>
     </div>
 

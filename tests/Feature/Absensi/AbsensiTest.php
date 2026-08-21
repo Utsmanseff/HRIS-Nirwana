@@ -52,4 +52,27 @@ class AbsensiTest extends TestCase
         $this->assertTrue($nyangkut->anomali());
         $this->assertFalse($normal->anomali());
     }
+
+    public function test_anomali_saat_sesi_kilat_kurang_dari_lima_menit(): void
+    {
+        // Swipe pulang kepencet tepat setelah swipe masuk → "15:47 → 15:47, 0m".
+        // Tanpa penandaan, baris itu terbaca sebagai kehadiran yang sah.
+        $kilat = Absensi::factory()->create([
+            'jam_masuk' => now()->setTime(15, 47),
+            'jam_pulang' => now()->setTime(15, 47),
+        ]);
+
+        $this->assertTrue($kilat->anomali());
+        $this->assertSame('anomali', $kilat->statusRekap());
+    }
+
+    public function test_sesi_pendek_tapi_wajar_bukan_anomali(): void
+    {
+        $singkat = Absensi::factory()->create([
+            'jam_masuk' => now()->setTime(15, 0),
+            'jam_pulang' => now()->setTime(15, 5),
+        ]);
+
+        $this->assertFalse($singkat->anomali());
+    }
 }
