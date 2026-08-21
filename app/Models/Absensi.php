@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Durasi;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,7 +75,7 @@ class Absensi extends Model
     {
         $m = $this->totalMenit();
 
-        return $m ? intdiv($m, 60).'j '.($m % 60).'m' : '-';
+        return $m === null ? '-' : Durasi::label($m);
     }
 
     /** Anomali: sesi nyangkut (aktif & tanggal lampau) atau durasi tak wajar. */
@@ -117,8 +118,8 @@ class Absensi extends Model
     {
         return match ($this->statusRekap()) {
             'anomali' => ['Anomali', 'badge-danger'],
-            'telat' => ['Telat'.($this->telat_menit ? ' '.$this->telat_menit.'m' : ''), 'badge-warning'],
-            'pulang_cepat' => ['Pulang cepat'.($this->pulang_cepat_menit ? ' '.$this->pulang_cepat_menit.'m' : ''), 'badge-warning'],
+            'telat' => ['Telat'.($this->telat_menit ? ' '.Durasi::label($this->telat_menit) : ''), 'badge-warning'],
+            'pulang_cepat' => ['Pulang cepat'.($this->pulang_cepat_menit ? ' '.Durasi::label($this->pulang_cepat_menit) : ''), 'badge-warning'],
             default => [$this->adaShift() ? 'Normal' : 'Tercatat', 'badge-success'],
         };
     }
