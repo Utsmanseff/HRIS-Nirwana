@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ foto: null }">
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight">Laporan Absensi</h1>
@@ -83,7 +83,7 @@
     {{-- Tabel --}}
     <div class="card overflow-x-auto">
         <table class="table">
-            <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Shift</th><th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th><th>Keterangan</th></tr></thead>
+            <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Shift</th><th>Masuk</th><th>Pulang</th><th>Jam Kerja</th><th>Status</th><th>Keterangan</th><th>Foto</th></tr></thead>
             <tbody>
                 @forelse ($baris as $a)
                     @php [$label, $kelas] = $a->labelStatus(); @endphp
@@ -110,14 +110,48 @@
                         <td class="tnum">{{ $a->jamKerjaLabel() }}</td>
                         <td><span class="badge {{ $kelas }}"><span class="dot"></span>{{ $label }}</span></td>
                         <td class="text-xs text-neutral-500">{{ $keterangan[$a->id] ?? '' }}</td>
+                        {{-- Foto bukti absen: web saja. Ekspor PDF/Excel sengaja TIDAK ikut
+                             (view-nya terpisah di laporan/pdf/absensi*). --}}
+                        <td>
+                            @php $fotoSesi = array_filter(['masuk' => $a->foto_masuk_path, 'pulang' => $a->foto_pulang_path]); @endphp
+                            @if ($fotoSesi)
+                                <div class="flex items-center gap-1.5">
+                                    @foreach ($fotoSesi as $sesi => $path)
+                                        @php $url = route('absensi.foto', [$a->id, $sesi]); @endphp
+                                        <button type="button" title="Foto {{ $sesi }}"
+                                                @click="foto = @js(['url' => $url, 'judul' => $a->karyawan->nama_lengkap.' · '.$sesi.' · '.$a->tanggal_kerja->format('d/m/Y')])"
+                                                class="w-9 h-9 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0 hover:ring-2 hover:ring-brand-500 transition">
+                                            <img src="{{ $url }}" alt="Foto {{ $sesi }}" class="w-full h-full object-cover" loading="lazy">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-neutral-400">—</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center text-neutral-400 py-8">Tak ada data pada filter ini.</td></tr>
+                    <tr><td colspan="9" class="text-center text-neutral-400 py-8">Tak ada data pada filter ini.</td></tr>
                 @endforelse
             </tbody>
         </table>
         <div class="p-3 text-center text-xs text-neutral-400 border-t border-neutral-100">
             Evaluasi by jadwal: punya shift → deteksi telat/pulang cepat; tanpa shift → catat saja + total jam. Sesi nyangkut (anomali) ditandai, tidak dikoreksi otomatis.
+        </div>
+    </div>
+
+    {{-- Lightbox foto: klik thumbnail → membesar. Latar & Esc menutup. --}}
+    <div x-cloak x-show="foto" x-transition.opacity @keydown.escape.window="foto = null" @click="foto = null"
+         class="fixed inset-0 z-[60] bg-black/80 grid place-items-center p-4">
+        <div class="max-w-[92vw]" @click.stop>
+            <img :src="foto?.url" alt="" class="max-h-[80vh] max-w-full rounded-lg shadow-lg bg-neutral-900">
+            <div class="mt-3 flex items-center justify-between gap-4 text-white/90 text-xs">
+                <span class="font-semibold capitalize" x-text="foto?.judul"></span>
+                <div class="flex items-center gap-2">
+                    <a :href="foto?.url" target="_blank" class="px-2.5 py-1.5 rounded-md bg-white/15 hover:bg-white/25 font-semibold">Buka di tab baru</a>
+                    <button type="button" @click="foto = null" class="px-2.5 py-1.5 rounded-md bg-white/15 hover:bg-white/25 font-semibold">Tutup</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

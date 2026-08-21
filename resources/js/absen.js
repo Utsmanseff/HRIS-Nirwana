@@ -2,7 +2,7 @@
 // Deteksi wajah (MediaPipe) & peta (Leaflet) di-hook di Task 5/6 lewat properti reaktif di sini.
 
 import { LokasiHaversine } from './absen-lokasi.js';
-import { mulaiDeteksiWajah } from './absen-wajah.js';
+import { mulaiDeteksiWajah, pramuatDeteksiWajah } from './absen-wajah.js';
 import { buatPeta } from './absen-peta.js';
 
 document.addEventListener('alpine:init', () => {
@@ -16,6 +16,7 @@ document.addEventListener('alpine:init', () => {
         // state reaktif
         jam: '--:--',
         wajahAda: false,       // diisi MediaPipe (Task 5); default false → gerbang UX
+        detektorSiap: false,   // false = model masih dimuat → UI bilang "menyiapkan", bukan "tak terdeteksi"
         lat: null,
         long: null,
         akurasi: null,
@@ -33,12 +34,16 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.tickJam();
             setInterval(() => this.tickJam(), 1000);
+            // Pra-muat model DULU (fire-and-forget) supaya unduh + kompilasi WASM jalan
+            // BARENGAN prompt izin kamera/GPS, bukan setelahnya.
+            pramuatDeteksiWajah();
             this.mulaiKamera();
             this.mulaiLokasi();
             // Mulai deteksi wajah begitu kamera siap (lewati bila kamera gagal → fallback).
             this.$el.addEventListener('kamera-siap', async () => {
                 if (this._kameraGagal) return;
                 this._stopWajah = await mulaiDeteksiWajah(this.$refs.video, (ada) => { this.wajahAda = ada; });
+                this.detektorSiap = true;
             });
             // Peta Leaflet + marker posisi live.
             this.$nextTick(() => {
@@ -68,6 +73,7 @@ document.addEventListener('alpine:init', () => {
                 // tapi ambil() mengirim wajahAda=false → server catat wajah_verif=false.
                 this.kameraSiap = true;
                 this.wajahAda = true;
+                this.detektorSiap = true;
                 this._kameraGagal = true;
                 console.warn('Kamera gagal:', e);
             }

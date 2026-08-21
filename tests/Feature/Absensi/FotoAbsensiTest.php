@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Absensi;
 
+use App\Enums\Role;
 use App\Models\Absensi;
 use App\Models\Karyawan;
+use App\Models\OrgUnit;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -42,6 +45,32 @@ class FotoAbsensiTest extends TestCase
         $lain = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
 
         $this->actingAs($lain)->get("/absensi/foto/{$a->id}/masuk")->assertForbidden();
+    }
+
+    public function test_staff_hr_boleh_lihat_foto_siapa_pun(): void
+    {
+        // Laporan absensi terbuka untuk Staff HR & Admin Sistem; fotonya harus ikut,
+        // kalau tidak semua thumbnail di layar laporan jadi 403.
+        $this->seed(RoleSeeder::class);
+        $kar = Karyawan::factory()->create();
+        $a = $this->absensiDenganFoto($kar);
+
+        $hr = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+        $hr->assignRole(Role::StaffHr->value);
+
+        $this->actingAs($hr)->get("/absensi/foto/{$a->id}/masuk")->assertOk();
+    }
+
+    public function test_pemimpin_unit_boleh_lihat_foto_anggota_subtree(): void
+    {
+        $unit = OrgUnit::factory()->create();
+        $anggota = Karyawan::factory()->staffUnit($unit)->create();
+        $koor = Karyawan::factory()->pimpinanUnit($unit)->create();
+        $a = $this->absensiDenganFoto($anggota);
+
+        $userKoor = User::factory()->create(['karyawan_id' => $koor->id]);
+
+        $this->actingAs($userKoor)->get("/absensi/foto/{$a->id}/masuk")->assertOk();
     }
 
     public function test_foto_null_ditolak(): void

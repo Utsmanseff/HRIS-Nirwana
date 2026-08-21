@@ -182,7 +182,7 @@ a.btn-primary, a.btn-danger { color:#fff; }
 .field-label { display:block; font-size:.8125rem; font-weight:600; color:var(--text); margin-bottom:.375rem; }
 .field-hint { font-size:.75rem; color:var(--text-muted); margin-top:.375rem; }
 .input, .select, .textarea {
-  width:100%; font-family:inherit; font-size:.875rem; color:var(--text);
+  width:100%; min-width:0; font-family:inherit; font-size:.875rem; color:var(--text);
   background:var(--bg-surface); border:1px solid var(--border-strong);
   border-radius:var(--r-md); padding:.625rem .75rem; transition:border-color .15s, box-shadow .15s; }
 .input::placeholder, .textarea::placeholder { color:var(--text-subtle); }
@@ -190,6 +190,21 @@ a.btn-primary, a.btn-danger { color:#fff; }
 .input:disabled, .select:disabled { background:var(--neutral-100); color:var(--text-muted); cursor:not-allowed; }
 .input-error { border-color:var(--danger-500); }
 .input-error:focus { box-shadow:0 0 0 3px var(--danger-100); }
+
+/* Input tanggal/waktu punya LEBAR INTRINSIK (min-content) bawaan browser yang lebih
+   besar dari kolom grid sempit. Karena anak grid/flex default `min-width:auto`, kolom
+   tak bisa mengecil → kotak meluber & gap kelindas (kena di form cuti 2 kolom di HP).
+   `min-width:0` + `appearance:none` menormalkan lebar sekaligus tinggi di iOS. */
+input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"] {
+  -webkit-appearance:none; appearance:none; min-width:0; max-width:100%; }
+
+/* iOS & Android meng-auto-zoom halaman saat fokus ke input ber-font < 16px, lalu user
+   harus zoom-out manual. Naikkan ke 16px di viewport HP (bukan pakai maximum-scale=1,
+   karena itu mematikan pinch-zoom = masalah aksesibilitas). */
+@media (max-width:767px) {
+  .input, .select, .textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size:16px; }
+}
 
 /* Badges */
 .badge { display:inline-flex; align-items:center; gap:.375rem; font-size:.75rem; font-weight:600;

@@ -29,6 +29,26 @@ class LaporanAbsensiTest extends TestCase
         return $user;
     }
 
+    public function test_layar_laporan_menampilkan_thumbnail_foto_tapi_pdf_tidak(): void
+    {
+        $user = $this->hrd();
+        $kar = Karyawan::factory()->create(['nama_lengkap' => 'Siti Aminah']);
+        $a = Absensi::factory()->create([
+            'karyawan_id' => $kar->id,
+            'tanggal_kerja' => now()->toDateString(),
+            'foto_masuk_path' => 'absensi/1/masuk.webp',
+        ]);
+
+        $urlFoto = route('absensi.foto', [$a->id, 'masuk'], false);
+
+        $this->actingAs($user)->get('/absensi/laporan')->assertOk()->assertSee($urlFoto, false);
+
+        // Ekspor PDF sengaja tanpa foto (view terpisah) — jangan sampai ikut terbawa.
+        $pdf = $this->actingAs($user)->get(route('absensi.laporan.unduh', ['format' => 'pdf']));
+        $pdf->assertOk();
+        $this->assertStringNotContainsString($urlFoto, (string) $pdf->getContent());
+    }
+
     public function test_karyawan_biasa_dilarang(): void
     {
         $this->seed(RoleSeeder::class);
