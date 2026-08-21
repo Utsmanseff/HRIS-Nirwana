@@ -42,9 +42,12 @@
         <div class="face-guide"></div>
         {{-- badge atas: status wajah + kamera --}}
         <div class="absolute top-3 left-3 right-3 flex items-center justify-between">
+            {{-- 3 keadaan: model masih dimuat (abu) / wajah ada (hijau) / tak ada (merah).
+                 Tanpa keadaan "menyiapkan", user melihat merah "tak terdeteksi" selama
+                 model dimuat dan mengira kameranya yang bermasalah. --}}
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold text-white backdrop-blur"
-                  :style="wajahAda ? 'background:rgba(22,163,74,.9)' : 'background:rgba(220,38,38,.9)'"
-                  x-text="wajahAda ? 'Wajah terdeteksi' : 'Wajah tak terdeteksi'"></span>
+                  :style="! detektorSiap ? 'background:rgba(71,85,105,.9)' : (wajahAda ? 'background:rgba(22,163,74,.9)' : 'background:rgba(220,38,38,.9)')"
+                  x-text="! detektorSiap ? 'Menyiapkan deteksi wajah…' : (wajahAda ? 'Wajah terdeteksi' : 'Wajah tak terdeteksi')"></span>
             <span class="px-2.5 py-1 rounded-full bg-black/40 text-white/90 text-[11px] font-semibold backdrop-blur">Kamera depan</span>
         </div>
         {{-- overlay bawah: status radius/lokasi --}}
