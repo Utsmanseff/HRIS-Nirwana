@@ -14,7 +14,8 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+# /public/build sengaja DILACAK: build lokal (npm run build) lalu di-commit,
+# supaya server produksi (shared hosting) tak perlu Node/npm saat deploy.
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
