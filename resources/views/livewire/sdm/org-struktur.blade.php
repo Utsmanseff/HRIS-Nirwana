@@ -98,24 +98,41 @@
                 <div class="space-y-2">
                     <div class="text-xs font-semibold text-neutral-500">Jabatan pimpinan unit</div>
                     @if ($editPimpinanId === $jabatanPimpinan->id)
-                        <div class="flex items-end gap-2">
-                            <div class="flex-1">
-                                <label class="field-label">Ubah nama jabatan pimpinan</label>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="field-label">Nama jabatan pimpinan</label>
                                 <input wire:model="jpNama" class="input @error('jpNama') input-error @enderror"
                                     placeholder="mis. Ketua SPI">
                                 @error('jpNama') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
                             </div>
-                            <button wire:click="simpanJabatanPimpinan" class="btn btn-primary btn-sm">Simpan</button>
+                            <div>
+                                <label class="field-label">Kewenangan sanksi</label>
+                                <select wire:model="jpRute" class="select @error('jpRute') input-error @enderror">
+                                    <option value="">Jabatan biasa — hanya bisa mengusulkan bawahannya</option>
+                                    @foreach ($ruteOpsi as $r)
+                                        <option value="{{ $r->value }}">{{ $r->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="field-hint">Jabatan pengawas boleh mengusulkan sanksi untuk seluruh karyawan. Pilihannya menentukan ke siapa usulan itu masuk lebih dulu.</p>
+                                @error('jpRute') <p class="field-hint" style="color:var(--danger-500)">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <button wire:click="simpanJabatanPimpinan" class="btn btn-primary btn-sm">Simpan</button>
+                            </div>
                         </div>
                     @else
                         <div class="flex items-center justify-between px-3 py-2 border border-neutral-200 rounded-lg">
                             <span class="text-sm font-semibold">{{ $jabatanPimpinan->nama }}
-                                <span class="badge badge-neutral">{{ $jabatanPimpinan->level->label() }}</span></span>
+                                <span class="badge badge-neutral">{{ $jabatanPimpinan->level->label() }}</span>
+                                @if ($jabatanPimpinan->rute_pengawas)
+                                    <span class="badge badge-warning">{{ $jabatanPimpinan->rute_pengawas->ringkas() }}</span>
+                                @endif
+                            </span>
                             <button wire:click="editJabatanPimpinan({{ $jabatanPimpinan->id }})"
-                                class="btn btn-ghost btn-sm">Ubah nama</button>
+                                class="btn btn-ghost btn-sm">Ubah</button>
                         </div>
                     @endif
-                    <p class="text-xs text-neutral-400">Hanya nama yang bisa diubah — level dan jumlah (1 per unit) terkunci.</p>
+                    <p class="text-xs text-neutral-400">Nama & kewenangan sanksi bisa diubah — level dan jumlah (1 per unit) terkunci. Kewenangan pengawas hanya tersedia di jabatan pimpinan, karena satu jabatan staff bisa dipegang banyak orang sekaligus.</p>
                 </div>
             @endif
 

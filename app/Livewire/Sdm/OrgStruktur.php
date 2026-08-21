@@ -3,9 +3,11 @@
 namespace App\Livewire\Sdm;
 
 use App\Enums\OrgUnitTipe;
+use App\Enums\RutePengawas;
 use App\Models\Jabatan;
 use App\Models\Karyawan;
 use App\Models\OrgUnit;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -43,6 +45,8 @@ class OrgStruktur extends Component
 
     // Jabatan pimpinan unit — hanya boleh di-rename (level & jumlah terkunci).
     public string $jpNama = '';
+
+    public string $jpRute = '';
 
     public ?int $editPimpinanId = null;
 
@@ -140,7 +144,7 @@ class OrgStruktur extends Component
 
     public function bukaJabatan(int $unitId): void
     {
-        $this->reset(['jNama', 'editJabatanId', 'jpNama', 'editPimpinanId']);
+        $this->reset(['jNama', 'editJabatanId', 'jpNama', 'jpRute', 'editPimpinanId']);
         $this->jabatanUnitId = $unitId;
         $this->setKepalaUnitId = null;
         $this->showForm = false;
@@ -151,7 +155,7 @@ class OrgStruktur extends Component
 
     public function tutupJabatan(): void
     {
-        $this->reset(['jabatanUnitId', 'jNama', 'editJabatanId', 'jpNama', 'editPimpinanId']);
+        $this->reset(['jabatanUnitId', 'jNama', 'editJabatanId', 'jpNama', 'jpRute', 'editPimpinanId']);
     }
 
     public function editJabatanStaff(int $id): void
@@ -172,9 +176,17 @@ class OrgStruktur extends Component
         }
         $this->editPimpinanId = $jab->id;
         $this->jpNama = $jab->nama;
+        $this->jpRute = $jab->rute_pengawas?->value ?? '';
     }
 
-    /** Rename saja — level, unit, dan jumlah (1 per unit) terkunci. */
+    /**
+     * Nama + rute pengawas. Level, unit, dan jumlah (1 per unit) tetap terkunci.
+     *
+     * Rute pengawas sengaja hanya tersedia di jabatan pimpinan: jabatan pimpinan dijamin
+     * 1 pemegang per unit, sedangkan satu baris jabatan staff bisa dipegang belasan orang
+     * — satu centang keliru di sana akan memberi mereka semua kewenangan mengusulkan SP
+     * untuk seluruh rumah sakit.
+     */
     public function simpanJabatanPimpinan(): void
     {
         $jab = $this->jabatanPimpinanUnit();
@@ -182,11 +194,17 @@ class OrgStruktur extends Component
             return;
         }
 
-        $data = $this->validate(['jpNama' => ['required', 'string', 'max:120']]);
+        $data = $this->validate([
+            'jpNama' => ['required', 'string', 'max:120'],
+            'jpRute' => ['nullable', Rule::enum(RutePengawas::class)],
+        ]);
 
-        $jab->update(['nama' => $data['jpNama']]);
+        $jab->update([
+            'nama' => $data['jpNama'],
+            'rute_pengawas' => $data['jpRute'] ?: null,
+        ]);
 
-        $this->reset(['jpNama', 'editPimpinanId']);
+        $this->reset(['jpNama', 'jpRute', 'editPimpinanId']);
     }
 
     private function jabatanPimpinanUnit(): ?Jabatan
@@ -236,6 +254,7 @@ class OrgStruktur extends Component
             'hasilCari' => $hasilCari,
             'jabatanUnit' => $jabatanUnit,
             'jabatanPimpinan' => $this->jabatanPimpinanUnit(),
+            'ruteOpsi' => RutePengawas::cases(),
         ]);
     }
 }

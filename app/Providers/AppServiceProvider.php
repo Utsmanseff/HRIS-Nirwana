@@ -27,7 +27,12 @@ class AppServiceProvider extends ServiceProvider
         // Kemampuan struktural (derived dari struktur org + jabatan.level), bukan role.
         Gate::define('ajukan-cuti', fn ($user) => $user->karyawan !== null && ! $user->karyawan->adalahDirektur());
         Gate::define('approve-cuti', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
-        Gate::define('usul-disiplin', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() && ! $user->karyawan->adalahDirektur()));
+        // Pemegang jabatan pengawas (SPI dsb.) boleh mengusulkan walau tak punya bawahan
+        // — unit SPI memang berisi satu orang tanpa anggota, sehingga syarat punyaBawahan
+        // sendirian membuat mereka tak bisa mengusulkan siapa pun.
+        Gate::define('usul-disiplin', fn ($user) => (bool) ($user->karyawan
+            && ($user->karyawan->punyaBawahan() || $user->karyawan->jabatan?->adalahPengawas())
+            && ! $user->karyawan->adalahDirektur()));
         Gate::define('kelola-cuti', fn ($user) => $user->hasRole(Role::Hrd->value));
         Gate::define('kelola-disiplin', fn ($user) => $user->hasRole(Role::Hrd->value));
         Gate::define('approve-disiplin', fn ($user) => (bool) ($user->karyawan?->punyaBawahan() || $user->hasRole(Role::Hrd->value)));
