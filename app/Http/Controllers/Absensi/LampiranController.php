@@ -33,6 +33,13 @@ class LampiranController extends Controller
 
         abort_unless($boleh && $path && Storage::disk('local')->exists($path), 403);
 
-        return Storage::disk('local')->response($path, null, ['Content-Type' => 'image/webp']);
+        // Foto absen tak pernah berubah untuk sesi yang sama, jadi biarkan browser
+        // menyimpannya. Tanpa ini setiap kunjungan laporan mem-boot Laravel sekali per
+        // thumbnail. `private` supaya tidak nyangkut di cache bersama/proxy — isinya
+        // hanya boleh dilihat pemakai yang sudah lolos pemeriksaan di atas.
+        return Storage::disk('local')->response($path, null, [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, max-age=604800',
+        ]);
     }
 }

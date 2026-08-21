@@ -118,10 +118,13 @@
                                 <div class="flex items-center gap-1.5">
                                     @foreach ($fotoSesi as $sesi => $path)
                                         @php $url = route('absensi.foto', [$a->id, $sesi]); @endphp
+                                        {{-- data-src, bukan src: pemuatannya diantre antrian-gambar.js supaya
+                                             puluhan thumbnail tidak menyerbu server sekaligus. --}}
                                         <button type="button" title="Foto {{ $sesi }}"
                                                 @click="foto = @js(['url' => $url, 'judul' => $a->karyawan->nama_lengkap.' · '.$sesi.' · '.$a->tanggal_kerja->format('d/m/Y')])"
                                                 class="w-9 h-9 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0 hover:ring-2 hover:ring-brand-500 transition">
-                                            <img src="{{ $url }}" alt="Foto {{ $sesi }}" class="w-full h-full object-cover" loading="lazy">
+                                            <img data-src="{{ $url }}" alt="" title="Foto {{ $sesi }}" decoding="async"
+                                                 class="w-full h-full object-cover data-[gagal]:hidden">
                                         </button>
                                     @endforeach
                                 </div>
@@ -136,7 +139,7 @@
             </tbody>
         </table>
         <div class="p-3 text-center text-xs text-neutral-400 border-t border-neutral-100">
-            Evaluasi by jadwal: punya shift → deteksi telat/pulang cepat; tanpa shift → catat saja + total jam. Sesi nyangkut (anomali) ditandai, tidak dikoreksi otomatis.
+            Evaluasi by jadwal: punya shift → deteksi telat/pulang cepat; tanpa shift → catat saja + total jam. Sesi nyangkut, durasi tak wajar, dan sesi kilat (&lt; 5 menit, biasanya salah pencet) ditandai anomali — tidak dikoreksi otomatis.
         </div>
     </div>
 

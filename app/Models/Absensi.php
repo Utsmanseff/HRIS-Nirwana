@@ -18,6 +18,13 @@ class Absensi extends Model
     /** Durasi (menit) di atas ini = anomali durasi tak wajar. */
     public const BATAS_ANOMALI_MENIT = 16 * 60;
 
+    /**
+     * Durasi (menit) di bawah ini = anomali sesi kilat. Nyaris selalu salah pencet:
+     * swipe pulang terpanggil sekali lagi tepat setelah swipe masuk, menghasilkan
+     * baris "15:47 → 15:47, 0m" yang terlihat sah sebagai kehadiran.
+     */
+    public const BATAS_SESI_KILAT_MENIT = 5;
+
     protected function casts(): array
     {
         return [
@@ -78,14 +85,16 @@ class Absensi extends Model
         return $m === null ? '-' : Durasi::label($m);
     }
 
-    /** Anomali: sesi nyangkut (aktif & tanggal lampau) atau durasi tak wajar. */
+    /** Anomali: sesi nyangkut (aktif & tanggal lampau), durasi tak wajar, atau sesi kilat. */
     public function anomali(): bool
     {
         if ($this->sesiAktif()) {
             return $this->tanggal_kerja->lt(now()->startOfDay());
         }
 
-        return $this->totalMenit() > self::BATAS_ANOMALI_MENIT;
+        $menit = $this->totalMenit();
+
+        return $menit > self::BATAS_ANOMALI_MENIT || $menit < self::BATAS_SESI_KILAT_MENIT;
     }
 
     public function scopeAktif($q)
