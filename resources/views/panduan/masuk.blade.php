@@ -9,6 +9,14 @@
 <x-layouts.panduan :title="$meta['judul']" :bab="$meta">
     <x-panduan.isi-bab :bagian="$bagian" />
 
+    <p class="text-[14px] leading-relaxed">
+        Langkah pertama adalah bisa masuk. Untuk sekarang cukup buka
+        <span class="kbd">presensi.rsunirwana.id</span> lewat browser HP Anda —
+        <strong>belum perlu memasang apa pun</strong>. Pemasangan ke layar utama dan penyalaan
+        notifikasi dibahas di bab berikutnya, karena tombolnya berada di halaman Profil
+        yang baru bisa dibuka setelah Anda masuk.
+    </p>
+
     <x-panduan.bagian :id="$bagian[0]['id']" :judul="$bagian[0]['judul']">
         <p class="text-[14px] leading-relaxed">
             Halaman masuk menyediakan dua jalan. Keduanya membuka akun yang sama.
@@ -123,6 +131,12 @@
                 </p>
             </div>
         </div>
+
+        <x-panduan.catatan tipe="info">
+            Sudah berhasil masuk? Lanjut ke bab
+            <a href="{{ route('panduan.bab', 'instalasi') }}" class="hover:underline" style="color:var(--brand-600)">Memasang Aplikasi di HP</a>
+            untuk memasang NirwanaHRIS ke layar utama dan menyalakan notifikasi.
+        </x-panduan.catatan>
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

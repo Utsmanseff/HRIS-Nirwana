@@ -15,8 +15,11 @@ class Panduan
     public static function semua(): array
     {
         return [
-            ['slug' => 'instalasi', 'judul' => 'Memasang Aplikasi di HP', 'ringkas' => 'Pasang NirwanaHRIS di layar utama Android/iPhone dan nyalakan notifikasi.', 'ikon' => 'home', 'peran' => ['Semua'], 'grup' => 'Mulai'],
+            // 'masuk' sengaja SEBELUM 'instalasi': tombol Pasang Aplikasi ada di halaman
+            // Profil, yang baru bisa dibuka setelah login. Menyuruh orang memasang lebih
+            // dulu berarti menyuruh membuka layar yang belum bisa mereka capai.
             ['slug' => 'masuk', 'judul' => 'Masuk & Klaim Akun', 'ringkas' => 'Login pertama kali, klaim akun karyawan, dan ganti kata sandi.', 'ikon' => 'shield', 'peran' => ['Semua'], 'grup' => 'Mulai'],
+            ['slug' => 'instalasi', 'judul' => 'Memasang Aplikasi di HP', 'ringkas' => 'Setelah bisa masuk: pasang NirwanaHRIS di layar utama dan nyalakan notifikasi.', 'ikon' => 'home', 'peran' => ['Semua'], 'grup' => 'Mulai'],
             ['slug' => 'dasar', 'judul' => 'Beranda, Riwayat, Notifikasi, Profil', 'ringkas' => 'Empat layar yang dipakai semua orang setiap hari.', 'ikon' => 'home', 'peran' => ['Semua'], 'grup' => 'Mulai'],
             ['slug' => 'absensi', 'judul' => 'Absen Masuk & Pulang', 'ringkas' => 'Absen swipe dengan lokasi dan foto wajah, plus arti telat dan pulang cepat.', 'ikon' => 'clock', 'peran' => ['Karyawan'], 'grup' => 'Absensi'],
             ['slug' => 'jadwal-saya', 'judul' => 'Jadwal Saya', 'ringkas' => 'Melihat shift sendiri dan arti dinas ganda.', 'ikon' => 'calendar', 'peran' => ['Karyawan'], 'grup' => 'Absensi'],
