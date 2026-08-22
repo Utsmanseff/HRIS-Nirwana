@@ -5,7 +5,6 @@
         ['id' => 'status', 'judul' => 'Memantau Status Pengajuan'],
         ['id' => 'rantai', 'judul' => 'Siapa yang Menyetujui'],
         ['id' => 'menyetujui', 'judul' => 'Menyetujui atau Menolak'],
-        ['id' => 'hrd', 'judul' => 'Kelola Cuti (HRD)'],
         ['id' => 'surat', 'judul' => 'Surat Cuti & QR Verifikasi'],
     ];
 @endphp
@@ -98,17 +97,10 @@
             <li><strong>Karyawan staf</strong> — naik dari atasan langsung ke atas: koordinator, lalu kepala bidang/bagian, lalu <strong>HRD</strong> sebagai tahap terakhir.</li>
             <li><strong>Kepala bidang/bagian ke atas</strong> — langsung ke <strong>HRD</strong>, tanpa melewati jenjang di bawahnya.</li>
             <li><strong>Pemegang role HRD sendiri</strong> — pengajuannya hanya ke <strong>Direktur</strong>.</li>
-            <li><strong>Direktur</strong> tidak ikut alur cuti pegawai, dan tidak menjadi penyetuju cuti umum.</li>
         </ul>
         <p class="text-[14px] leading-relaxed mt-3">
             Tahapnya <strong>berurutan</strong>: tahap berikutnya baru bisa bertindak setelah tahap sebelumnya menyetujui.
         </p>
-
-        <x-panduan.catatan tipe="awas">
-            Yang dianggap HRD adalah pemilik <strong>role akun HRD</strong>, bukan orang yang jabatannya bernama
-            “Kepegawaian”. Sistem memakai <strong>satu</strong> pemegang role HRD; bila role itu diberikan ke lebih
-            dari satu orang, hanya satu yang akan masuk rantai. Pastikan role HRD dipegang tepat satu orang.
-        </x-panduan.catatan>
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
@@ -131,44 +123,6 @@
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">
-        <x-panduan.peran :peran="['HRD']" />
-        <p class="text-[14px] leading-relaxed mt-3">
-            Menu <strong>Operasional → Kelola Cuti</strong> berisi tiga bagian pengaturan.
-        </p>
-
-        <h3 class="text-[15px] font-bold mt-5 mb-2">Hari libur</h3>
-        <p class="text-[14px] leading-relaxed">
-            Daftar tanggal merah beserta namanya. Dipakai kalender cuti sebagai penanda.
-        </p>
-
-        <h3 class="text-[15px] font-bold mt-5 mb-2">Jenis cuti</h3>
-        <p class="text-[14px] leading-relaxed">
-            Mengatur nama jenis cuti, apakah <strong>memotong jatah</strong>, apakah <strong>wajib lampiran</strong>,
-            dan apakah <strong>boleh diajukan mundur</strong>. Jenis yang tak dipakai lagi cukup dinonaktifkan.
-        </p>
-
-        <h3 class="text-[15px] font-bold mt-5 mb-2">Penyesuaian jatah</h3>
-        <x-panduan.langkah>
-            <li>Cari karyawannya.</li>
-            <li>Pilih <strong>periode</strong> — hanya periode berjalan dan periode berikutnya yang boleh disesuaikan.</li>
-            <li>Isi <strong>selisih</strong> hari: positif menambah, negatif mengurangi.</li>
-            <li>Tulis <strong>alasan</strong> — ini yang menjadi jejak audit, jadi tulis jelas.</li>
-        </x-panduan.langkah>
-
-        <h3 class="text-[15px] font-bold mt-5 mb-2">Membatalkan cuti yang sudah disetujui</h3>
-        <p class="text-[14px] leading-relaxed">
-            Hanya HRD yang bisa, dan hanya untuk cuti berstatus <strong>Disetujui</strong>, disertai alasan.
-            Percobaan lain ditolak dengan pesan
-            <span class="kbd">Hanya cuti berstatus disetujui yang bisa dibatalkan.</span>
-        </p>
-
-        <p class="text-[14px] leading-relaxed mt-4">
-            Menu <strong>Laporan Cuti</strong> menyediakan rekap pengajuan dan rekap jatah seluruh karyawan,
-            lengkap dengan ekspornya.
-        </p>
-    </x-panduan.bagian>
-
-    <x-panduan.bagian :id="$bagian[6]['id']" :judul="$bagian[6]['judul']">
         <p class="text-[14px] leading-relaxed">
             Cuti yang sudah disetujui bisa dicetak sebagai <strong>surat cuti</strong> dari halaman detail pengajuan.
         </p>

@@ -30,8 +30,9 @@ class Panduan
             ['slug' => 'disiplin', 'judul' => 'Disiplin & Surat Peringatan', 'ringkas' => 'Mengusulkan sanksi, rantai persetujuan, surat SP ber-QR, dan sanksi milik sendiri.', 'ikon' => 'gavel', 'peran' => ['Karyawan', 'Kepala Unit', 'Pengawas (SPI)', 'HRD', 'Direktur'], 'grup' => 'Operasional'],
             ['slug' => 'tiket', 'judul' => 'Tiket IT / Sarana / Alkes', 'ringkas' => 'Melapor kerusakan dan menangani tiket sebagai tim teknis.', 'ikon' => 'ticket', 'peran' => ['Semua', 'Tim Teknis'], 'grup' => 'Operasional'],
             ['slug' => 'inventaris', 'judul' => 'Inventaris Aset', 'ringkas' => 'Mendata aset, kategori, pemeliharaan, dan laporannya.', 'ikon' => 'box', 'peran' => ['Tim Teknis'], 'grup' => 'Operasional'],
-            ['slug' => 'sdm', 'judul' => 'Data Karyawan & Struktur Organisasi', 'ringkas' => 'Kelola karyawan, kontrak, dokumen, unit, jabatan, dan jenis izin.', 'ikon' => 'users', 'peran' => ['HRD', 'Staff HR', 'Admin Sistem'], 'grup' => 'Administrasi'],
-            ['slug' => 'sistem', 'judul' => 'Pengguna & Role', 'ringkas' => 'Memberi role, menonaktifkan akun, dan arti tiap role.', 'ikon' => 'shield', 'peran' => ['Admin Sistem'], 'grup' => 'Administrasi'],
+            // Grup "Administrasi" (bab sdm & sistem) sengaja TIDAK ada di sini: panduan
+            // terbuka untuk semua, termasuk tamu, sehingga alur kerja HRD/Direktur dan
+            // pengelolaan akun tak layak dipajang. Materinya disampaikan terpisah.
         ];
     }
 

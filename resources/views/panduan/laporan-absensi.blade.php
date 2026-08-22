@@ -73,11 +73,6 @@
             <a href="{{ route('panduan.bab', 'absensi') }}" class="hover:underline" style="color:var(--brand-600)">Absen Masuk &amp; Pulang</a>.
         </p>
 
-        <x-panduan.catatan tipe="awas">
-            <strong>Anomali</strong> layak ditindaklanjuti, bukan diabaikan. Sesi di bawah 5 menit hampir selalu
-            berarti tombol pulang tertekan tak sengaja; sesi di atas 16 jam berarti seseorang lupa absen pulang.
-            Keduanya membuat jam kerja bulan itu tidak mencerminkan kenyataan.
-        </x-panduan.catatan>
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

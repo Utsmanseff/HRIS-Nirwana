@@ -4,7 +4,6 @@
         ['id' => 'mengusulkan', 'judul' => 'Mengusulkan Sanksi'],
         ['id' => 'pengawas', 'judul' => 'Jabatan Pengawas (SPI) — Usulan Lintas Unit'],
         ['id' => 'rantai', 'judul' => 'Rantai Persetujuan'],
-        ['id' => 'menerbitkan', 'judul' => 'Menerbitkan & Mencabut Sanksi'],
         ['id' => 'surat', 'judul' => 'Surat SP & QR Verifikasi'],
     ];
 @endphp
@@ -55,12 +54,6 @@
             <li><span class="kbd">Karyawan di luar jangkauan usulan Anda.</span> — orang itu bukan bawahan Anda, sedangkan jabatan Anda bukan jabatan pengawas.</li>
             <li><span class="kbd">Belum ada pemegang peran HRD/Direktur, usulan tak punya penyetuju. Hubungi Admin Sistem.</span> — lihat catatan di bawah.</li>
         </ul>
-
-        <x-panduan.catatan tipe="bahaya">
-            Selama role <strong>HRD</strong> dan <strong>Direktur</strong> belum diberikan kepada siapa pun,
-            usulan sanksi <strong>ditolak</strong> — bukan tersimpan diam-diam tanpa penyetuju.
-            Ini disengaja. Kalau pesan itu muncul, mintalah Admin Sistem memberikan kedua role tersebut lebih dulu.
-        </x-panduan.catatan>
 
         {{-- SS: form usul sanksi --}}
     </x-panduan.bagian>
@@ -118,24 +111,6 @@
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
-        <x-panduan.peran :peran="['HRD', 'Direktur']" />
-        <p class="text-[14px] leading-relaxed mt-3">
-            Menu <strong>Operasional → Kelola Sanksi</strong> dipakai HRD dan Direktur untuk membuat sanksi
-            langsung, memberi <strong>nomor surat</strong>, menetapkan <strong>masa berlaku</strong>, dan
-            menerbitkannya. Muncul pesan <span class="kbd">Sanksi tersimpan.</span>
-        </p>
-        <p class="text-[14px] leading-relaxed mt-3">
-            <strong>Mencabut sanksi</strong> hanya bisa dilakukan HRD, dan <strong>wajib disertai alasan</strong>
-            (<span class="kbd">Alasan pencabutan wajib diisi.</span>). Sanksi yang dicabut langsung berhenti
-            dihitung sebagai sanksi aktif, sehingga tidak lagi menaikkan tingkat usulan berikutnya.
-            Muncul pesan <span class="kbd">Sanksi dicabut.</span>
-        </p>
-        <p class="text-[14px] leading-relaxed mt-3">
-            Menu <strong>Laporan Sanksi</strong> memuat rekap seluruh sanksi beserta ekspornya.
-        </p>
-    </x-panduan.bagian>
-
-    <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">
         <p class="text-[14px] leading-relaxed">
             Sanksi yang sudah diterbitkan bisa dicetak sebagai <strong>surat dua halaman</strong>.
             Suratnya memuat kode QR untuk tiap pihak yang menandatangani — penerbit, pengusul, dan kepala bidang.
