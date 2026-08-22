@@ -34,4 +34,25 @@ class PanduanTest extends TestCase
         $this->assertSame($pertama, Panduan::cari($pertama['slug']));
         $this->assertNull(Panduan::cari('slug-yang-tidak-ada'));
     }
+
+    public function test_daftar_isi_bisa_dibuka_tanpa_login(): void
+    {
+        $this->get('/panduan')
+            ->assertOk()
+            ->assertSee('Panduan Aplikasi');
+    }
+
+    public function test_setiap_bab_bisa_dibuka_tanpa_login(): void
+    {
+        foreach (Panduan::semua() as $bab) {
+            $this->get('/panduan/'.$bab['slug'])
+                ->assertOk()
+                ->assertSee($bab['judul']);
+        }
+    }
+
+    public function test_slug_asing_menghasilkan_404(): void
+    {
+        $this->get('/panduan/tidak-ada')->assertNotFound();
+    }
 }
