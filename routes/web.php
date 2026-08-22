@@ -39,6 +39,12 @@ Route::get('/verifikasi/cuti/{pengajuan}/{sumber}', [\App\Http\Controllers\Verif
     ->middleware('signed')
     ->name('verifikasi.cuti');
 
+// Publik — panduan pemakaian. Sengaja di luar auth: bab instalasi PWA & klaim akun
+// dibaca SEBELUM user punya akses. Rute literal '/panduan' harus sebelum '{bab}'.
+Route::get('/panduan', [\App\Http\Controllers\PanduanController::class, 'index'])->name('panduan');
+Route::get('/panduan/{bab}', [\App\Http\Controllers\PanduanController::class, 'bab'])
+    ->where('bab', '[a-z0-9-]+')->name('panduan.bab');
+
 // --- Auth: guest-only routes ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', Login::class)->name('login');

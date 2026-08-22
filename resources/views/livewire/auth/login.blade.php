@@ -53,6 +53,14 @@
                 Belum terhubung? Masuk dengan Google lalu hubungkan data karyawanmu.
                 Aplikasi bisa dipasang ke layar utama (PWA).
             </p>
+
+            {{-- Panduan sengaja bisa dibuka sebelum login: bab instalasi PWA & klaim akun
+                 justru dibutuhkan orang yang belum punya akses. --}}
+            <p class="mt-3 text-center text-xs">
+                <a href="{{ route('panduan') }}" class="text-neutral-500 hover:text-brand-600 hover:underline">
+                    Belum tahu cara pakai? Baca Panduan Aplikasi
+                </a>
+            </p>
         </div>
     </div>
 </div>

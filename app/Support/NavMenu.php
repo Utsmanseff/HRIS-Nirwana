@@ -41,6 +41,8 @@ class NavMenu
             ['id' => 'struktur', 'label' => 'Organisasi',     'icon' => 'tree',     'route' => 'sdm.struktur',   'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'jenis-izin', 'label' => 'Jenis Izin',   'icon' => 'sliders',  'route' => 'sdm.jenis-izin', 'can' => Permission::KelolaSdm->value, 'group' => 'SDM'],
             ['id' => 'pengguna', 'label' => 'Pengguna & Role','icon' => 'shield',   'route' => 'sistem.pengguna','can' => Permission::KelolaRbac->value, 'group' => 'Sistem'],
+            // Panduan pemakaian — terbuka untuk semua peran (halamannya sendiri publik).
+            ['id' => 'panduan',  'label' => 'Panduan',        'icon' => 'doc',      'route' => 'panduan',        'can' => null, 'group' => 'Sistem'],
             ['id' => 'riwayat',  'label' => 'Riwayat',        'icon' => 'history',  'route' => 'riwayat',        'can' => null, 'group' => null],
             ['id' => 'notif',    'label' => 'Notifikasi',     'icon' => 'bell',     'route' => 'notifikasi',     'can' => null, 'group' => null],
             ['id' => 'profil',   'label' => 'Profil',         'icon' => 'user',     'route' => 'profil',         'can' => null, 'group' => null],

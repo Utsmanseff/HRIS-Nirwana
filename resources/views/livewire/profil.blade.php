@@ -120,4 +120,14 @@
         <p class="text-sm text-neutral-500 mb-3">Aktifkan notifikasi push agar pengingat penting muncul di perangkat ini.</p>
         <x-push-subscribe />
     </div>
+
+    {{-- Panduan — jalur masuk utama di mobile; bottom-nav sudah penuh 4 slot. --}}
+    <a href="{{ route('panduan') }}" class="card card-pad flex items-center gap-3">
+        <x-icon name="doc" :size="18" />
+        <span class="flex-1">
+            <span class="block text-sm font-semibold">Panduan Aplikasi</span>
+            <span class="block text-xs text-neutral-500">Cara pasang di HP, absen, cuti, dan lainnya</span>
+        </span>
+        <span class="text-xs text-neutral-400">Buka</span>
+    </a>
 </div>
