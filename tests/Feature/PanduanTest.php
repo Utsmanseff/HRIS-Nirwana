@@ -90,6 +90,19 @@ class PanduanTest extends TestCase
         }
     }
 
+    public function test_tautan_panduan_muncul_di_halaman_login(): void
+    {
+        $this->get('/login')->assertOk()->assertSee('Panduan Aplikasi');
+    }
+
+    public function test_item_panduan_terlihat_semua_peran(): void
+    {
+        $item = collect(\App\Support\NavMenu::semua())->firstWhere('id', 'panduan');
+
+        $this->assertNotNull($item, 'Item panduan belum terdaftar di NavMenu');
+        $this->assertNull($item['can'], 'Panduan harus terlihat semua peran');
+    }
+
     public function test_bab_pertama_dan_terakhir_tak_punya_tetangga_di_ujungnya(): void
     {
         $semua = Panduan::semua();
