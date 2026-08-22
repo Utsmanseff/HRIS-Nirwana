@@ -53,6 +53,9 @@
             tidak mendukung. Kalau tombolnya tidak ada, pakai cara cadangan di bawah.
         </x-panduan.catatan>
 
+        <x-panduan.gambar src="instalasi-pasang.png" caption="Tombol Pasang Aplikasi di halaman Profil — muncul bila Chrome menawarkan pemasangan" />
+        <x-panduan.gambar src="android-instal-dialog.png" caption="Chrome meminta konfirmasi — ketuk Instal" />
+
         <h3 class="text-[15px] font-bold mt-5 mb-2">Cara cadangan — lewat menu Chrome</h3>
         <x-panduan.langkah>
             <li>Ketuk menu titik tiga <span class="kbd">⋮</span> di pojok kanan atas Chrome.</li>
@@ -60,10 +63,9 @@
             <li>Ketuk <strong>Instal</strong> / <strong>Tambah</strong> saat diminta konfirmasi.</li>
         </x-panduan.langkah>
 
-        {{-- SS: menu Instal aplikasi di Chrome Android --}}
-        {{-- SS: ikon NirwanaHRIS di layar utama Android --}}
 
-        <x-panduan.gambar src="instalasi-pasang.png" caption="Tombol Pasang Aplikasi di halaman Profil — muncul bila Chrome menawarkan pemasangan" />
+
+        <x-panduan.gambar src="android-layar-utama.png" caption="Ikon NirwanaHRIS sudah berada di layar utama Android" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -80,10 +82,11 @@
             masih dibuka lewat tab browser, iPhone tidak akan mengizinkan notifikasi sama sekali.
         </x-panduan.catatan>
 
-        {{-- SS: menu Bagikan di Chrome iOS --}}
-        {{-- SS: menu Tambah ke Layar Utama di lembar Bagikan iOS --}}
-        {{-- SS: konfirmasi Tambah ke Layar Utama --}}
-        {{-- SS: ikon NirwanaHRIS di layar utama iPhone --}}
+        <x-panduan.gambar src="ios-menu-titik-tiga.png" caption="Di Chrome iPhone, menu ada di tombol ••• pojok kanan bawah" />
+        <x-panduan.gambar src="ios-bagikan.png" caption="Pilih Bagikan dari menu itu" />
+        <x-panduan.gambar src="ios-tambah-layar-utama.png" caption="Gulir lembar Bagikan, pilih Tambah ke Layar Utama" />
+        <x-panduan.gambar src="ios-konfirmasi-tambah.png" caption="Ketuk Tambah di pojok kanan atas" />
+        <x-panduan.gambar src="ios-layar-utama.png" caption="Ikon NirwanaHRIS sudah berada di layar utama iPhone" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

@@ -28,6 +28,8 @@
             Itu memang disengaja.
         </p>
 
+        <x-panduan.gambar src="dasar-bilah-bawah.png" caption="Bilah bawah di HP: ① Beranda, ② Riwayat, ③ Notifikasi, ④ Profil" />
+
         <h3 class="text-[15px] font-bold mt-5 mb-2">Di komputer</h3>
         <p class="text-[14px] leading-relaxed">
             Menu ada di sisi kiri layar, dikelompokkan: <strong>Operasional</strong>, <strong>SDM</strong>,
@@ -35,7 +37,6 @@
             menciutkan sidebar agar layar lebih lega; pilihan itu diingat untuk kunjungan berikutnya.
         </p>
 
-        <x-panduan.gambar src="dasar-bilah-bawah.png" caption="Bilah bawah di HP: ① Beranda, ② Riwayat, ③ Notifikasi, ④ Profil" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
