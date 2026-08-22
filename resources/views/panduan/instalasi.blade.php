@@ -27,7 +27,7 @@
             <li>Alamat aplikasi: <span class="kbd">presensi.rsunirwana.id</span></li>
             <li><strong>Akun yang sudah bisa masuk</strong> — dan sudah diklaim ke data karyawan Anda.</li>
             <li><strong>Android:</strong> browser Chrome.</li>
-            <li><strong>iPhone / iPad:</strong> browser <strong>Safari</strong>. Chrome di iPhone tidak bisa memasang aplikasi ke layar utama.</li>
+            <li><strong>iPhone / iPad:</strong> <strong>Safari</strong> atau <strong>Chrome</strong> — keduanya bisa, karena pemasangan dilakukan lewat menu <strong>Bagikan</strong> milik iPhone, bukan lewat browsernya.</li>
         </ul>
 
         <x-panduan.catatan tipe="info">
@@ -68,19 +68,21 @@
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
         <x-panduan.langkah>
-            <li>Buka <strong>Safari</strong> (bukan Chrome), ketik <span class="kbd">presensi.rsunirwana.id</span> lalu buka. iPhone tidak punya tombol pasang di dalam aplikasi, jadi langkahnya lewat menu Safari.</li>
-            <li>Ketuk tombol <strong>Bagikan</strong> — ikon kotak dengan panah ke atas, di bilah bawah Safari.</li>
+            <li>Buka <span class="kbd">presensi.rsunirwana.id</span> di <strong>Safari</strong> atau <strong>Chrome</strong>. iPhone tidak punya tombol pasang di dalam aplikasi, jadi langkahnya lewat menu Bagikan.</li>
+            <li>Ketuk tombol <strong>Bagikan</strong> — ikon kotak dengan panah ke atas. Di <strong>Safari</strong> ada di bilah bawah; di <strong>Chrome</strong> ketuk menu titik tiga <span class="kbd">•••</span> lebih dulu, lalu pilih <strong>Bagikan</strong>.</li>
             <li>Gulir daftarnya, pilih <strong>Tambah ke Layar Utama</strong>.</li>
             <li>Ketuk <strong>Tambah</strong> di pojok kanan atas.</li>
-            <li>Buka aplikasi dari ikon NirwanaHRIS di layar utama. Layarnya akan penuh, tanpa bilah alamat Safari.</li>
+            <li>Buka aplikasi dari ikon NirwanaHRIS di layar utama. Layarnya akan penuh, tanpa bilah alamat browser.</li>
         </x-panduan.langkah>
 
         <x-panduan.catatan tipe="awas">
             Langkah ini <strong>wajib</strong> di iPhone kalau Anda ingin menerima notifikasi. Selama aplikasi
-            masih dibuka lewat tab Safari, iPhone tidak akan mengizinkan notifikasi sama sekali.
+            masih dibuka lewat tab browser, iPhone tidak akan mengizinkan notifikasi sama sekali.
         </x-panduan.catatan>
 
-        {{-- SS: tombol Bagikan dan menu Tambah ke Layar Utama di Safari iOS --}}
+        {{-- SS: menu Bagikan di Chrome iOS --}}
+        {{-- SS: menu Tambah ke Layar Utama di lembar Bagikan iOS --}}
+        {{-- SS: konfirmasi Tambah ke Layar Utama --}}
         {{-- SS: ikon NirwanaHRIS di layar utama iPhone --}}
     </x-panduan.bagian>
 
@@ -119,7 +121,7 @@
             <div class="card card-pad">
                 <div class="font-bold text-[14px]">“Pasang aplikasi dulu”</div>
                 <p class="text-[13.5px] mt-1 leading-relaxed">
-                    Anda memakai iPhone dan aplikasi masih dibuka lewat tab Safari.
+                    Anda memakai iPhone dan aplikasi masih dibuka lewat tab browser.
                     Pasang dulu ke layar utama (lihat bagian di atas), lalu buka dari ikonnya, baru aktifkan notifikasi.
                 </p>
             </div>

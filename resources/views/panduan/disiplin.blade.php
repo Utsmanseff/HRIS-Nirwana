@@ -119,6 +119,8 @@
             Memindai QR membuka halaman verifikasi yang menampilkan data asli dari sistem. Halaman itu bisa
             dibuka tanpa login, tetapi tautannya bertanda tangan digital sehingga QR palsu tidak akan terbuka.
         </p>
+
+        <x-panduan.gambar src="disiplin-surat.png" lebar="lebar" caption="Halaman pertama surat teguran, lengkap dengan QR tanda tangan penerbit" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

@@ -136,6 +136,8 @@
             suratnya benar dan belum diubah. Halaman verifikasi bisa dibuka <strong>tanpa login</strong>,
             tetapi tautannya bertanda tangan digital — QR palsu tidak akan terbuka.
         </p>
+
+        <x-panduan.gambar src="cuti-surat.png" lebar="lebar" caption="Surat keterangan cuti — tiap pihak yang menyetujui punya kode QR-nya sendiri" />
         <x-panduan.catatan tipe="info">
             Tiap pihak yang menyetujui punya QR-nya sendiri. Jadi satu surat bisa memuat beberapa QR sekaligus,
             masing-masing mewakili satu tanda tangan.
