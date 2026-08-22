@@ -35,7 +35,7 @@
             menciutkan sidebar agar layar lebih lega; pilihan itu diingat untuk kunjungan berikutnya.
         </p>
 
-        {{-- SS: bilah bawah di HP --}}
+        <x-panduan.gambar src="dasar-bilah-bawah.png" caption="Bilah bawah: Beranda, Riwayat, Notifikasi, Profil" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -64,7 +64,7 @@
             </table>
         </div>
 
-        {{-- SS: beranda di HP --}}
+        <x-panduan.gambar src="dasar-beranda.png" caption="Beranda di HP: kartu absensi, jatah cuti, dan pintasan menu" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -116,7 +116,7 @@
             Tombol matahari/bulan di bagian atas layar mengganti tampilan terang ↔ gelap. Pilihan itu diingat.
         </p>
 
-        {{-- SS: halaman profil di HP --}}
+        <x-panduan.gambar src="dasar-profil.png" caption="Halaman Profil" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

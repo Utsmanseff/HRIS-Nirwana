@@ -28,7 +28,7 @@
             hanya saja statusnya <strong>Tercatat</strong>, tanpa penilaian telat atau pulang cepat.
         </x-panduan.catatan>
 
-        {{-- SS: jadwal saya di HP --}}
+        <x-panduan.gambar src="jadwal-saya.png" caption="Jadwal Saya — shift satu bulan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">

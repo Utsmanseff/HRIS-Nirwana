@@ -60,7 +60,7 @@
             rencana. Untuk lowongan karena karyawan nonaktif, jadwalnya langsung terbentuk.
         </p>
 
-        {{-- SS: layar pengganti jadwal --}}
+        <x-panduan.gambar src="pengganti.png" caption="Layar Pengganti Jadwal" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">

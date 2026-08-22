@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        {{-- SS: form ajukan cuti di HP --}}
+        <x-panduan.gambar src="cuti-ajukan.png" caption="Form pengajuan cuti" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -119,7 +119,7 @@
             <li><span class="kbd">Jatah tak cukup: sisa … hari, diminta … hari.</span> — jatah pemohon berubah sejak pengajuan dibuat; diperiksa ulang di tahap akhir.</li>
         </ul>
 
-        {{-- SS: layar persetujuan cuti --}}
+        <x-panduan.gambar src="cuti-persetujuan.png" caption="Persetujuan Cuti — hanya pengajuan yang menunggu giliran Anda" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">

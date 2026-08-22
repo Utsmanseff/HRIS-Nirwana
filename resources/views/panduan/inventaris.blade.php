@@ -56,7 +56,7 @@
             </table>
         </div>
 
-        {{-- SS: daftar aset --}}
+        <x-panduan.gambar src="inventaris-daftar.png" caption="Daftar aset inventaris" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

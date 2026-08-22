@@ -41,7 +41,7 @@
             Selama belum, masuklah dengan Google.
         </x-panduan.catatan>
 
-        {{-- SS: halaman login di HP --}}
+        <x-panduan.gambar src="masuk-login.png" caption="Halaman masuk di HP" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -70,7 +70,7 @@
             atas nama orang yang salah.
         </x-panduan.catatan>
 
-        {{-- SS: halaman klaim akun --}}
+        <x-panduan.gambar src="masuk-klaim.png" caption="Halaman klaim akun: ketik nama, NIP, atau NIK, lalu tekan Pilih" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">

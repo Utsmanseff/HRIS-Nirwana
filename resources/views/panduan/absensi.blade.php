@@ -37,7 +37,7 @@
             supaya Anda tidak mengira sudah absen padahal belum.
         </x-panduan.catatan>
 
-        {{-- SS: layar absen dengan viewfinder kamera --}}
+        <x-panduan.gambar src="absensi-swipe.png" caption="Layar absen: chip shift hari ini, bingkai wajah, keterangan lokasi, lalu tombol absen" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">

@@ -32,14 +32,14 @@
             Setelah SP 3 tidak naik lagi. Bila tidak ada sanksi aktif, saran dimulai dari Teguran 1.
         </x-panduan.catatan>
 
-        {{-- SS: layar sanksi saya --}}
+        <x-panduan.gambar src="disiplin-sanksi-saya.png" caption="Sanksi Saya — sanksi atas nama sendiri" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
         <x-panduan.peran :peran="['Kepala Unit', 'Pengawas (SPI)']" />
         <p class="text-[14px] leading-relaxed mt-3">
             Menu <strong>Operasional → Disiplin</strong> hanya muncul bila Anda <strong>punya bawahan</strong>,
-            atau memegang <strong>jabatan pengawas</strong>. Direktur tidak memakai jalur ini — lihat bagian penerbitan.
+            atau memegang <strong>jabatan pengawas</strong>. Direktur tidak memakai jalur ini.
         </p>
         <x-panduan.langkah>
             <li>Cari dan pilih <strong>karyawan</strong> yang diusulkan.</li>
@@ -52,10 +52,10 @@
         <p class="text-[14px] leading-relaxed mt-4">Penolakan yang mungkin muncul:</p>
         <ul class="list-disc ms-5 space-y-1.5 text-[14px] leading-relaxed mt-1">
             <li><span class="kbd">Karyawan di luar jangkauan usulan Anda.</span> — orang itu bukan bawahan Anda, sedangkan jabatan Anda bukan jabatan pengawas.</li>
-            <li><span class="kbd">Belum ada pemegang peran HRD/Direktur, usulan tak punya penyetuju. Hubungi Admin Sistem.</span> — lihat catatan di bawah.</li>
+            <li><span class="kbd">Belum ada pemegang peran HRD/Direktur, usulan tak punya penyetuju. Hubungi Admin Sistem.</span> — usulan tak bisa dikirim karena rantai persetujuannya belum lengkap. Hubungi Admin Sistem.</li>
         </ul>
 
-        {{-- SS: form usul sanksi --}}
+        <x-panduan.gambar src="disiplin-usul.png" caption="Form usulan sanksi" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">

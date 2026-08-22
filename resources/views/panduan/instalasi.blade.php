@@ -104,7 +104,7 @@
             <li>Pemberitahuan sanksi dan tiket, sesuai peran Anda.</li>
         </ul>
 
-        {{-- SS: tombol Aktifkan Notifikasi di halaman Profil --}}
+        <x-panduan.gambar src="instalasi-notifikasi.png" caption="Tombol Pasang Aplikasi dan Aktifkan Notifikasi di halaman Profil" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">

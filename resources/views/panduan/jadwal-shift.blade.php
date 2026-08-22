@@ -1,5 +1,6 @@
 @php
     $bagian = [
+        ['id' => 'pakai-pc', 'judul' => 'Kerjakan dari Komputer, Bukan dari HP'],
         ['id' => 'siapa', 'judul' => 'Siapa yang Bisa Menyusun Jadwal'],
         ['id' => 'shift', 'judul' => 'Langkah 1 — Membuat Shift'],
         ['id' => 'pola', 'judul' => 'Langkah 2 — Membuat Pola Bernama'],
@@ -20,6 +21,23 @@
 
     <x-panduan.bagian :id="$bagian[0]['id']" :judul="$bagian[0]['judul']">
         <p class="text-[14px] leading-relaxed">
+            Menyusun jadwal bisa dilakukan dari HP, tetapi <strong>sangat disarankan dikerjakan dari komputer</strong>.
+            Alasannya sederhana: grid jadwal selebar satu bulan, dan layar HP hanya memuat beberapa tanggal
+            sekaligus sehingga Anda harus terus menggeser ke samping — mudah salah kolom.
+        </p>
+
+        <x-panduan.gambar src="jadwal-grid-hp.png" caption="Di HP: hanya sekitar 3 tanggal yang muat, sisanya harus digeser" />
+        <x-panduan.gambar src="jadwal-grid-pc.png" lebar="lebar" caption="Di komputer: belasan tanggal terlihat sekaligus, seluruh anggota unit terbaca dalam satu layar" />
+
+        <x-panduan.catatan tipe="info">
+            Pakailah HP untuk <strong>memeriksa</strong> jadwal yang sudah jadi, dan komputer untuk
+            <strong>menyusun</strong> atau memperbaikinya. Isi dan tombolnya sama persis — yang berbeda hanya
+            seberapa banyak yang muat di layar.
+        </x-panduan.catatan>
+    </x-panduan.bagian>
+
+    <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
+        <p class="text-[14px] leading-relaxed">
             Menu ini hanya muncul untuk <strong>pemegang jabatan pimpinan</strong> — koordinator, kepala bagian,
             kepala bidang, dan seterusnya. Karyawan staf tidak melihatnya. Direktur juga tidak, karena tidak
             ikut alur penjadwalan pegawai.
@@ -31,7 +49,7 @@
         </p>
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
+    <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
         <p class="text-[14px] leading-relaxed">
             Shift adalah jenis dinas, misalnya Pagi 07.00–14.00. Buat semua shift yang dipakai unit Anda lebih dulu.
         </p>
@@ -56,10 +74,10 @@
             jadwal dan absensi lama yang memakainya tetap utuh.
         </p>
 
-        {{-- SS: tab Shift --}}
+        <x-panduan.gambar src="jadwal-tab-shift.png" caption="Tab Shift Unit — daftar dan form shift" />
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
+    <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
         <p class="text-[14px] leading-relaxed">
             Pola adalah <strong>rangkaian shift yang berulang</strong>, diberi nama supaya mudah dikenali —
             misalnya “Rotasi 3 Regu” atau “Jaga Malam”. Satu unit boleh punya beberapa pola sekaligus.
@@ -89,10 +107,10 @@
             <span class="kbd">Kode "…" tidak dikenal di unit ini.</span> Buat shift-nya dulu di tab Shift.
         </x-panduan.catatan>
 
-        {{-- SS: tab Pola dengan grid --}}
+        <x-panduan.gambar src="jadwal-tab-pola.png" caption="Tab Pola — siklus per anggota" />
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
+    <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
         <p class="text-[14px] leading-relaxed">
             Tambahkan karyawan ke pola lewat kotak pencarian anggota. Aturan pentingnya:
         </p>
@@ -120,7 +138,7 @@
         </p>
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
+    <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">
         <p class="text-[14px] leading-relaxed">
             Pola belum berarti apa-apa sampai diterapkan ke sebuah bulan.
         </p>
@@ -143,7 +161,7 @@
         </p>
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">
+    <x-panduan.bagian :id="$bagian[6]['id']" :judul="$bagian[6]['judul']">
         <p class="text-[14px] leading-relaxed">
             Di tab Jadwal Bulanan, tiap kotak kalender bisa langsung diketik:
         </p>
@@ -169,7 +187,6 @@
             <a href="{{ route('panduan.bab', 'pengganti') }}" class="hover:underline" style="color:var(--brand-600)">Pengganti Jadwal</a>.
         </p>
 
-        {{-- SS: grid jadwal bulanan --}}
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

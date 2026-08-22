@@ -93,7 +93,7 @@
             atau sempat gagal, aplikasi mencobanya lagi sendiri — tunggu sebentar sebelum memuat ulang halaman.
         </p>
 
-        {{-- SS: laporan absensi dengan kolom foto --}}
+        <x-panduan.gambar src="laporan-absensi-pc.png" caption="Laporan absensi di layar PC — kolom Foto ada di ujung kanan" lebar="lebar" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">

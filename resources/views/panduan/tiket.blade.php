@@ -37,7 +37,7 @@
             foto kerusakan sangat membantu. Format JPG, PNG, WEBP, atau PDF, maksimal 8 MB per berkas.
         </p>
 
-        {{-- SS: form buat tiket --}}
+        <x-panduan.gambar src="tiket-buat.png" caption="Form pembuatan tiket" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
