@@ -1,5 +1,6 @@
 @php
     $bagian = [
+        ['id' => 'kenapa', 'judul' => 'Kenapa Harus Lewat Tiket'],
         ['id' => 'melapor', 'judul' => 'Melaporkan Kerusakan'],
         ['id' => 'memantau', 'judul' => 'Memantau Tiket Anda'],
         ['id' => 'mengerjakan', 'judul' => 'Mengerjakan Tiket (Tim Teknis)'],
@@ -16,6 +17,27 @@
     </p>
 
     <x-panduan.bagian :id="$bagian[0]['id']" :judul="$bagian[0]['judul']">
+        <p class="text-[14px] leading-relaxed">
+            Melapor lewat tiket memang terasa lebih lama daripada menelepon atau menitip pesan.
+            Bedanya, tiket <strong>meninggalkan jejak</strong> — dan jejak itulah yang dipakai
+            rumah sakit untuk memperbaiki keadaan, bukan sekadar memadamkan masalah satu per satu.
+        </p>
+
+        <ul class="list-disc ms-5 space-y-1.5 text-[14px] leading-relaxed mt-3">
+            <li><strong>Transparan.</strong> Anda bisa melihat sendiri tiket sudah dibaca, sedang dikerjakan, atau selesai — tanpa perlu menanyakan ulang. Tim teknis juga tidak perlu mengingat-ingat siapa melapor apa.</li>
+            <li><strong>Tercatat.</strong> Tiap laporan punya nomor, waktu lapor, siapa yang menangani, dan catatan penyelesaiannya. Laporan lisan mudah terlupa saat tim sedang menangani hal lain; tiket tidak.</li>
+            <li><strong>Antre dengan adil.</strong> Yang masuk lebih dulu dan yang lebih mendesak terlihat jelas, jadi urusan tidak didahulukan hanya karena pelapornya paling sering menagih.</li>
+            <li><strong>Jadi bahan evaluasi.</strong> Kerusakan yang berulang di alat atau ruangan yang sama akan kelihatan polanya dari rekapnya. Itu dasar yang kuat untuk mengusulkan perbaikan menyeluruh, penggantian alat, atau anggaran pemeliharaan — jauh lebih meyakinkan daripada mengandalkan ingatan.</li>
+            <li><strong>Menempel ke asetnya.</strong> Tiket yang ditautkan ke aset inventaris membuat riwayat kerusakan alat itu terkumpul di satu tempat, sehingga terlihat mana alat yang sudah terlalu sering rusak.</li>
+        </ul>
+
+        <p class="text-[14px] leading-relaxed mt-4">
+            Karena itu, biasakan tetap membuat tiket <strong>walaupun</strong> masalahnya sudah selesai
+            ditangani lewat jalan lain. Yang hilang dari catatan, hilang juga dari perencanaan.
+        </p>
+    </x-panduan.bagian>
+
+    <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
         <x-panduan.peran :peran="['Semua']" />
         <x-panduan.langkah>
             <li>Buka menu <strong>Tiket</strong>, tekan tombol buat tiket.</li>
@@ -37,10 +59,28 @@
             foto kerusakan sangat membantu. Format JPG, PNG, WEBP, atau PDF, maksimal 8 MB per berkas.
         </p>
 
+        <x-panduan.catatan tipe="awas">
+            <strong>Keadaan darurat: hubungi tim teknis langsung, jangan menunggu tiket dibaca.</strong>
+            Kalau kerusakan menghentikan pelayanan atau membahayakan pasien — listrik ruang tindakan padam,
+            alat kesehatan mati saat dipakai, jaringan mati total — telepon atau datangi tim terkait saat itu juga.
+            Tiket bukan nomor darurat: petugas baru melihatnya saat membuka aplikasi.
+            <br><br>
+            Tiketnya <strong>tetap dibuat sesudahnya</strong>, oleh Anda atau oleh tim teknis atas nama Anda,
+            supaya kejadian itu tetap tercatat dan ikut terhitung dalam evaluasi. Menangani tanpa mencatat
+            membuat kerusakan yang sama terlihat “tidak pernah terjadi”.
+        </x-panduan.catatan>
+
+        <x-panduan.catatan tipe="info">
+            Sebelum melapor, tengok dulu daftar tiket — bisa jadi rekan seruangan sudah melaporkannya.
+            Laporan ganda membuat antrean terlihat lebih panjang daripada kenyataannya.
+            Dan pakailah <strong>Urgent</strong> seperlunya: kalau semua tiket ditandai urgent,
+            tandanya berhenti berarti apa-apa.
+        </x-panduan.catatan>
+
         <x-panduan.gambar src="tiket-buat.png" caption="Form pembuatan tiket: pilih tim tujuan, prioritas, judul, dan uraian kerusakan" />
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
+    <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
         <div class="grid-wrap">
             <table class="table">
                 <thead><tr><th>Status</th><th>Artinya</th></tr></thead>
@@ -60,7 +100,7 @@
         <x-panduan.gambar src="tiket-daftar.png" caption="Daftar tiket: ① badge status menunjukkan tiket sedang dikerjakan" />
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
+    <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
         <x-panduan.peran :peran="['Tim Teknis']" />
         <p class="text-[14px] leading-relaxed mt-3">
             Anggota tim teknis melihat <strong>antrian tim</strong>-nya di Beranda dan bisa menangani tiket.
@@ -87,7 +127,7 @@
         <x-panduan.gambar src="tiket-detail.png" caption="Detail tiket berisi uraian, lampiran, dan tombol penanganan" />
     </x-panduan.bagian>
 
-    <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
+    <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
         <x-panduan.peran :peran="['Tim Teknis']" />
         <p class="text-[14px] leading-relaxed mt-3">
             Menu <strong>Operasional → Tiket → Laporan</strong> merekap tiket berdasarkan tim, status,
