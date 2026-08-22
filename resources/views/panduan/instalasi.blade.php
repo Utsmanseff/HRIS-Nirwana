@@ -62,6 +62,8 @@
 
         {{-- SS: menu Instal aplikasi di Chrome Android --}}
         {{-- SS: ikon NirwanaHRIS di layar utama Android --}}
+
+        <x-panduan.gambar src="instalasi-pasang.png" caption="Tombol Pasang Aplikasi di halaman Profil — muncul bila Chrome menawarkan pemasangan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -104,7 +106,8 @@
             <li>Pemberitahuan sanksi dan tiket, sesuai peran Anda.</li>
         </ul>
 
-        <x-panduan.gambar src="instalasi-notifikasi.png" caption="Tombol Pasang Aplikasi dan Aktifkan Notifikasi di halaman Profil" />
+        <x-panduan.gambar src="instalasi-notifikasi.png" caption="Tombol Aktifkan Notifikasi di halaman Profil" />
+        <x-panduan.gambar src="instalasi-notif-aktif.png" caption="Setelah izin diberikan, tombol berubah menjadi Notifikasi Aktif dan tidak bisa ditekan lagi" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">

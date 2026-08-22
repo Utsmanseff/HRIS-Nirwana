@@ -41,7 +41,7 @@
             Selama belum, masuklah dengan Google.
         </x-panduan.catatan>
 
-        <x-panduan.gambar src="masuk-login.png" caption="Halaman masuk di HP" />
+        <x-panduan.gambar src="masuk-login.png" caption="Halaman masuk: ① masuk dengan Google, ② kolom NIP, ③ tombol Masuk dengan NIP" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -70,7 +70,7 @@
             atas nama orang yang salah.
         </x-panduan.catatan>
 
-        <x-panduan.gambar src="masuk-klaim.png" caption="Halaman klaim akun: ketik nama, NIP, atau NIK, lalu tekan Pilih" />
+        <x-panduan.gambar src="masuk-klaim.png" caption="Klaim akun: ① ketik nama, NIP, atau NIK — ② tekan Pilih pada baris nama Anda" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -97,6 +97,8 @@
             hanya jika akun Anda memang belum punya kata sandi. Kalau sudah punya dan benar-benar lupa,
             hubungi Admin Sistem.
         </x-panduan.catatan>
+
+        <x-panduan.gambar src="masuk-sandi.png" caption="Bagian kata sandi di Profil: ① kata sandi lama, ② kata sandi baru, ③ tombol simpan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

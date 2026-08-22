@@ -40,6 +40,8 @@
             Baris pengganti punya dua status: <strong>Aktif</strong> (sudah berlaku) dan
             <strong>Menunggu Acc</strong> (usulan yang belum disetujui koordinator).
         </p>
+
+        <x-panduan.gambar src="pengganti-lowongan.png" caption="Daftar lowongan: ① jenisnya — pengganti cuti atau mengisi jadwal kosong" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -60,7 +62,7 @@
             rencana. Untuk lowongan karena karyawan nonaktif, jadwalnya langsung terbentuk.
         </p>
 
-        <x-panduan.gambar src="pengganti.png" caption="Layar Pengganti Jadwal" />
+        <x-panduan.gambar src="pengganti-tunjuk.png" caption="Pengganti dipilih dari layar peninjauan cuti, sebelum pengajuannya disetujui" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -82,6 +84,8 @@
             Yang boleh mengalihkan hanya <strong>koordinator unit pemohon</strong>. Yang lain akan mendapat pesan
             <span class="kbd">Hanya koordinator unit pemohon yang boleh mengalihkan.</span>
         </p>
+
+        <x-panduan.gambar src="pengganti-alih.png" caption="① Tanggal mulai peralihan — pengganti lama tetap memegang hari sebelumnya" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

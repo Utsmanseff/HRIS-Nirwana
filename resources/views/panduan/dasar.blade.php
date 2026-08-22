@@ -35,7 +35,7 @@
             menciutkan sidebar agar layar lebih lega; pilihan itu diingat untuk kunjungan berikutnya.
         </p>
 
-        <x-panduan.gambar src="dasar-bilah-bawah.png" caption="Bilah bawah: Beranda, Riwayat, Notifikasi, Profil" />
+        <x-panduan.gambar src="dasar-bilah-bawah.png" caption="Bilah bawah di HP: ① Beranda, ② Riwayat, ③ Notifikasi, ④ Profil" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -64,7 +64,7 @@
             </table>
         </div>
 
-        <x-panduan.gambar src="dasar-beranda.png" caption="Beranda di HP: kartu absensi, jatah cuti, dan pintasan menu" />
+        <x-panduan.gambar src="dasar-beranda.png" caption="Beranda: ① kartu Absensi Hari Ini, ② kartu Jatah Cuti" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -83,6 +83,8 @@
             untuk menampilkan semuanya kembali. Tiap baris bisa ditekan untuk membuka detailnya.
             Daftar dipecah 20 baris per halaman.
         </p>
+
+        <x-panduan.gambar src="dasar-riwayat.png" caption="Riwayat: ① tombol saring per jenis aktivitas" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -100,6 +102,8 @@
             Yang membedakan: tanpa notifikasi HP, Anda baru tahu saat membuka aplikasi. Cara mengaktifkannya ada di bab
             <a href="{{ route('panduan.bab', 'instalasi') }}" class="hover:underline" style="color:var(--brand-600)">Memasang Aplikasi di HP</a>.
         </p>
+
+        <x-panduan.gambar src="dasar-notifikasi.png" caption="Notifikasi: ② tombol tandai semua dibaca; angka merah menunjukkan yang belum dibaca" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
@@ -116,7 +120,7 @@
             Tombol matahari/bulan di bagian atas layar mengganti tampilan terang ↔ gelap. Pilihan itu diingat.
         </p>
 
-        <x-panduan.gambar src="dasar-profil.png" caption="Halaman Profil" />
+        <x-panduan.gambar src="dasar-profil.png" caption="Profil: ② kontak yang boleh Anda ubah sendiri" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

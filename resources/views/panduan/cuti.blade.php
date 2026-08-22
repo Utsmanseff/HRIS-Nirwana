@@ -23,6 +23,8 @@
             <li>Periode jatah mengikuti <strong>siklus kontrak Anda</strong>, bukan tanggal 1 Januari.</li>
             <li>Pengajuan yang masih berjalan sudah <strong>menahan</strong> jatah walau belum disetujui — supaya Anda tidak mengajukan melebihi hak dua kali.</li>
         </ul>
+
+        <x-panduan.gambar src="cuti-jatah.png" caption="Halaman Cuti: ① sisa jatah, beserta rincian jatah, terpakai, dan yang masih berjalan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -65,7 +67,7 @@
             </div>
         </div>
 
-        <x-panduan.gambar src="cuti-ajukan.png" caption="Form pengajuan cuti" />
+        <x-panduan.gambar src="cuti-ajukan.png" caption="Form pengajuan: ① tanggal mulai, ② jumlah hari yang benar-benar diambil, ③ alasan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -86,6 +88,8 @@
             Buka satu pengajuan untuk melihat riwayat tiap tahap: siapa penyetujunya, kapan, dan catatannya.
             Perubahan status juga masuk ke Notifikasi dan Riwayat Anda.
         </p>
+
+        <x-panduan.gambar src="cuti-detail.png" caption="Detail pengajuan: ① status berjalan, di bawahnya riwayat tiap tahap penyetuju" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -119,7 +123,7 @@
             <li><span class="kbd">Jatah tak cukup: sisa … hari, diminta … hari.</span> — jatah pemohon berubah sejak pengajuan dibuat; diperiksa ulang di tahap akhir.</li>
         </ul>
 
-        <x-panduan.gambar src="cuti-persetujuan.png" caption="Persetujuan Cuti — hanya pengajuan yang menunggu giliran Anda" />
+        <x-panduan.gambar src="cuti-persetujuan.png" caption="Setelah menekan Tinjau: ① tombol Setujui, ② tombol Tolak yang wajib disertai catatan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">

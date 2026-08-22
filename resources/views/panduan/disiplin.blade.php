@@ -32,7 +32,7 @@
             Setelah SP 3 tidak naik lagi. Bila tidak ada sanksi aktif, saran dimulai dari Teguran 1.
         </x-panduan.catatan>
 
-        <x-panduan.gambar src="disiplin-sanksi-saya.png" caption="Sanksi Saya — sanksi atas nama sendiri" />
+        <x-panduan.gambar src="disiplin-sanksi-saya.png" caption="Sanksi Saya: ① tingkat sanksi beserta masa berlakunya" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -55,7 +55,7 @@
             <li><span class="kbd">Belum ada pemegang peran HRD/Direktur, usulan tak punya penyetuju. Hubungi Admin Sistem.</span> — usulan tak bisa dikirim karena rantai persetujuannya belum lengkap. Hubungi Admin Sistem.</li>
         </ul>
 
-        <x-panduan.gambar src="disiplin-usul.png" caption="Form usulan sanksi" />
+        <x-panduan.gambar src="disiplin-usul.png" caption="Form usulan: ② tingkat sanksi (sudah disarankan sistem), ③ uraian pelanggaran" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">

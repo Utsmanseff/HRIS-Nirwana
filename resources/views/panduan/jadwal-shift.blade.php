@@ -25,15 +25,14 @@
             Alasannya sederhana: grid jadwal selebar satu bulan, dan layar HP hanya memuat beberapa tanggal
             sekaligus sehingga Anda harus terus menggeser ke samping — mudah salah kolom.
         </p>
-
-        <x-panduan.gambar src="jadwal-grid-hp.png" caption="Di HP: hanya sekitar 3 tanggal yang muat, sisanya harus digeser" />
-        <x-panduan.gambar src="jadwal-grid-pc.png" lebar="lebar" caption="Di komputer: belasan tanggal terlihat sekaligus, seluruh anggota unit terbaca dalam satu layar" />
-
         <x-panduan.catatan tipe="info">
             Pakailah HP untuk <strong>memeriksa</strong> jadwal yang sudah jadi, dan komputer untuk
             <strong>menyusun</strong> atau memperbaikinya. Isi dan tombolnya sama persis — yang berbeda hanya
             seberapa banyak yang muat di layar.
         </x-panduan.catatan>
+
+        <x-panduan.gambar src="jadwal-grid-hp.png" caption="Di HP: hanya sekitar 3 tanggal yang muat, sisanya harus digeser" />
+        <x-panduan.gambar src="jadwal-grid-pc.png" caption="Di komputer: belasan tanggal terlihat sekaligus, seluruh anggota unit terbaca dalam satu layar" lebar="lebar" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -74,7 +73,7 @@
             jadwal dan absensi lama yang memakainya tetap utuh.
         </p>
 
-        <x-panduan.gambar src="jadwal-tab-shift.png" caption="Tab Shift Unit — daftar dan form shift" />
+        <x-panduan.gambar src="jadwal-shift-form.png" caption="Form shift: ① kode maksimal 4 huruf dan unik per unit, ② toleransi telat dalam menit" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -107,7 +106,7 @@
             <span class="kbd">Kode "…" tidak dikenal di unit ini.</span> Buat shift-nya dulu di tab Shift.
         </x-panduan.catatan>
 
-        <x-panduan.gambar src="jadwal-tab-pola.png" caption="Tab Pola — siklus per anggota" />
+        <x-panduan.gambar src="jadwal-tab-pola.png" caption="Tab Pola: ② tanggal jangkar menentukan kolom pertama siklus" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
@@ -136,6 +135,8 @@
             Menghapus pola hanya membuang cetakannya. <strong>Jadwal bulanan yang sudah terbentuk tidak ikut terhapus</strong>,
             karena itu sudah menjadi data nyata yang dipakai absensi.
         </p>
+
+        <x-panduan.gambar src="jadwal-anggota.png" caption="① Kotak pencarian untuk menambahkan anggota ke pola" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[5]['id']" :judul="$bagian[5]['judul']">
@@ -159,6 +160,8 @@
         <p class="text-[14px] leading-relaxed mt-4">
             Anggota pola lain, dan karyawan yang tidak masuk pola mana pun, tidak tersentuh.
         </p>
+
+        <x-panduan.gambar src="jadwal-terapkan.png" caption="① Tombol terapkan mengisi seluruh bulan untuk anggota pola itu" lebar="lebar" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[6]['id']" :judul="$bagian[6]['judul']">
@@ -187,6 +190,8 @@
             <a href="{{ route('panduan.bab', 'pengganti') }}" class="hover:underline" style="color:var(--brand-600)">Pengganti Jadwal</a>.
         </p>
 
+
+        <x-panduan.gambar src="jadwal-sel-manual.png" caption="① Satu sel diisi dua kode dipisah koma — itulah cara menulis dinas ganda" lebar="lebar" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

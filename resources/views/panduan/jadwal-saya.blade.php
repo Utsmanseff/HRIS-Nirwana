@@ -28,7 +28,7 @@
             hanya saja statusnya <strong>Tercatat</strong>, tanpa penilaian telat atau pulang cepat.
         </x-panduan.catatan>
 
-        <x-panduan.gambar src="jadwal-saya.png" caption="Jadwal Saya — shift satu bulan" />
+        <x-panduan.gambar src="jadwal-saya.png" caption="Jadwal Saya: ① tombol pindah bulan, ② satu hari berisi nama shift dan jamnya" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -41,6 +41,8 @@
             Absen Masuk, aplikasi memilih shift yang jam mulainya paling dekat dengan waktu Anda absen
             <em>dan</em> belum dipakai hari itu — jadi shift kedua tidak akan tertukar dengan yang pertama.
         </p>
+
+        <x-panduan.gambar src="jadwal-saya-ganda.png" caption="① Satu tanggal dengan dua shift — wajib absen masuk dan pulang untuk masing-masing" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -65,6 +67,8 @@
             Detail penugasan pengganti dibahas di bab
             <a href="{{ route('panduan.bab', 'pengganti') }}" class="hover:underline" style="color:var(--brand-600)">Pengganti Jadwal</a>.
         </p>
+
+        <x-panduan.gambar src="jadwal-saya-pengganti.png" caption="① Keterangan bahwa shift itu menggantikan rekan yang sedang cuti" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

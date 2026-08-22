@@ -36,8 +36,6 @@
             dan ketelitian GPS cukup baik. Selama salah satu belum terpenuhi, tombol sengaja dimatikan
             supaya Anda tidak mengira sudah absen padahal belum.
         </x-panduan.catatan>
-
-        <x-panduan.gambar src="absensi-swipe.png" caption="Layar absen: chip shift hari ini, bingkai wajah, keterangan lokasi, lalu tombol absen" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -59,6 +57,8 @@
             Peta memerlukan internet untuk menggambar petanya. Kalau peta gagal tampil, pemeriksaan radius
             tetap berjalan normal — absen Anda tidak terganggu.
         </p>
+
+        <x-panduan.gambar src="absensi-masuk.png" caption="Layar absen: ① shift hari ini, ② status wajah, ③ status lokasi, ④ tombol absen" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -87,6 +87,8 @@
             Di bawah peta ada <strong>Riwayat 7 Hari</strong> — sekilas jam masuk, jam pulang, dan status
             absen Anda sepekan terakhir.
         </p>
+
+        <x-panduan.gambar src="absensi-pulang.png" caption="Saat sesi masih terbuka, ① tombol otomatis berubah menjadi Absen Pulang dan ② chip shift menandai sesi berjalan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -125,6 +127,8 @@
             Lama telat dan pulang cepat ditampilkan sebagai <span class="kbd">2j 15m</span>, <span class="kbd">1j</span>,
             atau <span class="kbd">45m</span>.
         </p>
+
+        <x-panduan.gambar src="absensi-riwayat7.png" caption="Riwayat 7 Hari di bawah peta: ① jam masuk, jam pulang, dan status tiap hari" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
@@ -164,6 +168,8 @@
             Kalau Anda benar-benar tidak bisa absen karena kendala teknis, laporkan ke atasan langsung dan
             bagian kepegawaian pada hari itu juga, jangan menunggu akhir bulan.
         </x-panduan.catatan>
+
+        <x-panduan.gambar src="absensi-galat-radius.png" caption="Di luar area: ① keterangan lokasi berubah merah, ② tombol absen mati" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

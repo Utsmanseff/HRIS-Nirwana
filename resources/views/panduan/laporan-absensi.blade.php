@@ -49,6 +49,8 @@
         <p class="text-[14px] leading-relaxed mt-2">
             Di bagian atas ada ringkasan jumlah: total kehadiran, telat, pulang cepat, dan anomali.
         </p>
+
+        <x-panduan.gambar src="laporan-hp.png" caption="Tampilan HP: ① rentang tanggal, ② penyaring unit dan status" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -73,6 +75,8 @@
             <a href="{{ route('panduan.bab', 'absensi') }}" class="hover:underline" style="color:var(--brand-600)">Absen Masuk &amp; Pulang</a>.
         </p>
 
+
+        <x-panduan.gambar src="laporan-absensi-pc.png" caption="Tabel rekap di komputer: ① baris yang telat ditandai kuning berikut lamanya" lebar="lebar" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -93,7 +97,7 @@
             atau sempat gagal, aplikasi mencobanya lagi sendiri — tunggu sebentar sebelum memuat ulang halaman.
         </p>
 
-        <x-panduan.gambar src="laporan-absensi-pc.png" caption="Laporan absensi di layar PC — kolom Foto ada di ujung kanan" lebar="lebar" />
+        <x-panduan.gambar src="laporan-foto.png" caption="Foto absen dibuka besar setelah gambar kecilnya ditekan" lebar="lebar" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
@@ -107,6 +111,8 @@
             Di Excel, lama telat, pulang cepat, dan jam kerja ditulis sebagai <strong>angka menit</strong>,
             bukan “2j 15m”. Itu disengaja supaya kolomnya bisa dijumlah dan dirata-rata langsung.
         </x-panduan.catatan>
+
+        <x-panduan.gambar src="laporan-ekspor.png" caption="Menu unduhan: ① pilihan Per Unit memecah hasil menjadi satu bagian per unit" lebar="lebar" />
     </x-panduan.bagian>
 
     <div class="divider my-6"></div>

@@ -37,7 +37,7 @@
             foto kerusakan sangat membantu. Format JPG, PNG, WEBP, atau PDF, maksimal 8 MB per berkas.
         </p>
 
-        <x-panduan.gambar src="tiket-buat.png" caption="Form pembuatan tiket" />
+        <x-panduan.gambar src="tiket-buat.png" caption="Form pembuatan tiket: pilih tim tujuan, prioritas, judul, dan uraian kerusakan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -56,6 +56,8 @@
             Kartu <strong>Tiket Saya</strong> di Beranda menampilkan jumlah tiket yang Anda laporkan.
             Perkembangannya juga tercatat di <strong>Riwayat</strong> Anda.
         </p>
+
+        <x-panduan.gambar src="tiket-daftar.png" caption="Daftar tiket: ① badge status menunjukkan tiket sedang dikerjakan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[2]['id']" :judul="$bagian[2]['judul']">
@@ -81,6 +83,8 @@
             <li>Menautkan tiket ke <strong>aset inventaris</strong>, sehingga riwayat kerusakan aset itu terkumpul.</li>
             <li>Langsung membuat tiket berstatus Diproses atau Selesai, untuk pekerjaan yang sudah telanjur dikerjakan.</li>
         </ul>
+
+        <x-panduan.gambar src="tiket-detail.png" caption="Detail tiket berisi uraian, lampiran, dan tombol penanganan" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">

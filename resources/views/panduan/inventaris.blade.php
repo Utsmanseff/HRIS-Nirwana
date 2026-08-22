@@ -22,6 +22,8 @@
             <strong>IT</strong>, <strong>Teknisi</strong> (Sarana), atau <strong>ATEM</strong>,
             serta Admin Sistem. Karyawan lain tidak melihatnya.
         </p>
+
+        <x-panduan.gambar src="inventaris-daftar.png" caption="Daftar aset yang terlihat oleh tim teknis" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">
@@ -56,7 +58,7 @@
             </table>
         </div>
 
-        <x-panduan.gambar src="inventaris-daftar.png" caption="Daftar aset inventaris" />
+        <x-panduan.gambar src="inventaris-form.png" caption="Form aset: ① kode wajib unik, ② kategori menentukan tim pemilik, ③ status kondisi" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[3]['id']" :judul="$bagian[3]['judul']">
@@ -85,6 +87,8 @@
             Unggah berkas pendukung seperti faktur, garansi, atau sertifikat kalibrasi, lengkap dengan
             tanggal dan masa berlakunya.
         </p>
+
+        <x-panduan.gambar src="inventaris-detail.png" caption="Detail aset: mutasi antar unit, jadwal pemeliharaan, dan lampiran berkas" />
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[4]['id']" :judul="$bagian[4]['judul']">
