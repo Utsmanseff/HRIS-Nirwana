@@ -11,6 +11,7 @@
 @import './shell.css' layer(components);
 @import './mobile.css' layer(components);
 @import './auth.css' layer(components);
+@import './panduan-tanya.css' layer(components);
 
 /* Scan Blade + Livewire + compiled views for utility classes */
 @source '../**/*.blade.php';
