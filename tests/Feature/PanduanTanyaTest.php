@@ -105,4 +105,26 @@ class PanduanTanyaTest extends TestCase
         $this->assertNull(FragmenPanduan::ambil('cuti', 'bagian-asing'));
         $this->assertNull(FragmenPanduan::ambil('cuti', 'Ajukan Cuti'));
     }
+
+    public function test_endpoint_bagian_terbuka_tanpa_login(): void
+    {
+        $this->getJson('/panduan/cuti/bagian/ajukan')
+            ->assertOk()
+            ->assertJsonPath('slug', 'cuti')
+            ->assertJsonPath('id', 'ajukan')
+            ->assertJsonPath('bab', 'Cuti')
+            ->assertJsonPath('judul', 'Mengajukan Cuti')
+            ->assertJsonStructure(['bab', 'slug', 'id', 'judul', 'html', 'lain' => [['id', 'judul']]]);
+    }
+
+    public function test_endpoint_bagian_404_untuk_bab_atau_bagian_asing(): void
+    {
+        $this->getJson('/panduan/bab-asing/bagian/ajukan')->assertNotFound();
+        $this->getJson('/panduan/cuti/bagian/bagian-asing')->assertNotFound();
+    }
+
+    public function test_rute_bab_biasa_tidak_tertabrak_rute_bagian(): void
+    {
+        $this->get('/panduan/cuti')->assertOk()->assertSee('Mengajukan Cuti');
+    }
 }
