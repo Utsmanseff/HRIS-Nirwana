@@ -11,9 +11,18 @@
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* Lompat-anchor tak boleh tersembunyi di balik header sticky setinggi 56px. */
+        /* Lompat-anchor tak boleh tersembunyi di balik header sticky setinggi 56px.
+           Di PWA standalone header ikut menyisakan ruang status bar, jadi jaraknya
+           harus ikut bertambah sebesar inset yang sama. */
         html { scroll-behavior: smooth; }
-        .panduan-isi [id] { scroll-margin-top: 4.5rem; }
+        .panduan-isi [id] { scroll-margin-top: calc(4.5rem + env(safe-area-inset-top)); }
+
+        /* viewport-fit=cover + status bar black-translucent (lihat partials/pwa-head)
+           membuat iOS menggambar konten SAMPAI belakang status bar; halaman wajib
+           menyisakan ruangnya sendiri. Tanpa baris ini, jam dan baterai menimpa judul
+           header — cacat yang HANYA tampak setelah dipasang ke Home Screen, tak pernah
+           di tab browser maupun preview desktop (di sana inset-nya 0). */
+        .panduan-header { padding-top: env(safe-area-inset-top); }
 
         /* Teks buku dibuat rata kiri-kanan. Dikecualikan: sel tabel (kolom sempit jadi
            berlubang), keterangan gambar, dan blok yang memang sengaja ditengahkan. */
@@ -38,7 +47,7 @@
     {{-- --bg-surface, BUKAN --bg-card: token itu tak ada di theme.css, dan var yang tak
          dikenal membuat background jatuh ke transparan sehingga isi halaman menembus
          header sticky saat digulir. --}}
-    <header class="sticky top-0 z-30 border-b" style="background:var(--bg-surface);border-color:var(--border)">
+    <header class="panduan-header sticky top-0 z-30 border-b" style="background:var(--bg-surface);border-color:var(--border)">
         <div class="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
             <a href="{{ route('panduan') }}" class="flex items-center gap-2 min-w-0" title="Kembali ke Daftar Isi">
                 <x-logo :size="22" />
