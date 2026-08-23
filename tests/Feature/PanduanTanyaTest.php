@@ -164,4 +164,11 @@ class PanduanTanyaTest extends TestCase
             ->assertOk()
             ->assertDontSee('ptny-sheet');
     }
+
+    public function test_bab_dasar_menjelaskan_tombol_tanya(): void
+    {
+        $this->get('/panduan/dasar')
+            ->assertOk()
+            ->assertSee('tanda tanya');
+    }
 }
