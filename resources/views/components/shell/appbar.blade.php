@@ -1,17 +1,18 @@
 @props(['title' => '', 'brand' => false, 'back' => null])
 <header class="m-appbar {{ $brand ? 'brand' : '' }}">
     @if ($brand)
-        <div class="flex items-center gap-2.5">
-            <span class="grid place-items-center w-9 h-9 rounded-xl bg-white shadow-sm border border-neutral-100"><x-logo :size="22" /></span>
+        <div class="flex items-center gap-2 min-w-0">
+            <span class="grid place-items-center w-8 h-8 shrink-0 rounded-xl bg-white shadow-sm border border-neutral-100"><x-logo :size="20" /></span>
             <div class="leading-tight">
-                <div class="font-extrabold text-[15px] tracking-tight text-white">Nirwana<span class="text-brand-300">HRIS</span></div>
-                <div class="text-[10px] text-white/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
+                <div class="font-extrabold text-[13.5px] tracking-tight text-white">Nirwana<span class="text-brand-300">HRIS</span></div>
+                <div class="text-[9px] text-white/70 font-semibold uppercase tracking-wider">RSU Nirwana</div>
             </div>
         </div>
         <div class="flex-1"></div>
-        <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white" />
+        <x-panduan.tanya class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-white/10 text-white" />
+        <x-theme-toggle class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-white/10 text-white" />
         @php $belumDibaca = auth()->user()->unreadNotifications()->count(); @endphp
-        <a href="{{ route('notifikasi') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white relative" aria-label="notifikasi">
+        <a href="{{ route('notifikasi') }}" class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-white/10 text-white relative" aria-label="notifikasi">
             <x-icon name="bell" :size="20" />
             @if ($belumDibaca > 0)
                 <span class="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 rounded-full text-white text-[9px] font-bold grid place-items-center" style="background:var(--danger-500)">{{ $belumDibaca > 9 ? '9+' : $belumDibaca }}</span>
@@ -19,7 +20,7 @@
         </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" aria-label="Keluar" title="Keluar" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white">
+            <button type="submit" aria-label="Keluar" title="Keluar" class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-white/10 text-white">
                 <x-icon name="logout" :size="20" />
             </button>
         </form>
@@ -31,11 +32,12 @@
         @endif
         <h1 class="font-bold text-[16px] tracking-tight">{{ $title }}</h1>
         <div class="flex-1"></div>
-        <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100" />
+        <x-panduan.tanya class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-neutral-100" />
+        <x-theme-toggle class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-neutral-100" />
         {{ $slot }}
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" aria-label="Keluar" title="Keluar" class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100">
+            <button type="submit" aria-label="Keluar" title="Keluar" class="w-8 h-8 shrink-0 grid place-items-center rounded-full hover:bg-neutral-100">
                 <x-icon name="logout" :size="20" />
             </button>
         </form>

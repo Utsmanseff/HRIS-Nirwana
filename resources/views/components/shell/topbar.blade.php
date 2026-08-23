@@ -28,6 +28,7 @@
         <span class="kbd">⌘K</span>
     </div>
 
+    <x-panduan.tanya class="btn btn-ghost btn-icon" />
     <x-theme-toggle class="btn btn-ghost btn-icon" />
 
     <livewire:notification-bell />

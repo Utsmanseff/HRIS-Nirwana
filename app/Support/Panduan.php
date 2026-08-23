@@ -74,4 +74,91 @@ class Panduan
             'sesudah' => $i < count($semua) - 1 ? $semua[$i + 1] : null,
         ];
     }
+
+    /**
+     * Peta nama rute → "bab#bagian". Kunci boleh nama rute persis atau prefix-nya:
+     * pencocokan memakai prefix TERPANJANG, pola sama NavMenu::aktif(). Rute yang
+     * tak punya prefix di sini tak mendapat tombol "?".
+     *
+     * Nilai null = PENYEKAT: rute itu (dan turunannya) sengaja tanpa tombol walau
+     * induknya punya. Dibutuhkan karena halaman kerja HRD/Direktur bersarang di
+     * bawah prefix yang sama dengan halaman karyawan (cuti.kelola di bawah cuti),
+     * sedangkan materinya sengaja dibuang dari panduan.
+     *
+     * @return array<string,?string>
+     */
+    public static function rute(): array
+    {
+        return [
+            'beranda' => 'dasar#beranda',
+            'riwayat' => 'dasar#riwayat',
+            'notifikasi' => 'dasar#notifikasi',
+            'profil' => 'dasar#profil',
+
+            'absensi' => 'absensi#masuk',
+            'absensi.jadwal-saya' => 'jadwal-saya#membaca',
+            'absensi.jadwal' => 'jadwal-shift#shift',
+            'absensi.laporan' => 'laporan-absensi#filter',
+
+            'cuti' => 'cuti#jatah',
+            'cuti.ajukan' => 'cuti#ajukan',
+            'cuti.detail' => 'cuti#status',
+            'cuti.persetujuan' => 'cuti#menyetujui',
+
+            'pengganti' => 'pengganti#kapan',
+
+            'disiplin' => 'disiplin#mengusulkan',
+            'disiplin.saya' => 'disiplin#sanksi-saya',
+            'disiplin.persetujuan' => 'disiplin#rantai',
+
+            'tiket' => 'tiket#memantau',
+            'tiket.buat' => 'tiket#melapor',
+            'tiket.laporan' => 'tiket#laporan',
+
+            'inventaris' => 'inventaris#siapa',
+            'inventaris.kategori' => 'inventaris#kategori',
+            'inventaris.tambah' => 'inventaris#tambah',
+            'inventaris.ubah' => 'inventaris#tambah',
+            'inventaris.detail' => 'inventaris#detail',
+            'inventaris.laporan' => 'inventaris#laporan',
+
+            // Penyekat — halaman kerja HRD/Direktur, tak dibahas di panduan.
+            'absensi.pengaturan' => null,
+            'cuti.kelola' => null,
+            'cuti.laporan' => null,
+            'disiplin.kelola' => null,
+            'disiplin.laporan' => null,
+        ];
+    }
+
+    /**
+     * Target panduan untuk sebuah nama rute.
+     *
+     * @return array{slug:string,bagian:string}|null
+     */
+    public static function untukRute(?string $routeName): ?array
+    {
+        if (! $routeName) {
+            return null;
+        }
+
+        $terbaik = null;
+        $panjang = -1;
+        foreach (self::rute() as $rute => $target) {
+            if (($routeName === $rute || str_starts_with($routeName, $rute.'.')) && strlen($rute) > $panjang) {
+                $terbaik = $target;
+                $panjang = strlen($rute);
+            }
+        }
+
+        // null bisa berarti dua hal — tak ada prefix yang cocok, atau prefix
+        // terdekat memang penyekat. Keduanya berujung sama: tanpa tombol.
+        if ($terbaik === null) {
+            return null;
+        }
+
+        [$slug, $bagian] = array_pad(explode('#', $terbaik, 2), 2, null);
+
+        return ['slug' => $slug, 'bagian' => $bagian];
+    }
 }

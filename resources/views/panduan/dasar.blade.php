@@ -37,6 +37,14 @@
             menciutkan sidebar agar layar lebih lega; pilihan itu diingat untuk kunjungan berikutnya.
         </p>
 
+        <h3 class="text-[15px] font-bold mt-5 mb-2">Tombol bantuan di tiap halaman</h3>
+        <p class="text-[14px] leading-relaxed">
+            Di bilah atas setiap halaman ada tombol <strong>tanda tanya</strong>. Menekannya membuka
+            penjelasan singkat untuk halaman yang sedang Anda buka — tanpa keluar dari halaman itu.
+            Di dalamnya tersedia juga bagian lain dari bab yang sama, serta tautan ke panduan lengkap.
+            Halaman yang belum punya penjelasan tidak menampilkan tombol ini.
+        </p>
+
     </x-panduan.bagian>
 
     <x-panduan.bagian :id="$bagian[1]['id']" :judul="$bagian[1]['judul']">

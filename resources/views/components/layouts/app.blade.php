@@ -45,6 +45,7 @@
         </div>
     </div>
     <x-konfirmasi />
+    <x-panduan.sheet />
     @livewireScripts
 </body>
 </html>

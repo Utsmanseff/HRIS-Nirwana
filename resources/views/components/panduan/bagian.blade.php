@@ -1,5 +1,5 @@
 @props(['id', 'judul'])
-<section class="mt-8">
+<section class="mt-8" data-bagian="{{ $id }}">
     <div class="flex items-baseline gap-2">
         <h2 id="{{ $id }}" class="text-[18px] font-bold tracking-tight flex-1">{{ $judul }}</h2>
         <a href="#atas" class="text-[11px] shrink-0 hover:underline" style="color:var(--text-muted)">↑ Bagian atas</a>

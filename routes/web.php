@@ -42,6 +42,8 @@ Route::get('/verifikasi/cuti/{pengajuan}/{sumber}', [\App\Http\Controllers\Verif
 // Publik — panduan pemakaian. Sengaja di luar auth: bab instalasi PWA & klaim akun
 // dibaca SEBELUM user punya akses. Rute literal '/panduan' harus sebelum '{bab}'.
 Route::get('/panduan', [\App\Http\Controllers\PanduanController::class, 'index'])->name('panduan');
+Route::get('/panduan/{bab}/bagian/{id}', [\App\Http\Controllers\PanduanController::class, 'bagian'])
+    ->where(['bab' => '[a-z0-9-]+', 'id' => '[a-z0-9-]+'])->name('panduan.bagian');
 Route::get('/panduan/{bab}', [\App\Http\Controllers\PanduanController::class, 'bab'])
     ->where('bab', '[a-z0-9-]+')->name('panduan.bab');
 
