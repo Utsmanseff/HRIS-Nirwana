@@ -2,12 +2,27 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Permission;
+use App\Models\Karyawan;
+use App\Models\User;
 use App\Support\FragmenPanduan;
 use App\Support\Panduan;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 use Tests\TestCase;
 
 class PanduanTanyaTest extends TestCase
 {
+    use RefreshDatabase;
+
+    private function userSdm(): User
+    {
+        $user = User::factory()->create(['karyawan_id' => Karyawan::factory()->create()->id]);
+        $user->givePermissionTo(SpatiePermission::findOrCreate(Permission::KelolaSdm->value, 'web'));
+
+        return $user;
+    }
+
     public function test_rute_persis_mendapat_targetnya(): void
     {
         $this->assertSame(
@@ -126,5 +141,27 @@ class PanduanTanyaTest extends TestCase
     public function test_rute_bab_biasa_tidak_tertabrak_rute_bagian(): void
     {
         $this->get('/panduan/cuti')->assertOk()->assertSee('Mengajukan Cuti');
+    }
+
+    public function test_tombol_tanya_muncul_di_halaman_yang_dipetakan(): void
+    {
+        $this->actingAs($this->userSdm())->get('/beranda')
+            ->assertOk()
+            ->assertSee('Bantuan halaman ini')
+            ->assertSee("tampil('dasar', 'beranda')", false);
+    }
+
+    public function test_tombol_tanya_tak_muncul_di_halaman_yang_tak_dipetakan(): void
+    {
+        $this->actingAs($this->userSdm())->get('/sdm/karyawan')
+            ->assertOk()
+            ->assertDontSee('Bantuan halaman ini');
+    }
+
+    public function test_sheet_tak_ikut_dirender_di_halaman_tanpa_tombol(): void
+    {
+        $this->actingAs($this->userSdm())->get('/sdm/karyawan')
+            ->assertOk()
+            ->assertDontSee('ptny-sheet');
     }
 }

@@ -9,6 +9,7 @@
             </div>
         </div>
         <div class="flex-1"></div>
+        <x-panduan.tanya class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white" />
         <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white" />
         @php $belumDibaca = auth()->user()->unreadNotifications()->count(); @endphp
         <a href="{{ route('notifikasi') }}" class="w-9 h-9 grid place-items-center rounded-full hover:bg-white/10 text-white relative" aria-label="notifikasi">
@@ -31,6 +32,7 @@
         @endif
         <h1 class="font-bold text-[16px] tracking-tight">{{ $title }}</h1>
         <div class="flex-1"></div>
+        <x-panduan.tanya class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100" />
         <x-theme-toggle class="w-9 h-9 grid place-items-center rounded-full hover:bg-neutral-100" />
         {{ $slot }}
         <form method="POST" action="{{ route('logout') }}">
