@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\FragmenPanduan;
 use App\Support\Panduan;
 use Tests\TestCase;
 
@@ -68,5 +69,40 @@ class PanduanTanyaTest extends TestCase
                 "Rute {$rute} menunjuk bagian '{$t['bagian']}' yang tak ada di bab {$t['slug']}",
             );
         }
+    }
+
+    public function test_fragmen_mengembalikan_judul_dan_html_bagian(): void
+    {
+        $f = FragmenPanduan::ambil('cuti', 'ajukan');
+
+        $this->assertNotNull($f);
+        $this->assertSame('Mengajukan Cuti', $f['judul']);
+        $this->assertStringContainsString('data-bagian="ajukan"', $f['html']);
+        $this->assertStringContainsString('jenis cuti', $f['html']);
+    }
+
+    public function test_fragmen_membuang_baris_judul_dan_tautan_bagian_atas(): void
+    {
+        $f = FragmenPanduan::ambil('cuti', 'ajukan');
+
+        // Judul sudah tampil di kepala sheet; menyisakannya bikin judul dobel.
+        $this->assertStringNotContainsString('<h2', $f['html']);
+        $this->assertStringNotContainsString('#atas', $f['html']);
+    }
+
+    public function test_fragmen_mendaftar_bagian_lain_di_bab_yang_sama(): void
+    {
+        $f = FragmenPanduan::ambil('cuti', 'ajukan');
+        $id = array_column($f['lain'], 'id');
+
+        $this->assertSame(['jatah', 'ajukan', 'status', 'rantai', 'menyetujui', 'surat'], $id);
+        $this->assertSame('Memahami Jatah Cuti', $f['lain'][0]['judul']);
+    }
+
+    public function test_fragmen_null_untuk_bab_atau_bagian_asing(): void
+    {
+        $this->assertNull(FragmenPanduan::ambil('bab-asing', 'ajukan'));
+        $this->assertNull(FragmenPanduan::ambil('cuti', 'bagian-asing'));
+        $this->assertNull(FragmenPanduan::ambil('cuti', 'Ajukan Cuti'));
     }
 }
