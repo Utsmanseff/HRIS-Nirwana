@@ -151,6 +151,9 @@ body.ptny-terkunci {
         width: 440px;
         max-height: none;
         border-radius: 0;
+        /* Panel tinggi penuh dimulai dari y=0; di PWA standalone itu berarti di balik
+           status bar, jadi kepalanya perlu ruang inset sendiri. */
+        padding-top: env(safe-area-inset-top);
         padding-bottom: 0;
     }
 }
