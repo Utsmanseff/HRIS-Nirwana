@@ -77,7 +77,10 @@ document.addEventListener('alpine:init', () => {
             document.body.classList.remove('ptny-terkunci');
             const kembali = this.fokusSebelumnya;
             this.fokusSebelumnya = null;
-            if (kembali && typeof kembali.focus === 'function') kembali.focus();
+            // body bukan sasaran fokus yang berguna: biarkan saja di tempatnya.
+            if (kembali && kembali !== document.body && typeof kembali.focus === 'function') {
+                kembali.focus();
+            }
         },
 
         // Tab tak boleh kabur ke halaman di belakang sheet selama dialog terbuka.
