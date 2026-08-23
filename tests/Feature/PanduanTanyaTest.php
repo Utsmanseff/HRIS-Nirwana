@@ -47,4 +47,26 @@ class PanduanTanyaTest extends TestCase
         $this->assertNull(Panduan::untukRute('sistem.pengguna'));
         $this->assertNull(Panduan::untukRute(null));
     }
+
+    public function test_setiap_target_peta_menunjuk_bab_dan_bagian_yang_benar_benar_ada(): void
+    {
+        foreach (Panduan::rute() as $rute => $target) {
+            if ($target === null) {
+                continue; // penyekat, bukan target
+            }
+
+            $t = Panduan::untukRute($rute);
+
+            $this->assertNotNull(Panduan::cari($t['slug']), "Rute {$rute} menunjuk bab {$t['slug']} yang tak ada di registry");
+            $this->assertNotNull($t['bagian'], "Rute {$rute} wajib menyebut bagian (bab#bagian)");
+
+            $html = $this->get('/panduan/'.$t['slug'])->assertOk()->getContent();
+
+            $this->assertStringContainsString(
+                'data-bagian="'.$t['bagian'].'"',
+                $html,
+                "Rute {$rute} menunjuk bagian '{$t['bagian']}' yang tak ada di bab {$t['slug']}",
+            );
+        }
+    }
 }
