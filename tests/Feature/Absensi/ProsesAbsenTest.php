@@ -9,6 +9,7 @@ use App\Models\Shift;
 use App\Support\ProsesAbsen;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -113,5 +114,43 @@ class ProsesAbsenTest extends TestCase
         $this->assertSame(0, $sesi1->telat_menit);          // dalam toleransi 10 menit
         $this->assertSame($sore->id, $sesi2->shift_id);
         $this->assertSame(20, $sesi2->telat_menit);         // 16:20 vs mulai 16:00
+    }
+
+    /**
+     * catat() adalah satu-satunya pintu dari UI: ia yang memutuskan masuk/pulang
+     * DI DALAM kunci per-karyawan, bukan pemanggilnya. Tanpa itu, "cek sesi" dan
+     * "tulis baris" jadi dua langkah terpisah dan dua request paralel sama-sama
+     * membuat sesi masuk — absen dobel.
+     */
+    public function test_catat_membuka_sesi_lalu_menutupnya(): void
+    {
+        $kar = Karyawan::factory()->create();
+
+        $masuk = ProsesAbsen::catat($kar, $this->dataAbsen(Carbon::parse('2026-07-09 08:00:00')));
+        $this->assertNull($masuk->jam_pulang);
+
+        $pulang = ProsesAbsen::catat($kar, $this->dataAbsen(Carbon::parse('2026-07-09 16:00:00')));
+        $this->assertSame($masuk->id, $pulang->id);
+        $this->assertNotNull($pulang->jam_pulang);
+        $this->assertSame(1, Absensi::where('karyawan_id', $kar->id)->count());
+    }
+
+    /**
+     * Kunci yang tak kebagian giliran harus jadi pesan yang bisa dibaca orang,
+     * bukan LockTimeoutException yang naik jadi 500.
+     */
+    public function test_catat_yang_tak_dapat_kunci_melempar_pesan_ramah(): void
+    {
+        $kar = Karyawan::factory()->create();
+        $kunci = Cache::lock("absen-catat:{$kar->id}", 30);
+        $this->assertTrue($kunci->get());
+
+        try {
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('masih diproses');
+            ProsesAbsen::catat($kar, $this->dataAbsen(Carbon::parse('2026-07-09 08:00:00')));
+        } finally {
+            $kunci->release();
+        }
     }
 }

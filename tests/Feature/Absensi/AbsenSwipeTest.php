@@ -154,6 +154,76 @@ class AbsenSwipeTest extends TestCase
         $this->assertNotNull($a->foto_pulang_path);
     }
 
+    /**
+     * Label & jam pada modal konfirmasi harus berasal dari baris yang tersimpan.
+     * Kalau diambil dari computed $aksi sebelum submit, kasus balapan bisa
+     * menampilkan "Absen Masuk Berhasil" untuk baris yang sebenarnya pulang.
+     */
+    public function test_masuk_mengirim_payload_aksi_dan_jam_dari_baris_tersimpan(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-08-26 08:07:30'));
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertDispatched('absen-tersimpan', aksi: 'masuk', jam: '08:07');
+    }
+
+    public function test_pulang_mengirim_payload_aksi_pulang_dan_jam_pulang(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+        Absensi::factory()->create([
+            'karyawan_id' => $user->karyawan_id,
+            'jam_pulang' => null,
+        ]);
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-08-26 16:45:10'));
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan')
+            ->assertHasNoErrors()
+            ->assertDispatched('absen-tersimpan', aksi: 'pulang', jam: '16:45');
+    }
+
+    /**
+     * Jalur gagal juga harus naik ke modal — teks 11px di bawah tombol gampang
+     * kelewat di HP, dan itulah yang bikin orang menekan tombol lagi.
+     */
+    public function test_penolakan_radius_mengirim_event_gagal_untuk_modal(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
+            ->set('lat', -6.95)->set('long', 107.65)->set('akurasi', 8)
+            ->call('simpan')
+            ->assertHasErrors('lat')
+            ->assertDispatched('absen-gagal', pesan: 'Di luar radius kantor — absen ditolak.');
+    }
+
+    public function test_sukses_tidak_mengirim_event_gagal(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan')
+            ->assertNotDispatched('absen-gagal');
+    }
+
     public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
     {
         $this->seed(\Database\Seeders\RoleSeeder::class);

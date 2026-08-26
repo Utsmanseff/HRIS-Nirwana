@@ -25,6 +25,8 @@ document.addEventListener('alpine:init', () => {
         kameraSiap: false,
         mengirim: false,
         _kameraGagal: false,
+        _jamTimer: null,
+        _watchId: null,
 
         get bolehAbsen() {
             return this.wajahAda && this.dalamRadius && this.akurasi != null
@@ -33,7 +35,7 @@ document.addEventListener('alpine:init', () => {
 
         init() {
             this.tickJam();
-            setInterval(() => this.tickJam(), 1000);
+            this._jamTimer = setInterval(() => this.tickJam(), 1000);
             // Pra-muat model DULU (fire-and-forget) supaya unduh + kompilasi WASM jalan
             // BARENGAN prompt izin kamera/GPS, bukan setelahnya.
             pramuatDeteksiWajah();
@@ -55,16 +57,41 @@ document.addEventListener('alpine:init', () => {
             this.$el.addEventListener('lokasi-berubah', (e) => {
                 this._peta?.posisi(e.detail.lat, e.detail.long, e.detail.akurasi);
             });
-            this.$wire.on('absen-tersimpan', (e) => {
-                const store = window.Alpine.store('konfirmasi');
-                const judul = e.aksi === 'masuk' ? 'Absen Masuk Berhasil' : 'Absen Pulang Berhasil';
-                const pesan = `Tercatat jam ${e.jam}.`;
-                if (store && typeof store.beritahu === 'function') {
-                    store.beritahu({ judul, pesan });
-                } else if (typeof window.alert === 'function') {
-                    window.alert(`${judul}: ${pesan}`);
-                }
-            });
+            // Hasil absen (berhasil MAUPUN gagal) naik ke modal global.
+            // Pakai addEventListener di $el, bukan $wire.on: Livewire melempar
+            // event server di elemen komponen ini juga, dan $wire.on tak
+            // mengembalikan pelepas — jadi tak bisa dibersihkan saat destroy().
+            this._onTersimpan = (e) => {
+                const { aksi, jam } = e.detail ?? {};
+                this.beritahu(
+                    aksi === 'pulang' ? 'Absen Pulang Berhasil' : 'Absen Masuk Berhasil',
+                    `Tercatat jam ${jam}.`,
+                );
+            };
+            this._onGagal = (e) => {
+                this.beritahu('Absen Gagal', (e.detail ?? {}).pesan ?? 'Absen tidak tersimpan.');
+            };
+            this.$el.addEventListener('absen-tersimpan', this._onTersimpan);
+            this.$el.addEventListener('absen-gagal', this._onGagal);
+        },
+
+        // wire:navigate memasang ulang komponen ini tiap kali halaman dibuka.
+        // Tanpa destroy(), interval jam & pendengar event menumpuk tiap kunjungan.
+        destroy() {
+            clearInterval(this._jamTimer);
+            if (this._watchId != null) navigator.geolocation.clearWatch(this._watchId);
+            this._stopWajah?.();
+            this.$el.removeEventListener('absen-tersimpan', this._onTersimpan);
+            this.$el.removeEventListener('absen-gagal', this._onGagal);
+        },
+
+        beritahu(judul, pesan) {
+            const store = window.Alpine?.store('konfirmasi');
+            if (store && typeof store.beritahu === 'function') {
+                store.beritahu({ judul, pesan });
+            } else {
+                window.alert(judul + '\n\n' + pesan);
+            }
         },
 
         tickJam() {
@@ -96,7 +123,7 @@ document.addEventListener('alpine:init', () => {
                 console.warn('Geolocation diblokir: origin bukan secure context (butuh https atau localhost).');
                 return;
             }
-            navigator.geolocation.watchPosition(
+            this._watchId = navigator.geolocation.watchPosition(
                 (pos) => {
                     this.lat = pos.coords.latitude;
                     this.long = pos.coords.longitude;
