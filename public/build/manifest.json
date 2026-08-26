@@ -304,7 +304,7 @@
     "src": "node_modules/leaflet/dist/images/marker-shadow.png"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CMAdoQml.css",
+    "file": "assets/app-DOmgYb6S.css",
     "name": "app",
     "names": [
       "app.css"
@@ -312,11 +312,23 @@
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/js/absen-wajah-tfjs.js": {
+    "file": "assets/absen-wajah-tfjs-ClzL5Gbt.js",
+    "name": "absen-wajah-tfjs",
+    "src": "resources/js/absen-wajah-tfjs.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-CLdnzVh9.js",
+    "file": "assets/app-ODXxy4sW.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "dynamicImports": [
+      "resources/js/absen-wajah-tfjs.js"
+    ],
     "css": [
       "assets/app-1DTFk8zz.css"
     ],

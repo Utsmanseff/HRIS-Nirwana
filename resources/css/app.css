@@ -13,6 +13,13 @@
 @import './auth.css' layer(components);
 @import './panduan-tanya.css' layer(components);
 
+/* Jangan pindai public/: itu KELUARAN build, bukan sumber. Tanpa baris ini, bundel
+   hasil build ikut dipindai pada build BERIKUTNYA dan token acak di dalamnya jadi
+   utilitas nyata — bundel tfjs menyelipkan `.grayscale` (dari nama op tfjs), dan
+   berkas kerja yang sempat mampir di public/ pernah menyelipkan `.shrink`. Efeknya
+   hash CSS berubah tanpa ada perubahan sumber CSS sama sekali. */
+@source not '../../public/**';
+
 /* Scan Blade + Livewire + compiled views for utility classes */
 @source '../**/*.blade.php';
 @source '../../app/**/*.php';

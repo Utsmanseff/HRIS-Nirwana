@@ -63,6 +63,36 @@
         </div>
     </div>
 
+    {{-- Panel diagnostik detektor. Hanya muncul dengan ?detektor=tfjs / ?detektor=banding;
+         staf tak akan pernah melihatnya. Dipakai untuk mengadu MediaPipe vs TensorFlow.js
+         di perangkat asli sebelum yang lama dicabut. --}}
+    <template x-if="diag">
+        <div class="card card-pad !p-3 mb-3">
+            <div class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">
+                Diagnostik detektor · <span x-text="diag.mode"></span>
+            </div>
+            <template x-for="nama in ['mediapipe', 'tfjs']" :key="nama">
+                <div class="text-xs mb-1" x-show="diag.siap[nama] !== undefined || diag.wajah[nama] !== undefined">
+                    <span class="font-semibold" x-text="nama"></span>:
+                    siap <span class="tnum font-semibold" x-text="(diag.siap[nama] ?? '—') + ' ms'"></span>
+                    · <span x-text="diag.wajah[nama] === undefined ? 'belum jalan' : (diag.wajah[nama] ? 'wajah ADA' : 'wajah tak ada')"></span>
+                    <span x-show="diag.inferensi[nama] !== undefined">
+                        · <span class="tnum" x-text="diag.inferensi[nama] + ' ms/inferensi'"></span>
+                    </span>
+                </div>
+            </template>
+            <div class="text-[11px] text-neutral-400 mt-2 mb-1">
+                Berkas · 0 KB = dilayani cache, &gt; 0 = diunduh lagi
+            </div>
+            <template x-for="b in diag.berkas" :key="b.nama">
+                <div class="text-[11px] text-neutral-500">
+                    <span x-text="b.nama"></span> — <span class="tnum" x-text="b.kb + ' KB'"></span>
+                    <span class="tnum" x-text="'+' + b.ms + ' ms'"></span>
+                </div>
+            </template>
+        </div>
+    </template>
+
     {{-- Stepper masuk → pulang (tipis) --}}
     <div class="flex items-center gap-2 mb-3 px-1">
         <div class="flex-1 flex items-center gap-2">
