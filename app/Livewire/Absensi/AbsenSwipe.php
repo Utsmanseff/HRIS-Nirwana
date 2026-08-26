@@ -8,22 +8,22 @@ use App\Models\PengaturanAbsensi;
 use App\Support\JadwalHarian;
 use App\Support\KompresGambar;
 use App\Support\LokasiAbsen;
+use App\Support\FotoDataUrl;
 use App\Support\ProsesAbsen;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use RuntimeException;
 
 #[Layout('components.layouts.app')]
 class AbsenSwipe extends Component
 {
-    use WithFileUploads;
+    /** Batas ukuran foto setelah didekode (5 MB, sama dengan aturan `max:5120` dulu). */
+    private const MAKS_FOTO = 5 * 1024 * 1024;
 
     // Data capture dari client (diverifikasi ulang di server — jangan dipercaya).
-    public $foto = null;
     public ?float $lat = null;
     public ?float $long = null;
     public ?float $akurasi = null;
@@ -82,14 +82,28 @@ class AbsenSwipe extends Component
             ->get();
     }
 
-    public function simpan(): void
+    /**
+     * Satu-satunya permintaan jaringan untuk sekali absen.
+     *
+     * Foto datang sebagai data URL di argumen, bukan lewat `$wire.upload()`. Satu
+     * upload() Livewire = tiga permintaan berurutan (`_startUpload` → POST berkas →
+     * `_finishUpload`), masing-masing boot Laravel penuh, dan simpan() jadi yang
+     * keempat. Lihat App\Support\FotoDataUrl untuk alasan lengkapnya.
+     */
+    public function simpan(?string $foto = null): void
     {
         $this->validate([
-            'foto' => ['required', 'image', 'max:5120'],
             'lat' => ['required', 'numeric'],
             'long' => ['required', 'numeric'],
             'akurasi' => ['required', 'numeric', 'min:0'],
-        ], [], ['foto' => 'foto', 'lat' => 'lokasi', 'akurasi' => 'akurasi']);
+        ], [], ['lat' => 'lokasi', 'akurasi' => 'akurasi']);
+
+        $biner = FotoDataUrl::dekode($foto, self::MAKS_FOTO);
+        if ($biner === null) {
+            $this->gagal('foto', 'Foto gagal diambil — coba lagi.');
+
+            return;
+        }
 
         $p = PengaturanAbsensi::ambil();
 
@@ -107,8 +121,15 @@ class AbsenSwipe extends Component
 
         $kar = auth()->user()->karyawan;
 
-        // Simpan foto → WebP (disk local privat).
-        $webp = KompresGambar::keWebp($this->foto->get(), 80, 720);
+        // Simpan foto → WebP (disk local privat). Klien sudah mengecilkan & meng-encode,
+        // tapi server tetap encode ulang: klien tak boleh jadi otoritas format/ukuran.
+        try {
+            $webp = KompresGambar::keWebp($biner, 80, 720);
+        } catch (RuntimeException) {
+            $this->gagal('foto', 'Foto tidak terbaca — coba lagi.');
+
+            return;
+        }
         $path = "absensi/{$kar->id}/".Str::ulid().'.webp';
         Storage::disk('local')->put($path, $webp);
 
@@ -144,7 +165,7 @@ class AbsenSwipe extends Component
         $jamTercatat = ($absensi->jam_pulang ?? $absensi->jam_masuk)->format('H:i');
 
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
-        $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
+        $this->reset('lat', 'long', 'akurasi', 'wajahAda');
         unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
         $this->dispatch('absen-tersimpan', aksi: $aksiTercatat, jam: $jamTercatat);
     }
