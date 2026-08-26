@@ -312,22 +312,22 @@
     "src": "resources/css/app.css",
     "isEntry": true
   },
-  "resources/js/absen-wajah-tfjs.js": {
-    "file": "assets/absen-wajah-tfjs-ClzL5Gbt.js",
-    "name": "absen-wajah-tfjs",
-    "src": "resources/js/absen-wajah-tfjs.js",
+  "resources/js/absen-wajah.js": {
+    "file": "assets/absen-wajah-BC-V6vXZ.js",
+    "name": "absen-wajah",
+    "src": "resources/js/absen-wajah.js",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-ODXxy4sW.js",
+    "file": "assets/app-Z52wmcSS.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "resources/js/absen-wajah-tfjs.js"
+      "resources/js/absen-wajah.js"
     ],
     "css": [
       "assets/app-1DTFk8zz.css"

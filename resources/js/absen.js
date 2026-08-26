@@ -1,8 +1,10 @@
 // Alpine component untuk halaman /absensi. Kamera + geolocation + gating + capture.
-// Deteksi wajah (MediaPipe) & peta (Leaflet) di-hook di Task 5/6 lewat properti reaktif di sini.
+// Deteksi wajah (TensorFlow.js) & peta (Leaflet) di-hook lewat properti reaktif di sini.
+//
+// absen-wajah.js di-import DINAMIS: bundel tfjs ~480 KB, dan cuma halaman ini yang
+// memakainya. Static import akan menaruhnya di app.js yang dimuat SETIAP halaman.
 
 import { LokasiHaversine } from './absen-lokasi.js';
-import { mulaiDeteksiWajah, pramuatDeteksiWajah } from './absen-wajah.js';
 import { buatPeta } from './absen-peta.js';
 
 document.addEventListener('alpine:init', () => {
@@ -15,11 +17,12 @@ document.addEventListener('alpine:init', () => {
 
         // state reaktif
         jam: '--:--',
-        wajahAda: false,       // diisi MediaPipe (Task 5); default false → gerbang UX
+        wajahAda: false,       // diisi detektor; default false → gerbang UX
         detektorSiap: false,   // false = model masih dimuat → UI bilang "menyiapkan", bukan "tak terdeteksi"
-        // Mode diagnostik detektor. null = normal (staf tak akan pernah melihatnya).
-        // ?detektor=tfjs    → pakai TensorFlow.js + BlazeFace, untuk mengukur kecepatan
-        // ?detektor=banding → jalankan KEDUANYA berbarengan, untuk mengadu kecocokan
+        // Panel diagnostik, muncul HANYA dengan ?diag=1 — staf tak akan pernah melihatnya.
+        // Menampilkan ms sampai detektor siap + transferSize tiap berkas (0 KB = dilayani
+        // cache). Panel inilah yang membuktikan 8 detik MediaPipe dulu adalah unduhan,
+        // bukan kompilasi; simpan untuk pertanyaan berikutnya yang serupa.
         diag: null,
         deteksiAktif: false,   // true HANYA saat loop deteksi benar-benar jalan
         lat: null,
@@ -34,7 +37,6 @@ document.addEventListener('alpine:init', () => {
         _watchId: null,
         _deteksiTersedia: null,
         _detektor: null,
-        _stopBanding: null,
 
         get bolehAbsen() {
             return this.wajahAda && this.dalamRadius && this.akurasi != null
@@ -48,19 +50,18 @@ document.addEventListener('alpine:init', () => {
             // BARENGAN prompt izin kamera/GPS, bukan setelahnya. Statusnya dilacak
             // TERPISAH dari kamera: dulu detektorSiap baru true setelah kamera siap,
             // jadi izin kamera yang lambat terbaca user sebagai "detektor lelet".
-            const pilihan = new URLSearchParams(location.search).get('detektor');
-            if (pilihan === 'tfjs' || pilihan === 'banding') {
-                this.diag = { mode: pilihan, siap: {}, inferensi: {}, wajah: {}, berkas: [] };
+            if (new URLSearchParams(location.search).get('diag') === '1') {
+                this.diag = { siap: null, berkas: [] };
             }
 
             // Gagal muat pun harus MENGAKHIRI keadaan "menyiapkan" — kalau tidak,
             // badge menggantung selamanya di HP yang unduhannya kandas.
             const t0 = performance.now();
-            this.detektorUtama().then((det) => det.pramuatDeteksiWajah()).then((siap) => {
+            this.detektor().then((det) => det.pramuatDeteksiWajah()).then((siap) => {
                 this.detektorSiap = true;
                 this._deteksiTersedia = siap;
                 if (this.diag) {
-                    this.diag.siap[this.namaDetektor()] = Math.round(performance.now() - t0);
+                    this.diag.siap = Math.round(performance.now() - t0);
                     this.kumpulkanBerkas();
                 }
             });
@@ -69,14 +70,10 @@ document.addEventListener('alpine:init', () => {
             // Mulai deteksi wajah begitu kamera siap (lewati bila kamera gagal → fallback).
             this.$el.addEventListener('kamera-siap', async () => {
                 if (this._kameraGagal) return;
-                const det = await this.detektorUtama();
-                this._stopWajah = await det.mulaiDeteksiWajah(this.$refs.video, (ada) => {
-                    this.wajahAda = ada;
-                    if (this.diag) this.diag.wajah[this.namaDetektor()] = ada;
-                });
+                const det = await this.detektor();
+                this._stopWajah = await det.mulaiDeteksiWajah(this.$refs.video, (ada) => { this.wajahAda = ada; });
                 this.detektorSiap = true;
                 this.deteksiAktif = this._deteksiTersedia !== false;
-                if (this.diag?.mode === 'banding') this.mulaiPembanding();
             });
             // Peta Leaflet + marker posisi live.
             this.$nextTick(() => {
@@ -112,7 +109,6 @@ document.addEventListener('alpine:init', () => {
             clearInterval(this._jamTimer);
             if (this._watchId != null) navigator.geolocation.clearWatch(this._watchId);
             this._stopWajah?.();
-            this._stopBanding?.();
             this.$el.removeEventListener('absen-tersimpan', this._onTersimpan);
             this.$el.removeEventListener('absen-gagal', this._onGagal);
         },
@@ -126,51 +122,18 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        /** Detektor yang menyetir gerbang. tfjs di-import dinamis supaya halaman lain
-         *  tak ikut memikul bundelnya. */
-        detektorUtama() {
-            if (this._detektor) return this._detektor;
-            this._detektor = this.diag?.mode === 'tfjs'
-                ? import('./absen-wajah-tfjs.js')
-                : Promise.resolve({ pramuatDeteksiWajah, mulaiDeteksiWajah });
+        /** Modul detektor, di-muat sekali dan dipakai ulang. */
+        detektor() {
+            if (! this._detektor) this._detektor = import('./absen-wajah.js');
 
             return this._detektor;
         },
 
-        namaDetektor() {
-            return this.diag?.mode === 'tfjs' ? 'tfjs' : 'mediapipe';
-        },
-
-        /** Mode banding: MediaPipe tetap menyetir gerbang, tfjs jalan berbarengan dan
-         *  hanya menulis ke panel — supaya dua verdict bisa dilihat pada wajah yang sama. */
-        async mulaiPembanding() {
-            try {
-                const m = await import('./absen-wajah-tfjs.js');
-                const t0 = performance.now();
-                if (! await m.pramuatDeteksiWajah()) return;
-                this.diag.siap.tfjs = Math.round(performance.now() - t0);
-                this.kumpulkanBerkas();
-                this._stopBanding = await m.mulaiDeteksiWajah(this.$refs.video, (ada) => {
-                    this.diag.wajah.tfjs = ada;
-                });
-                this.ukurInferensi(m);
-            } catch (e) {
-                console.warn('pembanding tfjs gagal:', e);
-            }
-        },
-
-        /** Rata-rata 10 inferensi, sekali saja — angka yang bisa dilaporkan. */
-        ukurInferensi(m) {
-            const t = performance.now();
-            for (let i = 0; i < 10; i++) m.skorWajah(this.$refs.video);
-            this.diag.inferensi.tfjs = Math.round((performance.now() - t) / 10);
-        },
-
         /** transferSize 0 = dilayani cache; > 0 = benar-benar diunduh lagi. Inilah yang
-         *  memisahkan "cache tak jalan" dari "kompilasi memang selama itu". */
+         *  memisahkan "cache tak jalan" dari "modelnya memang selambat itu". */
         kumpulkanBerkas() {
             this.diag.berkas = performance.getEntriesByType('resource')
-                .filter((r) => /\/(mediapipe|wajah)\//.test(r.name))
+                .filter((r) => /\/wajah\//.test(r.name))
                 .map((r) => ({
                     nama: r.name.split('/').pop(),
                     kb: Math.round(r.transferSize / 1024),

@@ -24,7 +24,7 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Runtime detektor wajah (public/mediapipe dan public/wajah) berukuran megabyte dan
+# Runtime detektor wajah (public/wajah) berukuran megabyte dan
 # dipakai tiap kali halaman absen dibuka. Tanpa dua blok di bawah, server mengirim mentah
 # tanpa kompresi dan tanpa header cache → HP mengunduh/merevalidasi belasan MB tiap absen.
 # Aman: berkasnya statis & di-versi manual, jadi cache panjang tidak membuat basi.
