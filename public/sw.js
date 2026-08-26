@@ -63,13 +63,16 @@ self.addEventListener('fetch', (event) => {
 
     // Cache-first for fingerprinted build assets AND the MediaPipe runtime.
     //
-    // /mediapipe/* is ~9.4 MB uncompressed (~2.6 MB over the wire). The HTTP cache
+    // /mediapipe/* is ~9.4 MB uncompressed (~2.6 MB over the wire); /wajah/* is the
+    // TensorFlow.js candidate meant to replace it (~1.3 MB). The HTTP cache
     // already marks it immutable for a year, but on iOS PWAs that cache gets evicted
     // often — and every eviction means staff wait through a fresh multi-megabyte
     // download at the exact moment they are trying to clock in. Cache Storage survives
     // that. These files are versioned by hand, so cache-first never goes stale;
     // replacing them means bumping CACHE above.
-    if (url.pathname.startsWith('/build/') || url.pathname.startsWith('/mediapipe/')) {
+    if (url.pathname.startsWith('/build/')
+        || url.pathname.startsWith('/mediapipe/')
+        || url.pathname.startsWith('/wajah/')) {
         // ignoreVary: the same file is requested in two different modes on the absen
         // page — once by <link rel=preload> (CORS) and once by MediaPipe — and the
         // origin sends `Vary: Accept-Encoding`. Without this, the second request misses

@@ -327,6 +327,23 @@ class AbsenSwipeTest extends TestCase
         $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
     }
 
+    /**
+     * Runtime detektor kandidat (TensorFlow.js + BlazeFace) di-host sendiri, bukan CDN.
+     * Kalau salah satu berkasnya hilang saat deploy, halaman absen tetap terbuka dan
+     * gagalnya baru ketahuan di HP staf — jadi keberadaannya dijaga di sini.
+     */
+    public function test_berkas_runtime_detektor_tfjs_tersedia(): void
+    {
+        foreach ([
+            'blazeface-front.json',
+            'blazeface-front.bin',
+            'tfjs-backend-wasm-simd.wasm',
+            'tfjs-backend-wasm.wasm',
+        ] as $berkas) {
+            $this->assertFileExists(public_path("wajah/$berkas"));
+        }
+    }
+
     public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
     {
         $this->seed(\Database\Seeders\RoleSeeder::class);

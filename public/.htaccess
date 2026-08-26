@@ -24,10 +24,12 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Runtime MediaPipe (public/mediapipe) berukuran ~9,4 MB WASM + model tflite dan dipakai
-# tiap kali halaman absen dibuka. Tanpa dua blok di bawah, server mengirim mentah tanpa
-# kompresi dan tanpa header cache → HP mengunduh/merevalidasi belasan MB tiap absen.
+# Runtime detektor wajah (public/mediapipe dan public/wajah) berukuran megabyte dan
+# dipakai tiap kali halaman absen dibuka. Tanpa dua blok di bawah, server mengirim mentah
+# tanpa kompresi dan tanpa header cache → HP mengunduh/merevalidasi belasan MB tiap absen.
 # Aman: berkasnya statis & di-versi manual, jadi cache panjang tidak membuat basi.
+# Catatan: bobot model .bin adalah float32 mentah — DEFLATE nyaris tak menolongnya
+# (~10%), yang menolong adalah header cache di bawah.
 <IfModule mod_mime.c>
     AddType application/wasm .wasm
 </IfModule>
@@ -37,7 +39,7 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    <FilesMatch "\.(wasm|tflite)$">
+    <FilesMatch "\.(wasm|tflite|bin)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>
