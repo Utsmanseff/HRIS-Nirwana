@@ -229,9 +229,9 @@ class AbsenSwipeTest extends TestCase
     }
 
     /**
-     * MediaPipe memuat berkasnya berurutan (glue JS → wasm → tflite). Preload di
-     * <head> yang bikin ketiganya berangkat barengan; kalau @stack('head') di layout
-     * hilang, halaman tetap jalan tapi diam-diam melambat lagi. Jadi dijaga test.
+     * tfjs memuat berkasnya berurutan (bundel → wasm → model.json → model.bin).
+     * Preload di <head> yang bikin mereka berangkat barengan; kalau @stack('head') di
+     * layout hilang, halaman tetap jalan tapi diam-diam melambat lagi. Dijaga di sini.
      */
     public function test_halaman_absensi_mempreload_berkas_detektor_wajah(): void
     {
@@ -239,18 +239,26 @@ class AbsenSwipeTest extends TestCase
         $html = $this->actingAs($user)->get('/absensi')->assertOk()->getContent();
 
         // crossorigin wajib walau se-origin: tanpa itu preload tak cocok dengan
-        // permintaan MediaPipe dan berkasnya diunduh DUA KALI.
+        // permintaan tfjs dan berkasnya diunduh DUA KALI.
+        foreach (['blazeface-front.json', 'blazeface-front.bin'] as $berkas) {
+            $this->assertMatchesRegularExpression(
+                '~<link rel="preload" href="/wajah/'.preg_quote($berkas, '~').'"[^>]*crossorigin~',
+                $html,
+                "preload $berkas hilang dari <head> atau tanpa crossorigin",
+            );
+        }
+
+        // Bundel tfjs adalah chunk dinamis: tanpa modulepreload ia baru mulai diunduh
+        // setelah app.js dijalankan.
         $this->assertMatchesRegularExpression(
-            '~<link rel="preload" href="/mediapipe/blaze_face_short_range\.tflite"[^>]*crossorigin~',
+            '~<link rel="modulepreload" href="[^"]*absen-wajah-[^"]*\.js"~',
             $html,
-            'preload model tflite hilang dari <head> atau tanpa crossorigin',
+            'modulepreload bundel detektor hilang dari <head>',
         );
 
-        // Varian wasm dipilih di klien lewat probe SIMD — KEDUA namanya harus ada di
-        // halaman, kalau salah satu hilang berarti variannya di-hardcode lagi.
-        $this->assertStringContainsString('vision_wasm', $html);
-        $this->assertStringContainsString('_nosimd', $html);
+        // Varian wasm dipilih di klien lewat probe SIMD, tidak boleh di-hardcode.
         $this->assertStringContainsString('WebAssembly.validate', $html);
+        $this->assertStringContainsString("'-simd'", $html);
     }
 
     public function test_foto_webp_dari_klien_diterima(): void
@@ -328,9 +336,9 @@ class AbsenSwipeTest extends TestCase
     }
 
     /**
-     * Runtime detektor kandidat (TensorFlow.js + BlazeFace) di-host sendiri, bukan CDN.
-     * Kalau salah satu berkasnya hilang saat deploy, halaman absen tetap terbuka dan
-     * gagalnya baru ketahuan di HP staf — jadi keberadaannya dijaga di sini.
+     * Runtime detektor (TensorFlow.js + BlazeFace) di-host sendiri, bukan CDN. Kalau
+     * salah satu berkasnya hilang saat deploy, halaman absen tetap terbuka dan gagalnya
+     * baru ketahuan di HP staf — jadi keberadaannya dijaga di sini.
      */
     public function test_berkas_runtime_detektor_tfjs_tersedia(): void
     {
@@ -342,6 +350,19 @@ class AbsenSwipeTest extends TestCase
         ] as $berkas) {
             $this->assertFileExists(public_path("wajah/$berkas"));
         }
+    }
+
+    /**
+     * MediaPipe dicabut 2026-08-27 (PR #43). Runtime-nya 9,4 MB dan di iPhone
+     * unduhannya sendiri makan 8995 ms. Kalau ada yang mengembalikannya, biayanya
+     * kembali utuh — jadi ketiadaannya dijaga.
+     */
+    public function test_mediapipe_sudah_tidak_ada(): void
+    {
+        $this->assertDirectoryDoesNotExist(public_path('mediapipe'));
+
+        $paket = json_decode(file_get_contents(base_path('package.json')), true);
+        $this->assertArrayNotHasKey('@mediapipe/tasks-vision', $paket['dependencies'] ?? []);
     }
 
     public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
