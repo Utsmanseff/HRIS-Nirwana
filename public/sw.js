@@ -5,7 +5,7 @@
    - Web Push handlers (in-app notif center remains the source of truth;
      push is best-effort per docs/superpowers/specs/2026-06-22-notifikasi-design.md).
    Bump CACHE on each deploy that changes precached files. */
-const CACHE = 'nirwana-v1';
+const CACHE = 'nirwana-v2';
 const PRECACHE = ['/offline.html', '/icons/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -26,12 +26,24 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(req.url);
     if (url.origin !== self.location.origin) return;
 
-    // Cache-first for fingerprinted build assets.
-    if (url.pathname.startsWith('/build/')) {
+    // Cache-first for fingerprinted build assets AND the MediaPipe runtime.
+    //
+    // /mediapipe/* is ~9.4 MB uncompressed (~2.6 MB over the wire). The HTTP cache
+    // already marks it immutable for a year, but on iOS PWAs that cache gets evicted
+    // often — and every eviction means staff wait through a fresh multi-megabyte
+    // download at the exact moment they are trying to clock in. Cache Storage survives
+    // that. These files are versioned by hand, so cache-first never goes stale;
+    // replacing them means bumping CACHE above.
+    if (url.pathname.startsWith('/build/') || url.pathname.startsWith('/mediapipe/')) {
+        // ignoreVary: the same file is requested in two different modes on the absen
+        // page — once by <link rel=preload> (CORS) and once by MediaPipe — and the
+        // origin sends `Vary: Accept-Encoding`. Without this, the second request misses
+        // the cache and re-downloads. put() is best-effort: a full storage quota must
+        // not turn into an unhandled rejection.
         event.respondWith(
-            caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+            caches.match(req, { ignoreVary: true }).then((hit) => hit || fetch(req).then((res) => {
                 const copy = res.clone();
-                caches.open(CACHE).then((c) => c.put(req, copy));
+                caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
                 return res;
             }))
         );

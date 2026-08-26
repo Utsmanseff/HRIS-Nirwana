@@ -17,6 +17,8 @@ document.addEventListener('alpine:init', () => {
         jam: '--:--',
         wajahAda: false,       // diisi MediaPipe (Task 5); default false → gerbang UX
         detektorSiap: false,   // false = model masih dimuat → UI bilang "menyiapkan", bukan "tak terdeteksi"
+        menungguLama: false,   // > 3 dtk masih menyiapkan → jelaskan bahwa ini unduhan sekali
+        deteksiAktif: false,   // true HANYA saat loop deteksi benar-benar jalan
         lat: null,
         long: null,
         akurasi: null,
@@ -27,6 +29,8 @@ document.addEventListener('alpine:init', () => {
         _kameraGagal: false,
         _jamTimer: null,
         _watchId: null,
+        _lamaTimer: null,
+        _deteksiTersedia: null,
 
         get bolehAbsen() {
             return this.wajahAda && this.dalamRadius && this.akurasi != null
@@ -37,8 +41,18 @@ document.addEventListener('alpine:init', () => {
             this.tickJam();
             this._jamTimer = setInterval(() => this.tickJam(), 1000);
             // Pra-muat model DULU (fire-and-forget) supaya unduh + kompilasi WASM jalan
-            // BARENGAN prompt izin kamera/GPS, bukan setelahnya.
-            pramuatDeteksiWajah();
+            // BARENGAN prompt izin kamera/GPS, bukan setelahnya. Statusnya dilacak
+            // TERPISAH dari kamera: dulu detektorSiap baru true setelah kamera siap,
+            // jadi izin kamera yang lambat terbaca user sebagai "detektor lelet".
+            // Gagal muat pun harus MENGAKHIRI keadaan "menyiapkan" — kalau tidak,
+            // badge menggantung selamanya di HP yang unduhannya kandas.
+            pramuatDeteksiWajah().then((siap) => {
+                this.detektorSiap = true;
+                this._deteksiTersedia = siap;
+            });
+            // Unduhan pertama ~2,6 MB. Setelah 3 detik, bilang apa adanya supaya
+            // orang tak mengira aplikasinya menggantung.
+            this._lamaTimer = setTimeout(() => { this.menungguLama = true; }, 3000);
             this.mulaiKamera();
             this.mulaiLokasi();
             // Mulai deteksi wajah begitu kamera siap (lewati bila kamera gagal → fallback).
@@ -46,6 +60,7 @@ document.addEventListener('alpine:init', () => {
                 if (this._kameraGagal) return;
                 this._stopWajah = await mulaiDeteksiWajah(this.$refs.video, (ada) => { this.wajahAda = ada; });
                 this.detektorSiap = true;
+                this.deteksiAktif = this._deteksiTersedia !== false;
             });
             // Peta Leaflet + marker posisi live.
             this.$nextTick(() => {
@@ -79,6 +94,7 @@ document.addEventListener('alpine:init', () => {
         // Tanpa destroy(), interval jam & pendengar event menumpuk tiap kunjungan.
         destroy() {
             clearInterval(this._jamTimer);
+            clearTimeout(this._lamaTimer);
             if (this._watchId != null) navigator.geolocation.clearWatch(this._watchId);
             this._stopWajah?.();
             this.$el.removeEventListener('absen-tersimpan', this._onTersimpan);
@@ -92,6 +108,28 @@ document.addEventListener('alpine:init', () => {
             } else {
                 window.alert(judul + '\n\n' + pesan);
             }
+        },
+
+        // Satu sumber untuk teks badge: tiga sebab tunggu yang berbeda tak boleh
+        // dipukul rata jadi "wajah tak terdeteksi" (itu bikin orang menyalahkan kameranya).
+        get statusWajah() {
+            if (! this.detektorSiap) {
+                return this.menungguLama
+                    ? 'Menyiapkan deteksi wajah… (unduh sekali saja)'
+                    : 'Menyiapkan deteksi wajah…';
+            }
+            if (! this.kameraSiap) return 'Menyiapkan kamera…';
+            if (! this.deteksiAktif) return 'Deteksi wajah tak aktif';
+
+            return this.wajahAda ? 'Wajah terdeteksi' : 'Wajah tak terdeteksi';
+        },
+
+        get warnaStatusWajah() {
+            if (! this.detektorSiap || ! this.kameraSiap || ! this.deteksiAktif) {
+                return 'background:rgba(71,85,105,.9)';
+            }
+
+            return this.wajahAda ? 'background:rgba(22,163,74,.9)' : 'background:rgba(220,38,38,.9)';
         },
 
         tickJam() {
@@ -151,7 +189,11 @@ document.addEventListener('alpine:init', () => {
             this.mengirim = true;
             try {
                 const blob = await this.tangkapFoto();
-                const wajah = this._kameraGagal ? false : this.wajahAda;
+                // wajah_verif hanya boleh true kalau detektornya BENAR-BENAR jalan.
+                // Sebelumnya cuma kamera-gagal yang dicek, jadi HP yang gagal memuat
+                // MediaPipe tetap mengirim true (wajahAda dipaksa true agar tombol tak
+                // terkunci) — verifikasi yang tak pernah terjadi tercatat lulus.
+                const wajah = this.deteksiAktif && this.wajahAda;
                 this.$wire.set('lat', this.lat, false);
                 this.$wire.set('long', this.long, false);
                 this.$wire.set('akurasi', this.akurasi, false);
