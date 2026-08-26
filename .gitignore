@@ -38,3 +38,6 @@ Thumbs.db
 
 # Local SQLite (dev scaffold only; project targets MySQL 8)
 /database/*.sqlite
+
+#Local
+/.agents

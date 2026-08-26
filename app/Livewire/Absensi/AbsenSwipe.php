@@ -122,6 +122,8 @@ class AbsenSwipe extends Component
             'flag_lokasi' => LokasiAbsen::heuristik((float) $this->akurasi),
         ];
 
+        $aksiSebelumSubmit = $this->aksi;
+
         // Dua submit beruntun bisa balapan: cek sesi di atas sudah basi saat state
         // machine cek ulang. Jangan 500 — tampilkan pesannya & buang foto yatim.
         try {
@@ -139,7 +141,7 @@ class AbsenSwipe extends Component
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
         unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
-        $this->dispatch('absen-tersimpan');
+        $this->dispatch('absen-tersimpan', aksi: $aksiSebelumSubmit, jam: now()->format('H:i'));
         session()->flash('absen_ok', 'Absensi tercatat.');
     }
 

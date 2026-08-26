@@ -55,6 +55,16 @@ document.addEventListener('alpine:init', () => {
             this.$el.addEventListener('lokasi-berubah', (e) => {
                 this._peta?.posisi(e.detail.lat, e.detail.long, e.detail.akurasi);
             });
+            this.$wire.on('absen-tersimpan', (e) => {
+                const store = window.Alpine.store('konfirmasi');
+                const judul = e.aksi === 'masuk' ? 'Absen Masuk Berhasil' : 'Absen Pulang Berhasil';
+                const pesan = `Tercatat jam ${e.jam}.`;
+                if (store && typeof store.beritahu === 'function') {
+                    store.beritahu({ judul, pesan });
+                } else if (typeof window.alert === 'function') {
+                    window.alert(`${judul}: ${pesan}`);
+                }
+            });
         },
 
         tickJam() {
@@ -120,7 +130,15 @@ document.addEventListener('alpine:init', () => {
                 this.$wire.set('akurasi', this.akurasi, false);
                 this.$wire.set('wajahAda', wajah, false);
                 this.$wire.upload('foto', new File([blob], 'absen.webp', { type: 'image/webp' }),
-                    () => { this.$wire.simpan(); this.mengirim = false; },
+                    async () => {
+                        try {
+                            await this.$wire.simpan();
+                        } catch (e) {
+                            console.error(e);
+                        } finally {
+                            this.mengirim = false;
+                        }
+                    },
                     () => { this.mengirim = false; },
                     () => {});
             } catch (e) {
