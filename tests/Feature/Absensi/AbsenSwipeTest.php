@@ -224,6 +224,31 @@ class AbsenSwipeTest extends TestCase
             ->assertNotDispatched('absen-gagal');
     }
 
+    /**
+     * MediaPipe memuat berkasnya berurutan (glue JS → wasm → tflite). Preload di
+     * <head> yang bikin ketiganya berangkat barengan; kalau @stack('head') di layout
+     * hilang, halaman tetap jalan tapi diam-diam melambat lagi. Jadi dijaga test.
+     */
+    public function test_halaman_absensi_mempreload_berkas_detektor_wajah(): void
+    {
+        $user = $this->userKaryawan();
+        $html = $this->actingAs($user)->get('/absensi')->assertOk()->getContent();
+
+        // crossorigin wajib walau se-origin: tanpa itu preload tak cocok dengan
+        // permintaan MediaPipe dan berkasnya diunduh DUA KALI.
+        $this->assertMatchesRegularExpression(
+            '~<link rel="preload" href="/mediapipe/blaze_face_short_range\.tflite"[^>]*crossorigin~',
+            $html,
+            'preload model tflite hilang dari <head> atau tanpa crossorigin',
+        );
+
+        // Varian wasm dipilih di klien lewat probe SIMD — KEDUA namanya harus ada di
+        // halaman, kalau salah satu hilang berarti variannya di-hardcode lagi.
+        $this->assertStringContainsString('vision_wasm', $html);
+        $this->assertStringContainsString('_nosimd', $html);
+        $this->assertStringContainsString('WebAssembly.validate', $html);
+    }
+
     public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
     {
         $this->seed(\Database\Seeders\RoleSeeder::class);

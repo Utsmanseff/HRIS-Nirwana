@@ -18,6 +18,10 @@
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    {{-- Halaman boleh menyisipkan <link>/<meta> sendiri (mis. preload berkas MediaPipe
+         di /absensi). Slot Livewire dirender sebelum layout, jadi @push dari view anak
+         sudah terkumpul saat @stack ini dieksekusi. --}}
+    @stack('head')
 </head>
 <body data-active="{{ $active }}">
     {{-- Satu layout responsif. .app-shell grid dipertahankan (sistem collapse/hover sidebar

@@ -1,11 +1,22 @@
 // Nirwana HRIS — app entry.
 
+import { hangatkanBerkasWajah } from './absen-wajah-berkas.js';
 import './absen.js';
 import './antrian-gambar.js';
 import './papan-ketik.js';
 import './absen-pengaturan.js';
 import './konfirmasi.js';
 import './panduan-tanya.js';
+
+// Hangatkan berkas detektor wajah selagi user membaca halaman lain di app shell.
+// Alur absen selalu beranda → tombol Absen → kamera; jeda beberapa detik itu cukup
+// untuk menarik ~2,6 MB, jadi begitu halaman absen dibuka berkasnya sudah di cache
+// service worker. Dilewati di halaman absen sendiri (di sana modelnya langsung dimuat)
+// dan di luar app shell (halaman tamu/panduan tak butuh ini).
+if (document.body?.dataset.active !== undefined && ! location.pathname.startsWith('/absensi')) {
+    const nanti = window.requestIdleCallback ?? ((f) => setTimeout(f, 1500));
+    nanti(() => hangatkanBerkasWajah());
+}
 
 // Register the service worker (PWA shell + web push).
 if ('serviceWorker' in navigator) {
