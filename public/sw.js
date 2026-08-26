@@ -20,6 +20,41 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// In-flight de-duplication for cache-first assets.
+//
+// The absen page asks for the same MediaPipe file twice within a few hundred ms:
+// once from <link rel=preload>, once from MediaPipe itself. Both miss the cache
+// (nothing is stored yet) and both hit the network — 2 x 2.6 MB on the exact page
+// where speed matters. Sharing one fetch per URL removes that regardless of whether
+// the browser reuses the preload, which Safari is not reliable about.
+const sedangJalan = new Map();
+
+function ambilSekali(req) {
+    const kunci = req.url;
+    if (sedangJalan.has(kunci)) {
+        return sedangJalan.get(kunci).then((res) => res.clone());
+    }
+
+    const janji = fetch(req).then((res) => {
+        // put() is best-effort: a full storage quota must not become an unhandled
+        // rejection. The in-flight entry is held until the write settles so a request
+        // arriving right after this one still finds it.
+        caches.open(CACHE)
+            .then((c) => c.put(req, res.clone()))
+            .catch(() => {})
+            .finally(() => sedangJalan.delete(kunci));
+
+        return res;
+    }).catch((e) => {
+        sedangJalan.delete(kunci);
+        throw e;
+    });
+
+    sedangJalan.set(kunci, janji);
+
+    return janji.then((res) => res.clone());
+}
+
 self.addEventListener('fetch', (event) => {
     const req = event.request;
     if (req.method !== 'GET') return;
@@ -38,14 +73,9 @@ self.addEventListener('fetch', (event) => {
         // ignoreVary: the same file is requested in two different modes on the absen
         // page — once by <link rel=preload> (CORS) and once by MediaPipe — and the
         // origin sends `Vary: Accept-Encoding`. Without this, the second request misses
-        // the cache and re-downloads. put() is best-effort: a full storage quota must
-        // not turn into an unhandled rejection.
+        // the cache and re-downloads.
         event.respondWith(
-            caches.match(req, { ignoreVary: true }).then((hit) => hit || fetch(req).then((res) => {
-                const copy = res.clone();
-                caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-                return res;
-            }))
+            caches.match(req, { ignoreVary: true }).then((hit) => hit || ambilSekali(req))
         );
         return;
     }

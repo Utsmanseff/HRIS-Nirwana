@@ -17,7 +17,6 @@ document.addEventListener('alpine:init', () => {
         jam: '--:--',
         wajahAda: false,       // diisi MediaPipe (Task 5); default false → gerbang UX
         detektorSiap: false,   // false = model masih dimuat → UI bilang "menyiapkan", bukan "tak terdeteksi"
-        menungguLama: false,   // > 3 dtk masih menyiapkan → jelaskan bahwa ini unduhan sekali
         deteksiAktif: false,   // true HANYA saat loop deteksi benar-benar jalan
         lat: null,
         long: null,
@@ -29,7 +28,6 @@ document.addEventListener('alpine:init', () => {
         _kameraGagal: false,
         _jamTimer: null,
         _watchId: null,
-        _lamaTimer: null,
         _deteksiTersedia: null,
 
         get bolehAbsen() {
@@ -50,9 +48,6 @@ document.addEventListener('alpine:init', () => {
                 this.detektorSiap = true;
                 this._deteksiTersedia = siap;
             });
-            // Unduhan pertama ~2,6 MB. Setelah 3 detik, bilang apa adanya supaya
-            // orang tak mengira aplikasinya menggantung.
-            this._lamaTimer = setTimeout(() => { this.menungguLama = true; }, 3000);
             this.mulaiKamera();
             this.mulaiLokasi();
             // Mulai deteksi wajah begitu kamera siap (lewati bila kamera gagal → fallback).
@@ -94,7 +89,6 @@ document.addEventListener('alpine:init', () => {
         // Tanpa destroy(), interval jam & pendengar event menumpuk tiap kunjungan.
         destroy() {
             clearInterval(this._jamTimer);
-            clearTimeout(this._lamaTimer);
             if (this._watchId != null) navigator.geolocation.clearWatch(this._watchId);
             this._stopWajah?.();
             this.$el.removeEventListener('absen-tersimpan', this._onTersimpan);
@@ -113,11 +107,7 @@ document.addEventListener('alpine:init', () => {
         // Satu sumber untuk teks badge: tiga sebab tunggu yang berbeda tak boleh
         // dipukul rata jadi "wajah tak terdeteksi" (itu bikin orang menyalahkan kameranya).
         get statusWajah() {
-            if (! this.detektorSiap) {
-                return this.menungguLama
-                    ? 'Menyiapkan deteksi wajah… (unduh sekali saja)'
-                    : 'Menyiapkan deteksi wajah…';
-            }
+            if (! this.detektorSiap) return 'Menyiapkan deteksi wajah…';
             if (! this.kameraSiap) return 'Menyiapkan kamera…';
             if (! this.deteksiAktif) return 'Deteksi wajah tak aktif';
 
@@ -188,47 +178,58 @@ document.addEventListener('alpine:init', () => {
             if (!this.bolehAbsen) return;
             this.mengirim = true;
             try {
-                const blob = await this.tangkapFoto();
+                const foto = this.tangkapFoto();
                 // wajah_verif hanya boleh true kalau detektornya BENAR-BENAR jalan.
                 // Sebelumnya cuma kamera-gagal yang dicek, jadi HP yang gagal memuat
                 // MediaPipe tetap mengirim true (wajahAda dipaksa true agar tombol tak
                 // terkunci) — verifikasi yang tak pernah terjadi tercatat lulus.
                 const wajah = this.deteksiAktif && this.wajahAda;
+                // set(..., false) menunda pengiriman: keempatnya menumpang permintaan
+                // berikutnya, yaitu simpan(). Jadi sekali absen = SATU permintaan.
+                // Dulu fotonya lewat $wire.upload(), dan itu diam-diam tiga permintaan
+                // berurutan sendiri (_startUpload → POST berkas → _finishUpload) sebelum
+                // simpan() jadi yang keempat.
                 this.$wire.set('lat', this.lat, false);
                 this.$wire.set('long', this.long, false);
                 this.$wire.set('akurasi', this.akurasi, false);
                 this.$wire.set('wajahAda', wajah, false);
-                this.$wire.upload('foto', new File([blob], 'absen.webp', { type: 'image/webp' }),
-                    async () => {
-                        try {
-                            await this.$wire.simpan();
-                        } catch (e) {
-                            console.error(e);
-                        } finally {
-                            this.mengirim = false;
-                        }
-                    },
-                    () => { this.mengirim = false; },
-                    () => {});
+                await this.$wire.simpan(foto);
             } catch (e) {
                 console.error(e);
+            } finally {
                 this.mengirim = false;
             }
         },
 
+        /**
+         * Tangkap frame → data URL. Dikecilkan ke maksimal 720 px sisi terpanjang DI SINI,
+         * bukan di server: dulu frame penuh dikirim lewat jaringan seluler hanya untuk
+         * dibuang oleh downscale server ke ukuran yang sama.
+         */
         tangkapFoto() {
-            return new Promise((resolve) => {
-                const v = this.$refs.video;
-                const c = document.createElement('canvas');
-                c.width = v.videoWidth || 480;
-                c.height = v.videoHeight || 600;
-                const ctx = c.getContext('2d');
-                // Un-mirror: kamera depan kirim frame ter-mirror → balik horizontal agar foto natural.
-                ctx.translate(c.width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(v, 0, 0, c.width, c.height);
-                c.toBlob((b) => resolve(b), 'image/webp', 0.85);
-            });
+            const v = this.$refs.video;
+            const asalW = v.videoWidth || 480;
+            const asalH = v.videoHeight || 600;
+            const skala = Math.min(1, 720 / Math.max(asalW, asalH));
+            const w = Math.round(asalW * skala);
+            const h = Math.round(asalH * skala);
+
+            const c = document.createElement('canvas');
+            c.width = w;
+            c.height = h;
+            const ctx = c.getContext('2d');
+            // Un-mirror: kamera depan kirim frame ter-mirror → balik horizontal agar foto natural.
+            ctx.translate(w, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(v, 0, 0, w, h);
+
+            // Safari < 16.4 TIDAK meng-encode WebP: ia diam-diam mengembalikan PNG,
+            // tanpa error. PNG kamera ~7x lebih besar dari WebP, jadi HP lama dulu
+            // mengunggah 1,5 MB tanpa ada yang tahu. Periksa hasilnya, jangan percaya
+            // tipe yang kita minta.
+            const webp = c.toDataURL('image/webp', 0.8);
+
+            return webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/jpeg', 0.8);
         },
     }));
 });

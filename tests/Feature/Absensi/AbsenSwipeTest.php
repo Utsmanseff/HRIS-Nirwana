@@ -7,7 +7,6 @@ use App\Models\Karyawan;
 use App\Models\PengaturanAbsensi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -56,6 +55,20 @@ class AbsenSwipeTest extends TestCase
             ->assertSet('aksi', 'pulang');
     }
 
+    /** Foto absen sekarang dikirim sebagai data URL di argumen simpan(), bukan lewat
+     *  $wire.upload() — lihat App\Support\FotoDataUrl. */
+    private function fotoData(string $tipe = 'png'): string
+    {
+        $img = imagecreatetruecolor(64, 64);
+        imagefilledrectangle($img, 0, 0, 63, 63, imagecolorallocate($img, 120, 90, 70));
+        ob_start();
+        $tipe === 'webp' ? imagewebp($img, null, 80) : imagepng($img);
+        $biner = ob_get_clean();
+        imagedestroy($img);
+
+        return "data:image/$tipe;base64,".base64_encode($biner);
+    }
+
     private function setPengaturan(): PengaturanAbsensi
     {
         // Kantor di (-6.9, 107.6), radius 100 m, akurasi maks 30 m.
@@ -72,10 +85,9 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('selfie.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
             ->set('wajahAda', true)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasNoErrors();
 
         $a = Absensi::where('karyawan_id', $user->karyawan_id)->firstOrFail();
@@ -93,9 +105,8 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('selfie.jpg', 200, 200))
             ->set('lat', -6.95)->set('long', 107.65)->set('akurasi', 8) // jauh
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasErrors('lat');
 
         $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
@@ -108,9 +119,8 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 500)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasErrors('akurasi');
 
         $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
@@ -123,10 +133,9 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
             ->set('wajahAda', false)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasNoErrors();
 
         $a = Absensi::where('karyawan_id', $user->karyawan_id)->firstOrFail();
@@ -144,9 +153,8 @@ class AbsenSwipeTest extends TestCase
         ]);
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasNoErrors();
 
         $a = Absensi::where('karyawan_id', $user->karyawan_id)->firstOrFail();
@@ -167,9 +175,8 @@ class AbsenSwipeTest extends TestCase
         $this->travelTo(\Illuminate\Support\Carbon::parse('2026-08-26 08:07:30'));
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasNoErrors()
             ->assertDispatched('absen-tersimpan', aksi: 'masuk', jam: '08:07');
     }
@@ -186,9 +193,8 @@ class AbsenSwipeTest extends TestCase
         $this->travelTo(\Illuminate\Support\Carbon::parse('2026-08-26 16:45:10'));
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasNoErrors()
             ->assertDispatched('absen-tersimpan', aksi: 'pulang', jam: '16:45');
     }
@@ -204,9 +210,8 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.95)->set('long', 107.65)->set('akurasi', 8)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertHasErrors('lat')
             ->assertDispatched('absen-gagal', pesan: 'Di luar radius kantor — absen ditolak.');
     }
@@ -218,9 +223,8 @@ class AbsenSwipeTest extends TestCase
         $user = $this->userKaryawan();
 
         \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
-            ->set('foto', UploadedFile::fake()->image('s.jpg', 200, 200))
             ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
-            ->call('simpan')
+            ->call('simpan', $this->fotoData())
             ->assertNotDispatched('absen-gagal');
     }
 
@@ -247,6 +251,80 @@ class AbsenSwipeTest extends TestCase
         $this->assertStringContainsString('vision_wasm', $html);
         $this->assertStringContainsString('_nosimd', $html);
         $this->assertStringContainsString('WebAssembly.validate', $html);
+    }
+
+    public function test_foto_webp_dari_klien_diterima(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan', $this->fotoData('webp'))
+            ->assertHasNoErrors();
+
+        $this->assertSame(1, Absensi::where('karyawan_id', $user->karyawan_id)->count());
+    }
+
+    /**
+     * WithFileUploads sudah dicabut; foto lewat argumen. Kalau ada yang mengembalikan
+     * $wire.upload(), sekali absen jadi empat permintaan lagi tanpa ada yang sadar.
+     */
+    public function test_komponen_tidak_lagi_memakai_upload_livewire(): void
+    {
+        $this->assertNotContains(
+            \Livewire\WithFileUploads::class,
+            class_uses_recursive(\App\Livewire\Absensi\AbsenSwipe::class),
+            'AbsenSwipe kembali memakai WithFileUploads — sekali absen jadi 4 permintaan HTTP.',
+        );
+    }
+
+    public function test_foto_kosong_atau_bukan_gambar_ditolak(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        foreach ([null, '', 'bukan-data-url', 'data:text/html;base64,'.base64_encode('<b>')] as $buruk) {
+            \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+                ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+                ->call('simpan', $buruk)
+                ->assertHasErrors('foto')
+                ->assertDispatched('absen-gagal');
+        }
+
+        $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
+    }
+
+    /** Data URL bertipe gambar tapi isinya sampah: lolos decoder, harus dijegal GD. */
+    public function test_data_url_gambar_palsu_ditolak_tanpa_menulis_berkas(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan', 'data:image/webp;base64,'.base64_encode('bukan gambar sama sekali'))
+            ->assertHasErrors('foto');
+
+        $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
+        $this->assertEmpty(Storage::disk('local')->allFiles());
+    }
+
+    public function test_foto_kelewat_besar_ditolak(): void
+    {
+        Storage::fake('local');
+        $this->setPengaturan();
+        $user = $this->userKaryawan();
+
+        \Livewire\Livewire::actingAs($user)->test(\App\Livewire\Absensi\AbsenSwipe::class)
+            ->set('lat', -6.9)->set('long', 107.6)->set('akurasi', 8)
+            ->call('simpan', 'data:image/webp;base64,'.str_repeat('A', 8 * 1024 * 1024))
+            ->assertHasErrors('foto');
+
+        $this->assertSame(0, Absensi::where('karyawan_id', $user->karyawan_id)->count());
     }
 
     public function test_beranda_menampilkan_kartu_absensi_untuk_karyawan(): void
