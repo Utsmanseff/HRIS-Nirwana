@@ -4,7 +4,10 @@ namespace App\Support;
 
 use App\Models\Absensi;
 use App\Models\Karyawan;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
@@ -21,6 +24,32 @@ class ProsesAbsen
             ->whereNull('jam_pulang')
             ->latest('jam_masuk')
             ->first();
+    }
+
+    /**
+     * Satu pintu untuk absen dari UI: ambil kunci per-karyawan, baru putuskan
+     * masuk/pulang DI DALAM kunci.
+     *
+     * Tanpa ini, "cek sesi" dan "tulis baris" adalah dua langkah terpisah: dua
+     * request paralel (dua tab, dua perangkat, atau satu tap ganda yang lolos
+     * gerbang UI) sama-sama melihat "belum ada sesi" lalu sama-sama membuat sesi
+     * masuk. Itulah absen dobel yang terlihat di lapangan; guard RuntimeException
+     * di masuk()/pulang() saja tidak cukup karena ia juga check-then-act.
+     *
+     * masuk()/pulang() sengaja dibiarkan tanpa kunci — dipakai seeder & test yang
+     * memang serial, dan menguncinya di sana bikin kunci bersarang.
+     */
+    public static function catat(Karyawan $karyawan, array $data): Absensi
+    {
+        try {
+            return Cache::lock("absen-catat:{$karyawan->id}", 10)->block(5, function () use ($karyawan, $data) {
+                return DB::transaction(fn () => self::sesiAktif($karyawan)
+                    ? self::pulang($karyawan, $data)
+                    : self::masuk($karyawan, $data));
+            });
+        } catch (LockTimeoutException) {
+            throw new RuntimeException('Absen sebelumnya masih diproses — tunggu sebentar lalu coba lagi.');
+        }
     }
 
     /**

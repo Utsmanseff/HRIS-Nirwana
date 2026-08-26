@@ -95,12 +95,12 @@ class AbsenSwipe extends Component
 
         // OTORITAS SERVER: hitung ulang Haversine + akurasi. Client cuma gerbang UX.
         if (! LokasiAbsen::dalamRadius((float) $this->lat, (float) $this->long, $p)) {
-            $this->addError('lat', 'Di luar radius kantor — absen ditolak.');
+            $this->gagal('lat', 'Di luar radius kantor — absen ditolak.');
 
             return;
         }
         if (! LokasiAbsen::akurasiDiterima((float) $this->akurasi, $p)) {
-            $this->addError('akurasi', 'Akurasi lokasi terlalu buruk — coba lagi di tempat terbuka.');
+            $this->gagal('akurasi', 'Akurasi lokasi terlalu buruk — coba lagi di tempat terbuka.');
 
             return;
         }
@@ -122,25 +122,43 @@ class AbsenSwipe extends Component
             'flag_lokasi' => LokasiAbsen::heuristik((float) $this->akurasi),
         ];
 
-        // Dua submit beruntun bisa balapan: cek sesi di atas sudah basi saat state
-        // machine cek ulang. Jangan 500 — tampilkan pesannya & buang foto yatim.
+        // Dua submit beruntun bisa balapan. ProsesAbsen::catat() memutuskan
+        // masuk/pulang di dalam kunci per-karyawan; di sini tinggal urus jalur
+        // gagalnya — jangan 500, tampilkan pesannya & buang foto yatim.
         try {
-            ProsesAbsen::sesiAktif($kar)
-                ? ProsesAbsen::pulang($kar, $data)
-                : ProsesAbsen::masuk($kar, $data);
+            $absensi = ProsesAbsen::catat($kar, $data);
         } catch (RuntimeException $e) {
             Storage::disk('local')->delete($path);
             unset($this->sesi, $this->aksi, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
-            $this->addError('sesi', $e->getMessage());
+            $this->gagal('sesi', $e->getMessage());
 
             return;
         }
 
+        // Label & jam untuk alert dibaca dari BARIS YANG TERSIMPAN, bukan dari
+        // computed $this->aksi sebelum submit. Computed itu query sendiri, terpisah
+        // dari keputusan masuk/pulang di dalam kunci — pada kasus balapan ia bisa
+        // bilang "masuk" padahal yang tercatat pulang. Jamnya pun harus jam DB,
+        // supaya modal tak menyebut menit yang beda dari Riwayat tepat di bawahnya.
+        $aksiTercatat = $absensi->jam_pulang ? 'pulang' : 'masuk';
+        $jamTercatat = ($absensi->jam_pulang ?? $absensi->jam_masuk)->format('H:i');
+
         // Bersihkan capture + segarkan computed (sesi/aksi/riwayat).
         $this->reset('foto', 'lat', 'long', 'akurasi', 'wajahAda');
         unset($this->sesi, $this->aksi, $this->riwayat, $this->jadwalHariIni, $this->jadwalTerpilih, $this->shiftTerpakai);
-        $this->dispatch('absen-tersimpan');
-        session()->flash('absen_ok', 'Absensi tercatat.');
+        $this->dispatch('absen-tersimpan', aksi: $aksiTercatat, jam: $jamTercatat);
+    }
+
+    /**
+     * Kegagalan absen naik ke modal, bukan cuma teks 11px di bawah tombol.
+     * Justru jalur gagal yang bikin orang menekan tombol lagi; kalau pesannya
+     * tak terlihat di layar HP, tap kedua itulah yang jadi absen dobel.
+     * addError tetap dipasang sebagai jaring pengaman bila Alpine/store gagal muat.
+     */
+    private function gagal(string $field, string $pesan): void
+    {
+        $this->addError($field, $pesan);
+        $this->dispatch('absen-gagal', pesan: $pesan);
     }
 
     public function render()
