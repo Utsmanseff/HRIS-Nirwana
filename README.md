@@ -2,7 +2,7 @@
 
 RSU Nirwana · 2026
 
-Sebelumnya absensi menggunakan mesin absen, pengajuan cuti dilakukan melalui surat, dan data pegawai disimpan di Excel. Aplikasi ini menyatukan ketiganya. Absensinya menggunakan lokasi dan deteksi wajah, serta terhubung dengan jadwal shift setiap pegawai.
+Sebelumnya absensi menggunakan mesin absen, pengajuan cuti dilakukan melalui surat, dan data pegawai disimpan di Excel. Proses absensi manual juga rentan mengalami kecurangan, dengan sengaja tidak absen masuk jika telat dan tidak absen pulang jika ingin pulang lebih cepat. Aplikasi ini menyatukan solusi dari permasalahan tersebut. Absensinya menggunakan lokasi dan deteksi wajah, serta terhubung dengan jadwal shift setiap pegawai. Pilihan absen hanya 1, masuk dan pulang. Tidak bisa melakukan absen pulang jika belum melakukan absen masuk, serta tidak bisa melakukan absen masuk jika sebelumnya belum melakukan absen pulang.
 
 ## Yang dibangun
 
